@@ -7,7 +7,7 @@
 #ifndef SUBMISSION_HANDLER_H
 #define SUBMISSION_HANDLER_H
 
-#include "crow.h"
+#include "crow_all.h"
 #include <memory>
 #include "judge_engine.h"
 
