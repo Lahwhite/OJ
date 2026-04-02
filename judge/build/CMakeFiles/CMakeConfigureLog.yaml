@@ -8,4 +8,441 @@ events:
       - "CMakeLists.txt:2 (project)"
     message: |
       The system is: Windows - 6.2.9200 - AMD64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: C:/Program Files/AMD/ROCm/5.7/bin/clang.exe 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.exe"
+      
+      The C compiler identification is Clang, found in:
+        C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/3.29.2/CompilerIdC/a.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:1216 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Detecting C compiler /showIncludes prefix:
+        
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:1216 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Detecting C compiler /showIncludes prefix:
+        
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: C:/Program Files/AMD/ROCm/5.7/bin/clang++.exe 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.exe"
+      
+      The CXX compiler identification is Clang, found in:
+        C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/3.29.2/CompilerIdCXX/a.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:1216 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:1216 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:64 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-tjh1yh"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-tjh1yh"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-tjh1yh'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_1fe72/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_1fe72.dir\\build.make CMakeFiles/cmTC_1fe72.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-tjh1yh'
+        Building C object CMakeFiles/cmTC_1fe72.dir/CMakeCCompilerABI.c.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe   -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_1fe72.dir/CMakeCCompilerABI.c.obj -MF CMakeFiles\\cmTC_1fe72.dir\\CMakeCCompilerABI.c.obj.d -o CMakeFiles\\cmTC_1fe72.dir\\CMakeCCompilerABI.c.obj -c C:\\Strawberry\\c\\share\\cmake-3.29\\Modules\\CMakeCCompilerABI.c
+        Linking C executable cmTC_1fe72.exe
+        C:\\Strawberry\\c\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_1fe72.dir\\link.txt --verbose=1
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe -nostartfiles -nostdlib -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd  -v -Xlinker /subsystem:console -fuse-ld=lld-link @CMakeFiles\\cmTC_1fe72.dir\\objects1.rsp -o cmTC_1fe72.exe -Xlinker /MANIFEST:EMBED -Xlinker /implib:cmTC_1fe72.lib -Xlinker /pdb:C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-tjh1yh\\cmTC_1fe72.pdb -Xlinker /version:0.0 
+        clang version 17.0.0 (git@github.amd.com:Compute-Mirrors/llvm-project 6e709f613348e5258188527d11ee8d78376f26b7)
+        Target: x86_64-pc-windows-msvc
+        Thread model: posix
+        InstalledDir: C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin
+        Found HIP installation: C:\\PROGRA~1\\AMD\\ROCm\\5.7, version 5.7.32000
+         "C:\\\\PROGRA~1\\\\AMD\\\\ROCm\\\\5.7\\\\bin\\\\lld-link" -out:cmTC_1fe72.exe "-libpath:C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Tools\\\\MSVC\\\\14.44.35207\\\\lib\\\\x64" "-libpath:C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Tools\\\\MSVC\\\\14.44.35207\\\\atlmfc\\\\lib\\\\x64" "-libpath:C:\\\\Program Files (x86)\\\\Windows Kits\\\\10\\\\Lib\\\\10.0.26100.0\\\\ucrt\\\\x64" "-libpath:C:\\\\Program Files (x86)\\\\Windows Kits\\\\10\\\\Lib\\\\10.0.26100.0\\\\um\\\\x64" "-libpath:C:\\\\PROGRA~1\\\\AMD\\\\ROCm\\\\5.7\\\\lib\\\\clang\\\\17.0.0\\\\lib\\\\windows" -nologo -debug /subsystem:console CMakeFiles/cmTC_1fe72.dir/CMakeCCompilerABI.c.obj /MANIFEST:EMBED /implib:cmTC_1fe72.lib "/pdb:C:\\\\Users\\\\33598\\\\Desktop\\\\杞欢宸ョ▼缁煎悎瀹為獙\\\\OJ\\\\judge\\\\build\\\\CMakeFiles\\\\CMakeScratch\\\\TryCompile-tjh1yh\\\\cmTC_1fe72.pdb" /version:0.0
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-tjh1yh'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:170 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'C': C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the C compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "-v"
+      lld-link: warning: ignoring unknown argument '-v'
+      lld-link: error: no input files
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the C compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "-V"
+      lld-link: warning: ignoring unknown argument '-V'
+      lld-link: error: no input files
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the C compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "--version"
+      LLD 17.0.0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:64 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-r9lrdy"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-r9lrdy"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-r9lrdy'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_70947/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_70947.dir\\build.make CMakeFiles/cmTC_70947.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-r9lrdy'
+        Building CXX object CMakeFiles/cmTC_70947.dir/CMakeCXXCompilerABI.cpp.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\CLANG_~1.EXE   -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_70947.dir/CMakeCXXCompilerABI.cpp.obj -MF CMakeFiles\\cmTC_70947.dir\\CMakeCXXCompilerABI.cpp.obj.d -o CMakeFiles\\cmTC_70947.dir\\CMakeCXXCompilerABI.cpp.obj -c C:\\Strawberry\\c\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp
+        Linking CXX executable cmTC_70947.exe
+        C:\\Strawberry\\c\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_70947.dir\\link.txt --verbose=1
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\CLANG_~1.EXE -nostartfiles -nostdlib -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd  -v -Xlinker /subsystem:console -fuse-ld=lld-link @CMakeFiles\\cmTC_70947.dir\\objects1.rsp -o cmTC_70947.exe -Xlinker /MANIFEST:EMBED -Xlinker /implib:cmTC_70947.lib -Xlinker /pdb:C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-r9lrdy\\cmTC_70947.pdb -Xlinker /version:0.0 
+        clang version 17.0.0 (git@github.amd.com:Compute-Mirrors/llvm-project 6e709f613348e5258188527d11ee8d78376f26b7)
+        Target: x86_64-pc-windows-msvc
+        Thread model: posix
+        InstalledDir: C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin
+        Found HIP installation: C:\\PROGRA~1\\AMD\\ROCm\\5.7, version 5.7.32000
+         "C:\\\\PROGRA~1\\\\AMD\\\\ROCm\\\\5.7\\\\bin\\\\lld-link" -out:cmTC_70947.exe "-libpath:C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Tools\\\\MSVC\\\\14.44.35207\\\\lib\\\\x64" "-libpath:C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Tools\\\\MSVC\\\\14.44.35207\\\\atlmfc\\\\lib\\\\x64" "-libpath:C:\\\\Program Files (x86)\\\\Windows Kits\\\\10\\\\Lib\\\\10.0.26100.0\\\\ucrt\\\\x64" "-libpath:C:\\\\Program Files (x86)\\\\Windows Kits\\\\10\\\\Lib\\\\10.0.26100.0\\\\um\\\\x64" "-libpath:C:\\\\PROGRA~1\\\\AMD\\\\ROCm\\\\5.7\\\\lib\\\\clang\\\\17.0.0\\\\lib\\\\windows" -nologo -debug /subsystem:console CMakeFiles/cmTC_70947.dir/CMakeCXXCompilerABI.cpp.obj /MANIFEST:EMBED /implib:cmTC_70947.lib "/pdb:C:\\\\Users\\\\33598\\\\Desktop\\\\杞欢宸ョ▼缁煎悎瀹為獙\\\\OJ\\\\judge\\\\build\\\\CMakeFiles\\\\CMakeScratch\\\\TryCompile-r9lrdy\\\\cmTC_70947.pdb" /version:0.0
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-r9lrdy'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:170 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "-v"
+      lld-link: warning: ignoring unknown argument '-v'
+      lld-link: error: no input files
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "-V"
+      lld-link: warning: ignoring unknown argument '-V'
+      lld-link: error: no input files
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:207 (cmake_determine_linker_id)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/PROGRA~1/AMD/ROCm/5.7/bin/lld-link" "--version"
+      LLD 17.0.0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/FeatureTesting.cmake:34 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/FeatureTesting.cmake:84 (_record_compiler_features)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake:121 (_record_compiler_features_cxx)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeDetermineCompileFeatures.cmake:70 (cmake_record_cxx_compile_features)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:70 (CMAKE_DETERMINE_COMPILE_FEATURES)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compile features"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-0oro5j"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-0oro5j"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_FEATURE_TEST"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-0oro5j'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_3d71d/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_3d71d.dir\\build.make CMakeFiles/cmTC_3d71d.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-0oro5j'
+        Building CXX object CMakeFiles/cmTC_3d71d.dir/feature_tests.cxx.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\CLANG_~1.EXE   -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd   -std=c++14 -MD -MT CMakeFiles/cmTC_3d71d.dir/feature_tests.cxx.obj -MF CMakeFiles\\cmTC_3d71d.dir\\feature_tests.cxx.obj.d -o CMakeFiles\\cmTC_3d71d.dir\\feature_tests.cxx.obj -c C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-0oro5j\\feature_tests.cxx
+        CLANG_~1: error: no such file or directory: 'C:\\Users\\33598\\Desktop\\鏉?U+E219>娆㈠銉р柤缂佺厧鎮庣€圭偤鐛橽OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-0oro5j\\feature_tests.cxx'
+        CLANG_~1: error: no input files
+        mingw32-make[1]: *** [CMakeFiles\\cmTC_3d71d.dir\\build.make:78: CMakeFiles/cmTC_3d71d.dir/feature_tests.cxx.obj] Error 1
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-0oro5j'
+        mingw32-make: *** [Makefile:126: cmTC_3d71d/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "CMakeLists.txt:12 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-fe0pk0"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-fe0pk0"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-fe0pk0'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_b8aa6/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_b8aa6.dir\\build.make CMakeFiles/cmTC_b8aa6.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-fe0pk0'
+        Building C object CMakeFiles/cmTC_b8aa6.dir/src.c.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe -DCMAKE_HAVE_LIBC_PTHREAD  -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_b8aa6.dir/src.c.obj -MF CMakeFiles\\cmTC_b8aa6.dir\\src.c.obj.d -o CMakeFiles\\cmTC_b8aa6.dir\\src.c.obj -c C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-fe0pk0\\src.c
+        clang: error: no such file or directory: 'C:\\Users\\33598\\Desktop\\鏉?U+E219>娆㈠銉р柤缂佺厧鎮庣€圭偤鐛橽OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-fe0pk0\\src.c'
+        clang: error: no input files
+        mingw32-make[1]: *** [CMakeFiles\\cmTC_b8aa6.dir\\build.make:78: CMakeFiles/cmTC_b8aa6.dir/src.c.obj] Error 1
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-fe0pk0'
+        mingw32-make: *** [Makefile:126: cmTC_b8aa6/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "CMakeLists.txt:12 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-eihds7"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-eihds7"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-eihds7'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_8b05b/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_8b05b.dir\\build.make CMakeFiles/cmTC_8b05b.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-eihds7'
+        Building C object CMakeFiles/cmTC_8b05b.dir/CheckFunctionExists.c.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe   -DCHECK_FUNCTION_EXISTS=pthread_create -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_8b05b.dir/CheckFunctionExists.c.obj -MF CMakeFiles\\cmTC_8b05b.dir\\CheckFunctionExists.c.obj.d -o CMakeFiles\\cmTC_8b05b.dir\\CheckFunctionExists.c.obj -c C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-eihds7\\CheckFunctionExists.c
+        clang: error: no such file or directory: 'C:\\Users\\33598\\Desktop\\鏉?U+E219>娆㈠銉р柤缂佺厧鎮庣€圭偤鐛橽OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-eihds7\\CheckFunctionExists.c'
+        clang: error: no input files
+        mingw32-make[1]: *** [CMakeFiles\\cmTC_8b05b.dir\\build.make:78: CMakeFiles/cmTC_8b05b.dir/CheckFunctionExists.c.obj] Error 1
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-eihds7'
+        mingw32-make: *** [Makefile:126: cmTC_8b05b/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "CMakeLists.txt:12 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-7gu5d2"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-7gu5d2"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-7gu5d2'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_df725/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_df725.dir\\build.make CMakeFiles/cmTC_df725.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-7gu5d2'
+        Building C object CMakeFiles/cmTC_df725.dir/CheckFunctionExists.c.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe   -DCHECK_FUNCTION_EXISTS=pthread_create -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_df725.dir/CheckFunctionExists.c.obj -MF CMakeFiles\\cmTC_df725.dir\\CheckFunctionExists.c.obj.d -o CMakeFiles\\cmTC_df725.dir\\CheckFunctionExists.c.obj -c C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7gu5d2\\CheckFunctionExists.c
+        clang: error: no such file or directory: 'C:\\Users\\33598\\Desktop\\鏉?U+E219>娆㈠銉р柤缂佺厧鎮庣€圭偤鐛橽OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7gu5d2\\CheckFunctionExists.c'
+        clang: error: no input files
+        mingw32-make[1]: *** [CMakeFiles\\cmTC_df725.dir\\build.make:78: CMakeFiles/cmTC_df725.dir/CheckFunctionExists.c.obj] Error 1
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-7gu5d2'
+        mingw32-make: *** [Makefile:126: cmTC_df725/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:136 (try_compile)"
+      - "C:/Strawberry/c/share/cmake-3.29/Modules/FindThreads.cmake:179 (_threads_check_flag_pthread)"
+      - "CMakeLists.txt:12 (find_package)"
+    checks:
+      - "Check if compiler accepts -pthread"
+    directories:
+      source: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-spf7an"
+      binary: "C:/Users/33598/Desktop/\u8f6f\u4ef6\u5de5\u7a0b\u7efc\u5408\u5b9e\u9a8c/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-spf7an"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "THREADS_HAVE_PTHREAD_ARG"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-spf7an'
+        
+        Run Build Command(s): C:/Strawberry/c/bin/cmake.exe -E env VERBOSE=1 C:/Strawberry/c/bin/mingw32-make.exe -f Makefile cmTC_643c5/fast
+        C:/Strawberry/c/bin/mingw32-make.exe  -f CMakeFiles\\cmTC_643c5.dir\\build.make CMakeFiles/cmTC_643c5.dir/build
+        mingw32-make[1]: Entering directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-spf7an'
+        Building C object CMakeFiles/cmTC_643c5.dir/CheckForPthreads.c.obj
+        C:\\PROGRA~1\\AMD\\ROCm\\5.7\\bin\\clang.exe   -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -MD -MT CMakeFiles/cmTC_643c5.dir/CheckForPthreads.c.obj -MF CMakeFiles\\cmTC_643c5.dir\\CheckForPthreads.c.obj.d -o CMakeFiles\\cmTC_643c5.dir\\CheckForPthreads.c.obj -c C:\\Users\\33598\\Desktop\\杞欢宸ョ▼缁煎悎瀹為獙\\OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-spf7an\\CheckForPthreads.c
+        clang: error: no such file or directory: 'C:\\Users\\33598\\Desktop\\鏉?U+E219>娆㈠銉р柤缂佺厧鎮庣€圭偤鐛橽OJ\\judge\\build\\CMakeFiles\\CMakeScratch\\TryCompile-spf7an\\CheckForPthreads.c'
+        clang: error: no input files
+        mingw32-make[1]: *** [CMakeFiles\\cmTC_643c5.dir\\build.make:78: CMakeFiles/cmTC_643c5.dir/CheckForPthreads.c.obj] Error 1
+        mingw32-make[1]: Leaving directory 'C:/Users/33598/Desktop/杞欢宸ョ▼缁煎悎瀹為獙/OJ/judge/build/CMakeFiles/CMakeScratch/TryCompile-spf7an'
+        mingw32-make: *** [Makefile:126: cmTC_643c5/fast] Error 2
+        
+      exitCode: 2
 ...

@@ -21,9 +21,12 @@ CompileResult executeCommand(const std::string& command) {
     result.success = false;
     result.exit_code = -1;
     
-    FILE* pipe = popen(command.c_str(), "r");
+    // 在Windows环境下，通过重定向标准错误到标准输出
+    std::string cmd = command + " 2>&1";
+    FILE* pipe = popen(cmd.c_str(), "r");
     if (!pipe) {
         result.error = "Failed to open pipe";
+        result.output = "Command: " + cmd;
         return result;
     }
     
@@ -36,7 +39,7 @@ CompileResult executeCommand(const std::string& command) {
     
     result.exit_code = pclose(pipe);
     result.success = (result.exit_code == 0);
-    result.output = output;
+    result.output = "Command: " + cmd + "\nOutput: " + output;
     
     return result;
 }
@@ -48,10 +51,22 @@ CompileResult executeCommand(const std::string& command) {
  * @return 临时文件路径
  */
 std::string saveToTempFile(const std::string& code, const std::string& extension) {
-    char temp_name[L_tmpnam_s + extension.size() + 1];
-    tmpnam_s(temp_name, L_tmpnam_s);
-    std::string temp_file = std::string(temp_name) + extension;
+    // 使用更可靠的临时文件生成方法
+    char temp_name[L_tmpnam_s];
+    errno_t err = tmpnam_s(temp_name, L_tmpnam_s);
+    if (err != 0) {
+        // 如果tmpnam_s失败，使用固定的临时文件名
+        static int counter = 0;
+        std::string temp_file = "temp_" + std::to_string(counter++) + extension;
+        std::ofstream file(temp_file);
+        if (file.is_open()) {
+            file << code;
+            file.close();
+        }
+        return temp_file;
+    }
     
+    std::string temp_file = std::string(temp_name) + extension;
     std::ofstream file(temp_file);
     if (file.is_open()) {
         file << code;
@@ -104,13 +119,18 @@ CompileResult CppCompiler::compile(const std::string& source_code, const std::st
  * @return 编译结果
  */
 CompileResult JavaCompiler::compile(const std::string& source_code, const std::string& output_path) {
-    std::string temp_file = saveToTempFile(source_code, ".java");
+    // 对于Java，需要确保文件名与公共类名相同
+    std::string temp_file = output_path;
+    
+    // 保存代码到文件
+    std::ofstream file(temp_file);
+    if (file.is_open()) {
+        file << source_code;
+        file.close();
+    }
+    
     std::string command = "javac " + temp_file;
-    
     CompileResult result = executeCommand(command);
-    
-    // 清理临时文件
-    remove(temp_file.c_str());
     
     return result;
 }

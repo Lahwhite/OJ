@@ -1,0 +1,2 @@
+C:\PROGRA~1\AMD\ROCm\5.7\bin\llvm-ar.exe qc judge_core.lib CMakeFiles/judge_core.dir/src/judge_engine.cpp.obj CMakeFiles/judge_core.dir/src/compiler.cpp.obj CMakeFiles/judge_core.dir/src/sandbox.cpp.obj CMakeFiles/judge_core.dir/src/result_judger.cpp.obj CMakeFiles/judge_core.dir/src/submission_handler.cpp.obj CMakeFiles/judge_core.dir/src/language_config.cpp.obj
+C:\Strawberry\c\bin\ranlib.exe judge_core.lib
