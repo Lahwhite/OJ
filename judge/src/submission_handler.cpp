@@ -5,6 +5,11 @@
  * @date 2024-01-01
  */
 #include "submission_handler.h"
+#include "oj/json_error.h"
+#include "oj/log.h"
+#include "oj/mysql_pool.h"
+#include "oj/redis_cache.h"
+
 #include <nlohmann/json.hpp>
 #include <iostream>
 
@@ -15,23 +20,34 @@ using json = nlohmann::json;
  */
 SubmissionHandler::SubmissionHandler() {
     judge_engine_ = std::make_unique<JudgeEngine>();
-    app_ = std::make_unique<crow::SimpleApp>();
-    
-    // 注册路由
-    CROW_ROUTE((*app_), "/api/submit").methods("POST"](const crow::request& req) {
+    app_ = std::make_unique<crow::Crow<crow::CORSHandler>>();
+
+    CROW_ROUTE((*app_), "/api/submit").methods("POST"_method)([this](const crow::request& req) {
         return handleSubmit(req);
     });
-    
-    CROW_ROUTE((*app_), "/api/submissions").methods("GET"](const crow::request& req) {
+
+    CROW_ROUTE((*app_), "/api/submissions").methods("GET"_method)([this](const crow::request& req) {
         return handleGetSubmissions(req);
     });
-    
-    CROW_ROUTE((*app_), "/api/submissions/<int>").methods("GET"](const crow::request& req, int id) {
-        return handleGetSubmission(req, id);
-    });
-    
-    CROW_ROUTE((*app_), "/api/submissions/<int>/status").methods("GET"](const crow::request& req, int id) {
-        return handleSubmissionStatus(req, id);
+
+    CROW_ROUTE((*app_), "/api/submissions/<int>").methods("GET"_method)(
+        [this](const crow::request& req, int id) { return handleGetSubmission(req, id); });
+
+    CROW_ROUTE((*app_), "/api/submissions/<int>/status").methods("GET"_method)(
+        [this](const crow::request& req, int id) { return handleSubmissionStatus(req, id); });
+
+    CROW_ROUTE((*app_), "/health").methods("GET"_method)([] {
+        json j;
+        j["status"] = "ok";
+        j["service"] = "oj-backend";
+        j["mysql_pool_ready"] = oj::MysqlConnectionPool::instance().available();
+        j["redis_ready"] = oj::RedisCache::instance().connected();
+        auto st = oj::MysqlConnectionPool::instance().stats();
+        j["mysql_idle_connections"] = st.pool_size;
+        j["mysql_in_use_connections"] = st.in_use;
+        crow::response res(200, j.dump());
+        res.add_header("Content-Type", "application/json");
+        return res;
     });
 }
 
@@ -59,9 +75,11 @@ bool SubmissionHandler::validateSubmission(const crow::request& req) {
  */
 crow::response SubmissionHandler::handleSubmit(const crow::request& req) {
     if (!validateSubmission(req)) {
-        return crow::response(400, "Invalid submission format");
+        crow::response r(400, oj::makeErrorJson("bad_request", "Invalid submission format"));
+        r.add_header("Content-Type", "application/json");
+        return r;
     }
-    
+
     try {
         auto body = json::parse(req.body);
         std::string code = body["code"];
@@ -84,9 +102,11 @@ crow::response SubmissionHandler::handleSubmit(const crow::request& req) {
         test_case2.score = 50;
         test_cases.push_back(test_case2);
         
+        OJ_LOG_INFO("submit problem_id=" + std::to_string(problem_id) + " lang=" + language);
+
         // 评测代码
         JudgeResult result = judge_engine_->judge(code, language, test_cases, 1000, 128);
-        
+
         // 构建响应
         json response_data;
         response_data["submission_id"] = 1; // 模拟ID
@@ -109,9 +129,18 @@ crow::response SubmissionHandler::handleSubmit(const crow::request& req) {
         }
         response_data["test_cases"] = test_case_results;
         
-        return crow::response(200, response_data.dump());
+        crow::response ok(200, response_data.dump());
+        ok.add_header("Content-Type", "application/json");
+        return ok;
+    } catch (const oj::HttpException& e) {
+        crow::response r(e.http_status, oj::makeErrorJson(e.error_code, e.what()));
+        r.add_header("Content-Type", "application/json");
+        return r;
     } catch (const std::exception& e) {
-        return crow::response(500, std::string("Internal error: ") + e.what());
+        OJ_LOG_ERROR(std::string("handleSubmit: ") + e.what());
+        crow::response r(500, oj::makeErrorJson("internal_error", e.what()));
+        r.add_header("Content-Type", "application/json");
+        return r;
     }
 }
 
@@ -140,7 +169,9 @@ crow::response SubmissionHandler::handleGetSubmissions(const crow::request& req)
     submission2["submit_time"] = "2024-01-01 12:30:00";
     response_data.push_back(submission2);
     
-    return crow::response(200, response_data.dump());
+    crow::response r(200, response_data.dump());
+    r.add_header("Content-Type", "application/json");
+    return r;
 }
 
 /**
@@ -161,7 +192,9 @@ crow::response SubmissionHandler::handleGetSubmission(const crow::request& req, 
     response_data["memory"] = 4096;
     response_data["submit_time"] = "2024-01-01 12:00:00";
     
-    return crow::response(200, response_data.dump());
+    crow::response r(200, response_data.dump());
+    r.add_header("Content-Type", "application/json");
+    return r;
 }
 
 /**
@@ -181,5 +214,15 @@ crow::response SubmissionHandler::handleSubmissionStatus(const crow::request& re
  * @param port 端口号
  */
 void SubmissionHandler::startServer(uint16_t port) {
+    app_->get_middleware<crow::CORSHandler>()
+        .global()
+        .origin("*")
+        .methods("GET"_method,
+                 "POST"_method,
+                 "PUT"_method,
+                 "DELETE"_method,
+                 "OPTIONS"_method);
+
+    OJ_LOG_INFO("HTTP server starting, port=" + std::to_string(port));
     app_->port(port).multithreaded().run();
 }

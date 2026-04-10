@@ -1,17 +1,18 @@
-cmake_minimum_required(VERSION 3.10)
-project(OJ_Judge)
+if(NOT DEFINED OJ_SUBPROJECT_BUILD)
+    set(OJ_SUBPROJECT_BUILD OFF)
+endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/asio
-)
+if(NOT OJ_SUBPROJECT_BUILD)
+    cmake_minimum_required(VERSION 3.14)
+    project(OJ_Judge LANGUAGES CXX)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    find_package(Threads REQUIRED)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../common ${CMAKE_BINARY_DIR}/oj_common_standalone)
+endif()
 
 find_package(Threads REQUIRED)
 
-# 创建核心库
 add_library(judge_core
     src/judge_engine.cpp
     src/compiler.cpp
@@ -21,26 +22,23 @@ add_library(judge_core
     src/language_config.cpp
 )
 
-target_link_libraries(judge_core
-    Threads::Threads
+target_include_directories(judge_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/asio
 )
 
-# 创建可执行文件
-add_executable(judge_engine
-    src/main.cpp
-)
+target_link_libraries(judge_core PUBLIC oj_common Threads::Threads)
 
-target_link_libraries(judge_engine
-    judge_core
-)
+add_executable(judge_engine src/main.cpp)
+target_link_libraries(judge_engine PRIVATE judge_core)
 
 enable_testing()
 
 add_executable(test_compiler tests/test_compiler.cpp)
-target_link_libraries(test_compiler judge_core)
+target_link_libraries(test_compiler PRIVATE judge_core)
 
 add_executable(test_sandbox tests/test_sandbox.cpp)
-target_link_libraries(test_sandbox judge_core)
+target_link_libraries(test_sandbox PRIVATE judge_core)
 
 add_test(NAME CompilerTest COMMAND test_compiler)
 add_test(NAME SandboxTest COMMAND test_sandbox)

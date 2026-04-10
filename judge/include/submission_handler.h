@@ -60,7 +60,7 @@ public:
     
 private:
     std::unique_ptr<JudgeEngine> judge_engine_; ///< 评测引擎
-    std::unique_ptr<crow::SimpleApp> app_; ///< Crow应用
+    std::unique_ptr<crow::Crow<crow::CORSHandler>> app_; ///< Crow 应用（含 CORS 中间件）
     
     /**
      * @brief 验证提交
