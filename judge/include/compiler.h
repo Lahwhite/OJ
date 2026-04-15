@@ -27,9 +27,6 @@ struct CompileResult {
  */
 class Compiler {
 public:
-    /**
-     * @brief 析构函数
-     */
     virtual ~Compiler() = default;
     
     /**

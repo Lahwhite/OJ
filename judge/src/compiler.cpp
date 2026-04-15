@@ -1,9 +1,3 @@
-/**
- * @file compiler.cpp
- * @brief 编译器实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "compiler.h"
 #include <iostream>
 #include <fstream>
@@ -139,7 +133,7 @@ CompileResult JavaCompiler::compile(const std::string& source_code, const std::s
  * @brief 编译Python代码
  * @param source_code Python源代码
  * @param output_path 输出文件路径
- * @return 编译结果
+ * @return "Python code does not require compilation"
  */
 CompileResult PythonCompiler::compile(const std::string& source_code, const std::string& output_path) {
     // Python 是解释型语言，不需要编译

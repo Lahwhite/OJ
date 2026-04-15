@@ -1,9 +1,3 @@
-/**
- * @file judge_engine.cpp
- * @brief 评测引擎实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "judge_engine.h"
 #include <iostream>
 #include <sstream>
