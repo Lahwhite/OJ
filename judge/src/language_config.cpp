@@ -6,7 +6,7 @@
  */
 #include "language_config.h"
 #include <fstream>
-#include <iostream>
+#include "oj/log.h"
 
 /**
  * @brief 构造函数
@@ -22,7 +22,7 @@ LanguageConfig::LanguageConfig() {
 bool LanguageConfig::load(const std::string& config_path) {
     std::ifstream config_file(config_path);
     if (!config_file.is_open()) {
-        std::cerr << "Failed to open language config file: " << config_path << std::endl;
+        OJ_LOG_ERROR("Failed to open language config file: " + config_path);
         return false;
     }
     
@@ -30,12 +30,12 @@ bool LanguageConfig::load(const std::string& config_path) {
     try {
         config_file >> config;
     } catch (const std::exception& e) {
-        std::cerr << "Failed to parse language config: " << e.what() << std::endl;
+        OJ_LOG_ERROR("Failed to parse language config: " + std::string(e.what()));
         return false;
     }
     
     if (!config.contains("languages")) {
-        std::cerr << "Invalid language config: missing 'languages' field" << std::endl;
+        OJ_LOG_ERROR("Invalid language config: missing 'languages' field");
         return false;
     }
     
@@ -56,7 +56,7 @@ bool LanguageConfig::load(const std::string& config_path) {
         languages_[lang_id] = info;
     }
     
-    std::cout << "Loaded " << languages_.size() << " languages" << std::endl;
+    OJ_LOG_INFO("Loaded " + std::to_string(languages_.size()) + " languages");
     return true;
 }
 

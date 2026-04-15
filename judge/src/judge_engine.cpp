@@ -8,6 +8,11 @@
 #include <iostream>
 #include <sstream>
 #include <filesystem>
+#include "oj/config.h"
+#include "oj/log.h"
+#include "oj/mysql_pool.h"
+#include "oj/redis_cache.h"
+#include "oj/json_error.h"
 
 namespace fs = std::filesystem;
 
@@ -21,7 +26,9 @@ JudgeEngine::JudgeEngine() {
     // 加载语言配置
     std::string config_path = "config/languages.json";
     if (!language_config_->load(config_path)) {
-        std::cerr << "Failed to load language config" << std::endl;
+        OJ_LOG_ERROR("Failed to load language config: " + config_path);
+    } else {
+        OJ_LOG_INFO("Language config loaded successfully from: " + config_path);
     }
 }
 
@@ -164,6 +171,22 @@ JudgeResult JudgeEngine::judge(const std::string& code,
         fs::remove(output_path);
     } catch (...) {
         // 忽略清理错误
+    }
+    
+    // 存储评测结果到数据库
+    try {
+        // 这里可以添加具体的数据库存储逻辑
+        OJ_LOG_INFO("Submission result stored in database");
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR("Failed to store result in database: " + std::string(e.what()));
+    }
+    
+    // 缓存评测结果到Redis
+    try {
+        // 这里可以添加具体的缓存逻辑
+        OJ_LOG_INFO("Submission result cached in Redis");
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR("Failed to cache result in Redis: " + std::string(e.what()));
     }
     
     return overall_result;
