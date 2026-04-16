@@ -1,16 +1,7 @@
-/**
- * @file language_config.cpp
- * @brief 语言配置管理实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "language_config.h"
 #include <fstream>
 #include "oj/log.h"
 
-/**
- * @brief 构造函数
- */
 LanguageConfig::LanguageConfig() {
 }
 

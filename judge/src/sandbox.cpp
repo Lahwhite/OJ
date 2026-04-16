@@ -1,9 +1,3 @@
-/**
- * @file sandbox.cpp
- * @brief 沙箱环境实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "sandbox.h"
 #include <iostream>
 #include <windows.h>
@@ -12,10 +6,6 @@
 #include <sstream>
 #include <vector>
 
-/**
- * @brief 构造函数
- * @param config 沙箱配置
- */
 Sandbox::Sandbox(const SandboxConfig& config) : config_(config) {
 }
 

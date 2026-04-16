@@ -1,9 +1,3 @@
-/**
- * @file result_judger.cpp
- * @brief 评测结果判定实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "result_judger.h"
 
 /**
@@ -13,7 +7,7 @@
  */
 std::string ResultJudger::trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\n\r");
-    if (std::string::npos == first) return str;
+    if (std::string::npos == first) return "";
     
     size_t last = str.find_last_not_of(" \t\n\r");
     return str.substr(first, (last - first + 1));

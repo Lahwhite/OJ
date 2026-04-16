@@ -10,9 +10,6 @@
 
 namespace fs = std::filesystem;
 
-/**
- * @brief 构造函数
- */
 JudgeEngine::JudgeEngine() {
     language_config_ = std::make_unique<LanguageConfig>();
     result_judger_ = std::make_unique<ResultJudger>();
@@ -26,9 +23,6 @@ JudgeEngine::JudgeEngine() {
     }
 }
 
-/**
- * @brief 析构函数
- */
 JudgeEngine::~JudgeEngine() {
 }
 
@@ -162,9 +156,33 @@ JudgeResult JudgeEngine::judge(const std::string& code,
     
     // 清理临时文件
     try {
-        fs::remove(output_path);
+        // 检查文件是否存在
+        if (fs::exists(output_path)) {
+            // 尝试删除文件
+            if (fs::remove(output_path)) {
+                OJ_LOG_INFO("Temporary file removed: " + output_path);
+            } else {
+                OJ_LOG_WARN("Failed to remove temporary file: " + output_path);
+            }
+        }
+        
+        // 对于Java程序，还需要清理生成的class文件
+        if (language == "java") {
+            // 提取类名（假设文件名就是类名）
+            std::string class_name = fs::path(output_path).stem().string();
+            std::string class_file = class_name + ".class";
+            if (fs::exists(class_file)) {
+                if (fs::remove(class_file)) {
+                    OJ_LOG_INFO("Java class file removed: " + class_file);
+                } else {
+                    OJ_LOG_WARN("Failed to remove Java class file: " + class_file);
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR("Error during temporary file cleanup: " + std::string(e.what()));
     } catch (...) {
-        // 忽略清理错误
+        OJ_LOG_ERROR("Unknown error during temporary file cleanup");
     }
     
     // 存储评测结果到数据库
