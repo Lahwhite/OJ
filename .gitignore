@@ -45,3 +45,11 @@ build/
 build-*/
 out/
 cmake-build-*/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven / Java
+target/
+*.class
