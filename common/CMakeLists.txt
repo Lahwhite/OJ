@@ -7,11 +7,18 @@ add_library(oj_common STATIC
     src/bootstrap.cpp
 )
 
+add_executable(common_smoke_test
+    tests/common_smoke_test.cpp
+)
+
 target_include_directories(oj_common PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_link_libraries(oj_common PUBLIC Threads::Threads)
+target_link_libraries(common_smoke_test PRIVATE oj_common)
+
+add_test(NAME CommonSmokeTest COMMAND common_smoke_test)
 
 if(OJ_ENABLE_MYSQL)
     target_compile_definitions(oj_common PUBLIC OJ_WITH_MYSQL)

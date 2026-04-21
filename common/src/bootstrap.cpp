@@ -23,7 +23,7 @@ void initInfrastructure(const AppConfig& config) {
     Logger::instance().init(parseLogLevel(config.log_level), config.log_file);
     OJ_LOG_INFO("OJ public infrastructure starting");
 
-    MysqlConnectionPool::instance().initialize(
+    const bool mysql_ready = MysqlConnectionPool::instance().initialize(
         config.mysql_host,
         config.mysql_port,
         config.mysql_user,
@@ -31,12 +31,18 @@ void initInfrastructure(const AppConfig& config) {
         config.mysql_database,
         config.mysql_pool_min,
         config.mysql_pool_max);
+    if (!mysql_ready) {
+        OJ_LOG_WARN("MySQL pool is unavailable after initialization");
+    }
 
-    RedisCache::instance().connect(
+    const bool redis_ready = RedisCache::instance().connect(
         config.redis_host,
         config.redis_port,
         config.redis_password,
         config.redis_db);
+    if (!redis_ready) {
+        OJ_LOG_WARN("Redis cache is unavailable after initialization");
+    }
 }
 
 void shutdownInfrastructure() {
