@@ -13,7 +13,6 @@ add_executable(common_smoke_test
 
 target_include_directories(oj_common PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/judge/include
 )
 
 target_link_libraries(oj_common PUBLIC Threads::Threads)

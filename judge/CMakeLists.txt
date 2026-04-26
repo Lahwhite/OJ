@@ -29,8 +29,8 @@ target_include_directories(judge_core PUBLIC
 
 target_link_libraries(judge_core PUBLIC oj_common Threads::Threads)
 
-add_executable(judge src/main.cpp)
-target_link_libraries(judge PRIVATE judge_core)
+add_executable(judge_engine src/main.cpp)
+target_link_libraries(judge_engine PRIVATE judge_core)
 
 enable_testing()
 

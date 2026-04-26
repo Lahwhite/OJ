@@ -31,8 +31,8 @@ if(WIN32)
     target_link_libraries(discussion_core PUBLIC ws2_32 mswsock)
 endif()
 
-add_executable(discussion src/main.cpp)
-target_link_libraries(discussion PRIVATE discussion_core)
+add_executable(discussion_server src/main.cpp)
+target_link_libraries(discussion_server PRIVATE discussion_core)
 
 enable_testing()
 

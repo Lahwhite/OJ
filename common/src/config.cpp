@@ -1,12 +1,7 @@
 #include "oj/config.h"
 
 #include <cstdlib>
-#include <fstream>
 #include <stdexcept>
-
-// 包含nlohmann/json库
-#include "nlohmann/json.hpp"
-using json = nlohmann::json;
 
 namespace oj {
 
@@ -51,49 +46,6 @@ AppConfig loadConfigFromEnv() {
 
     c.log_file = getenvOr("OJ_LOG_FILE", c.log_file);
     c.log_level = getenvOr("OJ_LOG_LEVEL", c.log_level);
-    return c;
-}
-
-AppConfig loadConfigFromJson(const std::string& configFile) {
-    AppConfig c;
-    
-    // 读取配置文件
-    std::ifstream ifs(configFile);
-    if (!ifs.is_open()) {
-        throw std::runtime_error("Failed to open config file: " + configFile);
-    }
-    
-    json j;
-    ifs >> j;
-    
-    // 读取数据库配置
-    if (j.contains("database") && j["database"].contains("mysql")) {
-        const auto& mysql = j["database"]["mysql"];
-        if (mysql.contains("host")) c.mysql_host = mysql["host"];
-        if (mysql.contains("port")) c.mysql_port = mysql["port"];
-        if (mysql.contains("user")) c.mysql_user = mysql["user"];
-        if (mysql.contains("password")) c.mysql_password = mysql["password"];
-        if (mysql.contains("database")) c.mysql_database = mysql["database"];
-        if (mysql.contains("pool_min")) c.mysql_pool_min = mysql["pool_min"];
-        if (mysql.contains("pool_max")) c.mysql_pool_max = mysql["pool_max"];
-    }
-    
-    // 读取Redis配置
-    if (j.contains("redis")) {
-        const auto& redis = j["redis"];
-        if (redis.contains("host")) c.redis_host = redis["host"];
-        if (redis.contains("port")) c.redis_port = redis["port"];
-        if (redis.contains("password")) c.redis_password = redis["password"];
-        if (redis.contains("db")) c.redis_db = redis["db"];
-    }
-    
-    // 读取日志配置
-    if (j.contains("log")) {
-        const auto& log = j["log"];
-        if (log.contains("file")) c.log_file = log["file"];
-        if (log.contains("level")) c.log_level = log["level"];
-    }
-    
     return c;
 }
 
