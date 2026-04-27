@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.exception.GlobalExceptionHandler;
 import com.oj.problem.security.CurrentUser;
 import com.oj.problem.security.JwtTokenService;
@@ -77,6 +78,25 @@ class ProblemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.title").value("两数之和"));
+    }
+
+    @Test
+    void getProblemTestCasesShouldReturnAllTestCases() throws Exception {
+        TestCaseResponse testCase = new TestCaseResponse();
+        testCase.setId(10L);
+        testCase.setInput("1 2");
+        testCase.setOutput("3");
+        testCase.setIsSample(true);
+        testCase.setScore(20);
+        when(problemService.getProblemTestCases(1L)).thenReturn(Collections.singletonList(testCase));
+
+        mockMvc.perform(get("/v1/problems/1/test-cases"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].id").value(10))
+                .andExpect(jsonPath("$.data[0].input").value("1 2"))
+                .andExpect(jsonPath("$.data[0].output").value("3"))
+                .andExpect(jsonPath("$.data[0].isSample").value(true))
+                .andExpect(jsonPath("$.data[0].score").value(20));
     }
 
     @Test

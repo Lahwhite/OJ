@@ -6,9 +6,11 @@ import com.oj.problem.dto.request.ProblemUpsertRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.security.CurrentUser;
 import com.oj.problem.security.JwtTokenService;
 import com.oj.problem.service.ProblemService;
+import java.util.List;
 import javax.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,6 +45,11 @@ public class ProblemController {
     @GetMapping("/{id}")
     public ApiResponse<ProblemDetailResponse> getProblem(@PathVariable Long id) {
         return ApiResponse.success(problemService.getProblemDetail(id));
+    }
+
+    @GetMapping("/{id}/test-cases")
+    public ApiResponse<List<TestCaseResponse>> getProblemTestCases(@PathVariable Long id) {
+        return ApiResponse.success(problemService.getProblemTestCases(id));
     }
 
     @PostMapping

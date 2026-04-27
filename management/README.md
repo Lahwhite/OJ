@@ -53,6 +53,7 @@ management
 
 - `GET /api/v1/problems`
 - `GET /api/v1/problems/{id}`
+- `GET /api/v1/problems/{id}/test-cases`
 
 ### 管理员接口
 
@@ -215,6 +216,11 @@ http://localhost:8080/api/v1/problems
 http://localhost:8080/api/v1/problems/1
 ```
 
+获取某个题目的全部测试用例：
+```text
+http://localhost:8080/api/v1/problems/1/test-cases
+```
+
 ## 如何运行测试
 
 ### 在 IDEA 中运行
@@ -256,6 +262,22 @@ mvn clean verify
 - [GlobalExceptionHandlerTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/exception/GlobalExceptionHandlerTest.java)
 - [ApiResponseTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/common/ApiResponseTest.java)
 
+测试用例接口已覆盖：
+- `ProblemControllerTest#getProblemTestCasesShouldReturnAllTestCases`
+- `ProblemServiceImplTest#getProblemTestCasesShouldReturnPublicProblemTestCases`
+- `ProblemServiceImplTest#getProblemTestCasesShouldRejectPrivateProblem`
+
+当前已通过验证：
+```bash
+mvn test
+```
+
+验证结果：
+```text
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
 ## 认证说明
 
 管理员接口需要在请求头中携带 JWT：
@@ -275,7 +297,7 @@ JWT payload 至少包含：
 
 ## 注意事项
 
-1. 公开题目详情接口不会返回完整测试用例
+1. 可通过 `GET /api/v1/problems/{id}/test-cases` 获取某个公开题目的全部测试用例
 2. 运行主程序时需要真实 MySQL
 3. 跑测试时不需要真实 MySQL
 4. 如果 IDEA 自带 Coverage 有问题，优先使用 Maven 的 JaCoCo 报告
