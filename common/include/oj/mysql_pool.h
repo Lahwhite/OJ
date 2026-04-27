@@ -48,7 +48,7 @@ private:
     std::atomic<size_t> total_created_{0};
     size_t pool_max_{0};
     std::string host_;
-    unsigned port_{3306};
+    unsigned port_{0};
     std::string user_;
     std::string password_;
     std::string database_;
