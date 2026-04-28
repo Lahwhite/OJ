@@ -5,13 +5,17 @@ import com.oj.problem.dto.request.ProblemUpsertRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.security.CurrentUser;
+import java.util.List;
 
 public interface ProblemService {
 
     ProblemPageResponse listProblems(ProblemQueryRequest queryRequest);
 
     ProblemDetailResponse getProblemDetail(Long id);
+
+    List<TestCaseResponse> getProblemTestCases(Long id);
 
     ProblemMutationResponse createProblem(ProblemUpsertRequest request, CurrentUser currentUser);
 

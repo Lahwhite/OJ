@@ -7,6 +7,7 @@ import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemListItemResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.entity.ProblemEntity;
 import com.oj.problem.entity.TagEntity;
 import com.oj.problem.entity.TestCaseEntity;
@@ -72,6 +73,15 @@ public class ProblemServiceImpl implements ProblemService {
                 .filter(ProblemEntity::getIsPublic)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
         return toDetail(problem);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TestCaseResponse> getProblemTestCases(Long id) {
+        ProblemEntity problem = problemRepository.findWithTestCasesAndTagsById(id)
+                .filter(ProblemEntity::getIsPublic)
+                .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
+        return problem.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList());
     }
 
     @Override
@@ -243,8 +253,19 @@ public class ProblemServiceImpl implements ProblemService {
         response.setAcceptedCount(entity.getAcceptedCount());
         response.setPassRate(calculatePassRate(entity.getSubmissionCount(), entity.getAcceptedCount()));
         response.setIsPublic(entity.getIsPublic());
+        response.setTestCases(entity.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList()));
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(entity.getUpdatedAt());
+        return response;
+    }
+
+    private TestCaseResponse toTestCase(TestCaseEntity entity) {
+        TestCaseResponse response = new TestCaseResponse();
+        response.setId(entity.getId());
+        response.setInput(entity.getInput());
+        response.setOutput(entity.getOutput());
+        response.setIsSample(entity.getIsSample());
+        response.setScore(entity.getScore());
         return response;
     }
 

@@ -15,6 +15,7 @@ import com.oj.problem.dto.request.TestCaseRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.entity.Difficulty;
 import com.oj.problem.entity.ProblemEntity;
 import com.oj.problem.entity.TagEntity;
@@ -97,6 +98,38 @@ class ProblemServiceImplTest {
         assertEquals("medium", response.getDifficulty());
         assertEquals(0.5D, response.getPassRate());
         assertEquals(Collections.singletonList("滑动窗口"), response.getTags());
+    }
+
+    @Test
+    void getProblemTestCasesShouldReturnPublicProblemTestCases() {
+        ProblemEntity entity = buildProblemEntity(4L, "测试用例题目", true);
+        TestCaseEntity first = buildTestCase("1 2", "3", true, 20);
+        first.setId(11L);
+        TestCaseEntity second = buildTestCase("2 3", "5", false, 80);
+        second.setId(12L);
+        entity.addTestCase(first);
+        entity.addTestCase(second);
+        when(problemRepository.findWithTestCasesAndTagsById(4L)).thenReturn(Optional.of(entity));
+
+        java.util.List<TestCaseResponse> response = problemService.getProblemTestCases(4L);
+
+        assertEquals(2, response.size());
+        assertEquals(11L, response.get(0).getId());
+        assertEquals("1 2", response.get(0).getInput());
+        assertEquals("3", response.get(0).getOutput());
+        assertTrue(response.get(0).getIsSample());
+        assertEquals(20, response.get(0).getScore());
+        assertEquals(12L, response.get(1).getId());
+    }
+
+    @Test
+    void getProblemTestCasesShouldRejectPrivateProblem() {
+        ProblemEntity entity = buildProblemEntity(4L, "私有题目", false);
+        when(problemRepository.findWithTestCasesAndTagsById(4L)).thenReturn(Optional.of(entity));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> problemService.getProblemTestCases(4L));
+
+        assertEquals(404002, exception.getCode());
     }
 
     @Test
