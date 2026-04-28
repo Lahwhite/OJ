@@ -1,7 +1,7 @@
 server:
-  port: 8080
+  port: ${OJ_MANAGEMENT_PORT:8080}
   servlet:
-    context-path: /api
+    context-path: ${OJ_MANAGEMENT_CONTEXT_PATH:/api}
 
 spring:
   datasource:
@@ -14,15 +14,15 @@ spring:
       maximum-pool-size: ${OJ_MYSQL_POOL_MAX:16}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${OJ_JPA_DDL_AUTO:update}
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
-    show-sql: false
+    show-sql: ${OJ_SHOW_SQL:false}
   jackson:
     default-property-inclusion: non_null
 
 security:
   jwt:
-    secret: oj-secret-key
+    secret: ${OJ_JWT_SECRET:oj-management-dev-secret}

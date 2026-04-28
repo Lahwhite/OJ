@@ -16,7 +16,7 @@
 
 ## 技术栈
 
-- Java 8 语法级别
+- Java 8
 - Spring Boot 2.7.18
 - Spring Web
 - Spring Validation
@@ -31,26 +31,20 @@
 ## 项目结构
 
 ```text
-E:\OJ
+management
+├── pom.xml
+├── README.md
 ├── src
-│   ├── README
 │   ├── main
-│   │   ├── java\com\oj\problem
-│   │   │   ├── common
-│   │   │   ├── controller
-│   │   │   ├── dto
-│   │   │   ├── entity
-│   │   │   ├── exception
-│   │   │   ├── repository
-│   │   │   ├── security
-│   │   │   ├── service
-│   │   │   └── ProblemManagementApplication.java
+│   │   ├── java/com/oj/problem
 │   │   └── resources
 │   │       ├── application.yml
-│   │       └── schema.sql
+│   │       ├── schema.sql
+│   │       └── init-data.sql
 │   └── test
-│       ├── java\com\oj\problem
-│       └── resources\application-test.yml
+│       ├── java/com/oj/problem
+│       └── resources/application-test.yml
+└── target
 ```
 
 ## 主要接口
@@ -59,6 +53,7 @@ E:\OJ
 
 - `GET /api/v1/problems`
 - `GET /api/v1/problems/{id}`
+- `GET /api/v1/problems/{id}/test-cases`
 
 ### 管理员接口
 
@@ -77,8 +72,8 @@ E:\OJ
 
 ### 运行配置
 
-主程序配置文件：
-[application.yml](E:/OJ/src/main/resources/application.yml)
+运行配置文件：
+[application.yml](E:/OJ/OJ/management/src/main/resources/application.yml)
 
 为便于与 `common` 模块联调，management 运行时默认读取与 `common` 一致的数据库环境变量：
 
@@ -94,19 +89,26 @@ E:\OJ
 
 主要配置项包括：
 
-- 服务端口：`8080`
-- 接口上下文：`/api`
-- MySQL 数据源
-- JPA 自动建表/更新
-- JWT 密钥
+- `OJ_MANAGEMENT_PORT`
+- `OJ_MANAGEMENT_CONTEXT_PATH`
+- `OJ_JWT_SECRET`
+- `OJ_JPA_DDL_AUTO`
+- `OJ_SHOW_SQL`
+- `OJ_MYSQL_HOST`
+- `OJ_MYSQL_PORT`
+- `OJ_MYSQL_DATABASE`
+- `OJ_MYSQL_USER`
+- `OJ_MYSQL_PASSWORD`
+- `OJ_MYSQL_POOL_MIN`
+- `OJ_MYSQL_POOL_MAX`
 
 示例：
 
 ```yaml
 server:
-  port: 8080
+  port: ${OJ_MANAGEMENT_PORT:8080}
   servlet:
-    context-path: /api
+    context-path: ${OJ_MANAGEMENT_CONTEXT_PATH:/api}
 
 spring:
   datasource:
@@ -120,22 +122,25 @@ spring:
 
 security:
   jwt:
-    secret: oj-secret-key
+    secret: ${OJ_JWT_SECRET:oj-management-dev-secret}
 ```
 
 ### 测试配置
 
 测试配置文件：
-[application-test.yml](E:/OJ/src/test/resources/application-test.yml)
+[application-test.yml](E:/OJ/OJ/management/src/test/resources/application-test.yml)
 
 测试默认使用 H2 内存数据库，不依赖真实 MySQL。
 
 ## 数据库初始化
 
-数据库脚本文件：
-[schema.sql](E:/OJ/src/main/resources/schema.sql)
+建表脚本：
+[schema.sql](E:/OJ/OJ/management/src/main/resources/schema.sql)
 
-当前包含的核心表：
+测试数据脚本：
+[init-data.sql](E:/OJ/OJ/management/src/main/resources/init-data.sql)
+
+当前核心表包括：
 
 - `users`
 - `problems`
@@ -143,12 +148,67 @@ security:
 - `tags`
 - `problem_tags`
 
+## 数据库使用方法
+
+### 1. 创建数据库
+
+先登录 MySQL：
+
+```bash
+mysql -u root -p
+```
+
+执行：
+
+```sql
+CREATE DATABASE IF NOT EXISTS oj CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE oj;
+```
+
+### 2. 导入表结构
+
+在 `management` 目录下执行：
+
+```bash
+mysql -u root -p oj < src/main/resources/schema.sql
+```
+
+### 3. 导入测试数据
+
+继续执行：
+
+```bash
+mysql -u root -p oj < src/main/resources/init-data.sql
+```
+
+这会导入一条公开题目 `Hello Problem`，可直接用于浏览器接口验证。
+
+### 4. 配置数据库连接
+
+如果你的 MySQL 密码不是空，启动前先设置环境变量，例如在 PowerShell 中：
+
+```powershell
+$env:OJ_MYSQL_HOST='127.0.0.1'
+$env:OJ_MYSQL_PORT='3306'
+$env:OJ_MYSQL_DATABASE='oj'
+$env:OJ_MYSQL_USER='oj'
+$env:OJ_MYSQL_PASSWORD='你的MySQL密码'
+$env:OJ_MYSQL_POOL_MIN='2'
+$env:OJ_MYSQL_POOL_MAX='16'
+```
+
+如需修改 JWT 密钥，也可以设置：
+
+```powershell
+$env:OJ_JWT_SECRET='your-own-secret'
+```
+
 ## 如何导入 IDEA
 
 1. 打开 IDEA
 2. 选择 `Open`
-3. 打开项目目录 `E:\OJ`
-4. 如果没有自动识别为 Maven 项目，右键 [pom.xml](E:/OJ/pom.xml)
+3. 打开项目目录 `E:\OJ\OJ\management`
+4. 如果没有自动识别为 Maven 项目，右键 [pom.xml](E:/OJ/OJ/management/pom.xml)
 5. 选择 `Add as Maven Project`
 6. 配置 `Project SDK` 为 JDK 8 或更高版本
 
@@ -174,12 +234,23 @@ mvn spring-boot:run
 ### 方式二：IDEA
 
 直接运行：
-[ProblemManagementApplication.java](E:/OJ/src/main/java/com/oj/problem/ProblemManagementApplication.java)
+[ProblemManagementApplication.java](E:/OJ/OJ/management/src/main/java/com/oj/problem/ProblemManagementApplication.java)
 
 启动后访问：
 
 ```text
 http://localhost:8080/api/v1/problems
+```
+
+如果已经导入了 `init-data.sql`，还可以直接访问：
+
+```text
+http://localhost:8080/api/v1/problems/1
+```
+
+获取某个题目的全部测试用例：
+```text
+http://localhost:8080/api/v1/problems/1/test-cases
 ```
 
 ## 如何运行测试
@@ -205,24 +276,39 @@ mvn clean verify
 ```
 
 覆盖率报告生成位置：
-
-[JaCoCo 报告](E:/OJ/target/site/jacoco/index.html)
+[JaCoCo 报告](E:/OJ/OJ/management/target/site/jacoco/index.html)
 
 说明：
 
 - 项目已配置 JaCoCo
 - 行覆盖率门槛为 `80%`
-- 若未达到 80%，`verify` 会失败
+- 若未达到 `80%`，`verify` 会失败
 
 ## 已编写测试
 
 主要测试文件：
 
-- [ProblemServiceImplTest.java](E:/OJ/src/test/java/com/oj/problem/service/impl/ProblemServiceImplTest.java)
-- [ProblemControllerTest.java](E:/OJ/src/test/java/com/oj/problem/controller/ProblemControllerTest.java)
-- [JwtTokenServiceTest.java](E:/OJ/src/test/java/com/oj/problem/security/JwtTokenServiceTest.java)
-- [GlobalExceptionHandlerTest.java](E:/OJ/src/test/java/com/oj/problem/exception/GlobalExceptionHandlerTest.java)
-- [ApiResponseTest.java](E:/OJ/src/test/java/com/oj/problem/common/ApiResponseTest.java)
+- [ProblemServiceImplTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/service/impl/ProblemServiceImplTest.java)
+- [ProblemControllerTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/controller/ProblemControllerTest.java)
+- [JwtTokenServiceTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/security/JwtTokenServiceTest.java)
+- [GlobalExceptionHandlerTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/exception/GlobalExceptionHandlerTest.java)
+- [ApiResponseTest.java](E:/OJ/OJ/management/src/test/java/com/oj/problem/common/ApiResponseTest.java)
+
+测试用例接口已覆盖：
+- `ProblemControllerTest#getProblemTestCasesShouldReturnAllTestCases`
+- `ProblemServiceImplTest#getProblemTestCasesShouldReturnPublicProblemTestCases`
+- `ProblemServiceImplTest#getProblemTestCasesShouldRejectPrivateProblem`
+
+当前已通过验证：
+```bash
+mvn test
+```
+
+验证结果：
+```text
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
 
 ## 认证说明
 
@@ -243,28 +329,21 @@ JWT payload 至少包含：
 
 ## 注意事项
 
-1. 公开题目详情接口不会返回完整测试用例
+1. 可通过 `GET /api/v1/problems/{id}/test-cases` 获取某个公开题目的全部测试用例
 2. 运行主程序时需要真实 MySQL
 3. 跑测试时不需要真实 MySQL
 4. 如果 IDEA 自带 Coverage 有问题，优先使用 Maven 的 JaCoCo 报告
 5. 如果 `mvn clean verify` 报 JRE/JDK 错误，需要检查 `JAVA_HOME` 和 Maven 使用的 JDK
 
-## 相关文档
-
-- [题目管理模块实现说明.md](E:/OJ/题目管理模块实现说明.md)
-- [测试说明.md](E:/OJ/测试说明.md)
-- [API接口规范.md](E:/OJ/API接口规范.md)
-- [架构设计文档.md](E:/OJ/架构设计文档.md)
-- [数据模型设计.md](E:/OJ/数据模型设计.md)
-
 ## 当前实现边界
 
-本次新增部分只实现题目管理模块，适合作为课程实验或 OJ 后端子模块示例。  
-如果后续需要继续扩展，可以在此基础上补充：
+本模块当前只实现题目管理功能，适合作为课程实验或 OJ 后端子模块示例。
+
+后续如果需要继续扩展，可以在此基础上补充：
 
 - 用户模块
 - 提交评测模块
 - 排行榜模块
 - 讨论区模块
-- Swagger/OpenAPI 文档
+- Swagger / OpenAPI 文档
 - 集成测试

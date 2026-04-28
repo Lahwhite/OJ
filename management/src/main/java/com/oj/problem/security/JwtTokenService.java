@@ -17,7 +17,7 @@ public class JwtTokenService {
     private final String secret;
 
     public JwtTokenService(ObjectMapper objectMapper,
-                           @Value("${security.jwt.secret:oj-secret-key}") String secret) {
+                           @Value("${security.jwt.secret:oj-management-dev-secret}") String secret) {
         this.objectMapper = objectMapper;
         this.secret = secret;
     }
