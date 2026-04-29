@@ -38,6 +38,7 @@ struct TestCaseResult {
     std::string output;     ///< 实际输出
     std::string expected_output; ///< 预期输出
     bool passed;            ///< 是否通过
+    int score_awarded = 0; ///< 通过获得的分数
 };
 
 /**
@@ -50,6 +51,10 @@ struct JudgeResult {
     int memory_kb;                  ///< 最大内存使用（KB）
     std::string error_message;      ///< 错误信息
     std::vector<TestCaseResult> test_case_results; ///< 测试用例结果
+
+    // 评分相关：允许部分分。
+    int total_score = 0;           ///< 本次评测获得的总分
+    int max_score = 0;             ///< 本次评测理论最大总分
 };
 
 /**
