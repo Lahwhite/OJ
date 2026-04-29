@@ -5,6 +5,7 @@
  * @date 2024-01-01
  */
 #include "judge_engine.h"
+#include "default_language_config.h"
 #include <iostream>
 #include <sstream>
 #include <filesystem>
@@ -17,11 +18,15 @@ namespace fs = std::filesystem;
 JudgeEngine::JudgeEngine() {
     language_config_ = std::make_unique<LanguageConfig>();
     result_judger_ = std::make_unique<ResultJudger>();
-    
-    // 加载语言配置
-    std::string config_path = "config/languages.json";
+
+    // 优先加载外部配置文件，失败时回退到头文件中的默认 JSON 字符串。
+    const std::string config_path = "config/languages.json";
     if (!language_config_->load(config_path)) {
-        std::cerr << "Failed to load language config" << std::endl;
+        if (!language_config_->loadFromJsonString(kDefaultLanguageConfigJson)) {
+            std::cerr << "Failed to load language config from both file and default string" << std::endl;
+        } else {
+            std::cerr << "Language config file not found, loaded built-in default config" << std::endl;
+        }
     }
 }
 
@@ -94,6 +99,11 @@ JudgeResult JudgeEngine::judge(const std::string& code,
     overall_result.overall_status = JudgeStatus::JUDGING;
     overall_result.runtime_ms = 0;
     overall_result.memory_kb = 0;
+    overall_result.total_score = 0;
+    overall_result.max_score = 0;
+    
+    bool all_accepted = true;
+    JudgeStatus first_failure_status = JudgeStatus::ACCEPTED;
     
     // 获取编译器
     std::unique_ptr<Compiler> compiler(getCompiler(language));
@@ -137,26 +147,48 @@ JudgeResult JudgeEngine::judge(const std::string& code,
             sandbox_result
         );
         
-        // 合并结果
-        overall_result.test_case_results.push_back(test_case_result.test_case_results[0]);
-        overall_result.runtime_ms += test_case_result.runtime_ms;
-        if (test_case_result.memory_kb > overall_result.memory_kb) {
-            overall_result.memory_kb = test_case_result.memory_kb;
+        if (test_case_result.test_case_results.empty()) {
+            // 理论上不会发生；但为了健壮性避免越界
+            all_accepted = false;
+            if (first_failure_status == JudgeStatus::ACCEPTED) {
+                first_failure_status = JudgeStatus::WRONG_ANSWER;
+            }
+            continue;
         }
         
-        // 如果有任何测试用例失败，整体结果为失败
-        if (test_case_result.overall_status != JudgeStatus::ACCEPTED) {
-            overall_result.overall_status = test_case_result.overall_status;
-            if (!test_case_result.error_message.empty()) {
-                overall_result.error_message = test_case_result.error_message;
+        // 当前实现每次只生成一个 test_case_result（对应一个测试用例）
+        auto tc = test_case_result.test_case_results.front();
+        tc.case_id = test_case.id;
+        tc.score_awarded = tc.passed ? test_case.score : 0;
+        overall_result.test_case_results.push_back(tc);
+        
+        overall_result.runtime_ms += tc.runtime_ms;
+        if (tc.memory_kb > overall_result.memory_kb) {
+            overall_result.memory_kb = tc.memory_kb;
+        }
+        
+        overall_result.total_score += tc.score_awarded;
+        overall_result.max_score += test_case.score;
+        
+        if (tc.passed == false) {
+            all_accepted = false;
+            if (first_failure_status == JudgeStatus::ACCEPTED) {
+                // 保留具体失败原因（可能是 TLE/MLE/RE/WA 等）
+                first_failure_status = tc.status;
             }
-            break;
+        }
+        
+        // 继续评测后续用例以计算部分分
+        if (tc.status != JudgeStatus::ACCEPTED && !test_case_result.error_message.empty() && overall_result.error_message.empty()) {
+            overall_result.error_message = test_case_result.error_message;
         }
     }
     
-    // 如果所有测试用例都通过，设置为ACCEPTED
-    if (overall_result.overall_status == JudgeStatus::JUDGING) {
+    // 汇总整体结果
+    if (all_accepted) {
         overall_result.overall_status = JudgeStatus::ACCEPTED;
+    } else {
+        overall_result.overall_status = first_failure_status;
     }
     
     // 清理临时文件

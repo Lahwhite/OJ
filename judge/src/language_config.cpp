@@ -8,6 +8,36 @@
 #include <fstream>
 #include <iostream>
 
+namespace {
+bool fillLanguagesFromJson(const nlohmann::json& config, std::unordered_map<std::string, LanguageInfo>& languages) {
+    if (!config.contains("languages")) {
+        std::cerr << "Invalid language config: missing 'languages' field" << std::endl;
+        return false;
+    }
+
+    languages.clear();
+    const auto& json_languages = config["languages"];
+    for (const auto& [lang_id, lang_info] : json_languages.items()) {
+        LanguageInfo info;
+        info.id = lang_id;
+        info.name = lang_info.value("name", "");
+        info.version = lang_info.value("version", "");
+        info.compiler = lang_info.value("compiler", "");
+        info.compile_command = lang_info.value("compile_command", "");
+        info.source_extension = lang_info.value("source_extension", "");
+        info.output_extension = lang_info.value("output_extension", "");
+        info.execute_command = lang_info.value("execute_command", "");
+        info.time_limit_multiplier = lang_info.value("time_limit_multiplier", 1.0);
+        info.memory_limit_multiplier = lang_info.value("memory_limit_multiplier", 1.0);
+
+        languages[lang_id] = info;
+    }
+
+    std::cout << "Loaded " << languages.size() << " languages" << std::endl;
+    return true;
+}
+}  // namespace
+
 /**
  * @brief 构造函数
  */
@@ -34,30 +64,24 @@ bool LanguageConfig::load(const std::string& config_path) {
         return false;
     }
     
-    if (!config.contains("languages")) {
-        std::cerr << "Invalid language config: missing 'languages' field" << std::endl;
+    return fillLanguagesFromJson(config, languages_);
+}
+
+/**
+ * @brief 从 JSON 字符串加载语言配置
+ * @param json_content JSON 内容
+ * @return 是否加载成功
+ */
+bool LanguageConfig::loadFromJsonString(const std::string& json_content) {
+    nlohmann::json config;
+    try {
+        config = nlohmann::json::parse(json_content);
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to parse language config from string: " << e.what() << std::endl;
         return false;
     }
-    
-    const auto& languages = config["languages"];
-    for (const auto& [lang_id, lang_info] : languages.items()) {
-        LanguageInfo info;
-        info.id = lang_id;
-        info.name = lang_info.value("name", "");
-        info.version = lang_info.value("version", "");
-        info.compiler = lang_info.value("compiler", "");
-        info.compile_command = lang_info.value("compile_command", "");
-        info.source_extension = lang_info.value("source_extension", "");
-        info.output_extension = lang_info.value("output_extension", "");
-        info.execute_command = lang_info.value("execute_command", "");
-        info.time_limit_multiplier = lang_info.value("time_limit_multiplier", 1.0);
-        info.memory_limit_multiplier = lang_info.value("memory_limit_multiplier", 1.0);
-        
-        languages_[lang_id] = info;
-    }
-    
-    std::cout << "Loaded " << languages_.size() << " languages" << std::endl;
-    return true;
+
+    return fillLanguagesFromJson(config, languages_);
 }
 
 /**

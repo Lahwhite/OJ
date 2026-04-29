@@ -1,7 +1,0 @@
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/judge_core.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/judge_engine.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/test_compiler.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/test_sandbox.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/test.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/edit_cache.dir
-C:/Users/33598/Desktop/软件工程综合实验/OJ/judge/build/CMakeFiles/rebuild_cache.dir

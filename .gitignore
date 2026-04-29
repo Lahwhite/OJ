@@ -1,3 +1,5 @@
+
+
 # Prerequisites
 *.d
 
@@ -45,6 +47,11 @@ build/
 build-*/
 out/
 cmake-build-*/
+
+# Also ignore build dirs in submodules/projects (e.g. judge/build-standalone-gcc)
+**/build/
+**/build-*/
+**/cmake-build-*/
 
 # IntelliJ IDEA
 .idea/

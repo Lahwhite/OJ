@@ -1,0 +1,7 @@
+﻿{
+  "time_limit_ms": 1000,
+  "memory_limit_mb": 128,
+  "test_cases": [
+    { "id": 1, "input": "", "expected_output": "hello", "score": 10 }
+  ]
+}

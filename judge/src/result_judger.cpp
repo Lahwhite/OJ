@@ -84,13 +84,14 @@ JudgeResult ResultJudger::judge(const std::string& actual_output,
     
     // 创建测试用例结果
     TestCaseResult test_case_result;
-    test_case_result.case_id = 1; // 暂时使用固定ID
+    test_case_result.case_id = 0; // 默认由 JudgeEngine 覆盖为真实 case_id
     test_case_result.status = result.overall_status;
     test_case_result.runtime_ms = sandbox_result.runtime_ms;
     test_case_result.memory_kb = sandbox_result.memory_kb;
     test_case_result.output = actual_output;
     test_case_result.expected_output = expected_output;
     test_case_result.passed = (result.overall_status == JudgeStatus::ACCEPTED);
+    test_case_result.score_awarded = 0; // 默认由 JudgeEngine 覆盖为本用例获得分
     
     result.test_case_results.push_back(test_case_result);
     

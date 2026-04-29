@@ -20,10 +20,10 @@
  * @brief 测试用例结构体
  */
 struct TestCase {
-    int id;                     ///< 测试用例ID
-    std::string input;          ///< 输入数据
-    std::string expected_output; ///< 预期输出
-    int score;                  ///< 分值
+    int id;                         ///< 测试用例ID
+    std::string input;              ///< 输入数据
+    std::string expected_output;    ///< 预期输出
+    int score;                      ///< 分值
 };
 
 /**

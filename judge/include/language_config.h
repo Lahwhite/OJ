@@ -51,6 +51,13 @@ public:
      * @return 是否加载成功
      */
     bool load(const std::string& config_path);
+
+    /**
+     * @brief 从 JSON 字符串加载语言配置
+     * @param json_content JSON 内容
+     * @return 是否加载成功
+     */
+    bool loadFromJsonString(const std::string& json_content);
     
     /**
      * @brief 获取语言信息
