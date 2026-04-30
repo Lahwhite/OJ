@@ -3,9 +3,11 @@ package com.oj.problem.controller;
 import com.oj.problem.common.ApiResponse;
 import com.oj.problem.dto.request.ProblemQueryRequest;
 import com.oj.problem.dto.request.ProblemUpsertRequest;
+import com.oj.problem.dto.request.SubmissionResultRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TagResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.security.CurrentUser;
 import com.oj.problem.security.JwtTokenService;
@@ -50,6 +52,19 @@ public class ProblemController {
     @GetMapping("/{id}/test-cases")
     public ApiResponse<List<TestCaseResponse>> getProblemTestCases(@PathVariable Long id) {
         return ApiResponse.success(problemService.getProblemTestCases(id));
+    }
+
+    @GetMapping("/tags")
+    public ApiResponse<List<TagResponse>> listTags() {
+        return ApiResponse.success(problemService.listTags());
+    }
+
+    @PostMapping("/{id}/submissions")
+    public ApiResponse<Void> recordSubmissionResult(
+            @PathVariable Long id,
+            @Valid @RequestBody SubmissionResultRequest request) {
+        problemService.recordSubmissionResult(id, Boolean.TRUE.equals(request.getAccepted()));
+        return ApiResponse.success("提交统计已更新", null);
     }
 
     @PostMapping

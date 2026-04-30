@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TagResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.exception.GlobalExceptionHandler;
 import com.oj.problem.security.CurrentUser;
@@ -97,6 +98,40 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.data[0].output").value("3"))
                 .andExpect(jsonPath("$.data[0].isSample").value(true))
                 .andExpect(jsonPath("$.data[0].score").value(20));
+    }
+
+    @Test
+    void listTagsShouldReturnTags() throws Exception {
+        TagResponse tag = new TagResponse();
+        tag.setId(6L);
+        tag.setName("动态规划");
+        tag.setColor("#1890ff");
+        tag.setProblemCount(3);
+        when(problemService.listTags()).thenReturn(Collections.singletonList(tag));
+
+        mockMvc.perform(get("/v1/problems/tags"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].id").value(6))
+                .andExpect(jsonPath("$.data[0].name").value("动态规划"))
+                .andExpect(jsonPath("$.data[0].problemCount").value(3));
+    }
+
+    @Test
+    void recordSubmissionResultShouldReturnSuccess() throws Exception {
+        mockMvc.perform(post("/v1/problems/1/submissions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accepted\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("提交统计已更新"));
+    }
+
+    @Test
+    void recordSubmissionResultShouldValidateRequest() throws Exception {
+        mockMvc.perform(post("/v1/problems/1/submissions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400001));
     }
 
     @Test

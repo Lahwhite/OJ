@@ -10,6 +10,7 @@
 - Redis 缓存封装（可选启用）
 - 错误 JSON 输出工具
 - 基础设施启动/关闭编排（bootstrap）
+- HTTP 服务器轻量框架（路由分发、统一响应、请求日志）
 
 当前建议：`judge`、`discussion`、`rank` 直接链接 `oj_common`；`management`（Java）保持配置语义对齐，不直接调用 C++ 接口。
 
@@ -22,19 +23,28 @@ common/
 ├── include/oj/
 │   ├── bootstrap.h
 │   ├── config.h
+│   ├── http_request.h
+│   ├── http_response.h
+│   ├── http_server.h
 │   ├── json_error.h
 │   ├── log.h
 │   ├── mysql_pool.h
-│   └── redis_cache.h
+│   ├── redis_cache.h
+│   └── router.h
 ├── src/
 │   ├── bootstrap.cpp
 │   ├── config.cpp
+│   ├── http_request.cpp
+│   ├── http_response.cpp
+│   ├── http_server.cpp
 │   ├── json_error.cpp
 │   ├── log.cpp
 │   ├── mysql_pool.cpp
-│   └── redis_cache.cpp
+│   ├── redis_cache.cpp
+│   └── router.cpp
 ├── tests/
-│   └── common_smoke_test.cpp
+│   ├── common_smoke_test.cpp
+│   └── http_smoke_test.cpp
 └── CMakeLists.txt
 ```
 
@@ -53,11 +63,14 @@ cmake .. -G "MinGW Makefiles"
 cmake --build .
 ```
 
-如果只验证 common 冒烟测试：
+如果只验证 common 测试：
 
 ```powershell
 cmake --build . --target common_smoke_test
 .\common\common_smoke_test.exe
+
+cmake --build . --target common_http_smoke_test
+.\common\common_http_smoke_test.exe
 ```
 
 > 若路径含中文导致 MinGW/Ninja 路径问题，可临时映射盘符后构建：
@@ -67,6 +80,8 @@ subst X: "d:\你的项目路径\OJ-direct-test"
 cmake -S X:/ -B X:/build-ascii -G Ninja
 cmake --build X:/build-ascii --target common_smoke_test
 X:/build-ascii/common/common_smoke_test.exe
+cmake --build X:/build-ascii --target common_http_smoke_test
+X:/build-ascii/common/common_http_smoke_test.exe
 subst X: /D
 ```
 
@@ -132,6 +147,40 @@ auto& cache = oj::RedisCache::instance();
 if (cache.connected()) {
     cache.set("k", "v", 60);
 }
+```
+
+### 4.7 HTTP 轻量框架
+
+#### 4.7.1 注册路由与统一 JSON 响应
+
+```cpp
+#include "oj/http_server.h"
+#include "oj/http_response.h"
+
+oj::HttpServer server;
+server.router().get("/health", [](const oj::HttpRequest&) {
+    return oj::HttpResponse::json(200, "{\"status\":\"ok\"}");
+});
+
+server.router().post("/echo", [](const oj::HttpRequest& req) {
+    return oj::HttpResponse::json(200, req.body);
+});
+
+server.start(8080);
+```
+
+#### 4.7.2 默认错误行为
+
+- 路由不存在：返回 `404` + `{"error_code":"NOT_FOUND",...}`
+- handler 异常：返回 `500` + `{"error_code":"INTERNAL_ERROR",...}`
+- 请求格式异常：返回 `400` + `{"error_code":"BAD_REQUEST",...}`
+
+#### 4.7.3 请求日志
+
+HTTP 服务会记录：`method path -> status cost(ms)`，例如：
+
+```text
+http GET /health -> 200 1ms
 ```
 
 ---
@@ -200,6 +249,7 @@ cmake .. -G "MinGW Makefiles" -DOJ_ENABLE_REDIS=ON
    - `initInfrastructure(cfg)`
 3. 程序退出统一执行：`shutdownInfrastructure()`
 4. 新增代码不再重复定义 MySQL/Redis/日志环境变量名
+5. 新增 HTTP 服务时统一使用 `HttpServer + Router + HttpResponse`
 
 ### management（Java）
 
@@ -221,19 +271,32 @@ cmake .. -G "MinGW Makefiles" -DOJ_ENABLE_REDIS=ON
 - bootstrap 启停流程
 - MySQL/Redis 在未启用依赖时的降级行为
 
+`common_http_smoke_test` 当前覆盖：
+
+- 路由注册与分发
+- 缺失路由统一 404 JSON
+- HTTP 响应报文组装（状态行、Content-Type、Content-Length、body）
+
 运行方式：
 
 ```powershell
 cmake --build . --target common_smoke_test
 .\common\common_smoke_test.exe
+
+cmake --build . --target common_http_smoke_test
+.\common\common_http_smoke_test.exe
 ```
 
-通过标准：输出 `Common smoke tests passed.`
+通过标准：
+
+- 输出 `Common smoke tests passed.`
+- 输出 `Common HTTP smoke tests passed.`
 
 ---
 
 ## 9. 当前状态与边界
 
 - common 核心功能已实现并可接入。
-- 当前定位是“功能可用版”，非性能压测版。
+- 当前定位是“课程项目功能可用版”，非高并发生产版。
+- HTTP 轻量框架当前支持基础 GET/POST/PUT/DELETE 精确路径匹配，不包含动态路由参数和 multipart 解析。
 - 若后续调整环境变量名/默认值，需同步更新本文件与各模块配置。
