@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>用户主页</title>
+    <!-- 通过 CDN 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+
+<div class="text-2xl font-bold flex">
+    <span class="text-gray-800 px-1">欢迎用户</span>
+    <span th:text="|${session.loginUser}|" class="text-blue-400 px-1"></span>
+    <span class="text-gray-800 px-1">登录本系统</span>
+</div>
+
+<div class="text-base text-gray-500 mt-12">
+    点击右侧“提问”按钮，体验检索增强生成（RAG）
+</div>
+
+<button id="openDrawer" class="fixed right-6 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+    <svg class="h-5 w-5" style="fill: none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    提问
+</button>
+
+<a href="/profile" class="fixed left-6 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+    个人资料
+</a>
+
+<!-- 底部链接 -->
+<div class="mt-24 text-lg">
+    <a href="/sandbox" class="text-blue-400 hover:underline">在线代码运行</a>
+</div>
+<div class="mt-8 text-lg">
+    <a href="/logout" class="text-blue-400 hover:underline">用户登出</a>
+</div>
+
+</body>
+</html>
