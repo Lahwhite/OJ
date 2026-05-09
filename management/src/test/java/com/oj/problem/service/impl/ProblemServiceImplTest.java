@@ -15,6 +15,7 @@ import com.oj.problem.dto.request.TestCaseRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TagResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.entity.Difficulty;
 import com.oj.problem.entity.ProblemEntity;
@@ -88,6 +89,10 @@ class ProblemServiceImplTest {
         entity.setSubmissionCount(10);
         entity.setAcceptedCount(5);
         entity.getTags().add(buildTag("滑动窗口", 1));
+        TestCaseEntity sampleCase = buildTestCase("abc", "3", true, 20);
+        TestCaseEntity hiddenCase = buildTestCase("bbbbb", "1", false, 80);
+        entity.addTestCase(sampleCase);
+        entity.addTestCase(hiddenCase);
 
         when(problemRepository.findWithTestCasesAndTagsById(2L)).thenReturn(Optional.of(entity));
 
@@ -98,6 +103,8 @@ class ProblemServiceImplTest {
         assertEquals("medium", response.getDifficulty());
         assertEquals(0.5D, response.getPassRate());
         assertEquals(Collections.singletonList("滑动窗口"), response.getTags());
+        assertEquals(1, response.getTestCases().size());
+        assertEquals("abc", response.getTestCases().get(0).getInput());
     }
 
     @Test
@@ -138,6 +145,59 @@ class ProblemServiceImplTest {
         when(problemRepository.findWithTestCasesAndTagsById(3L)).thenReturn(Optional.of(entity));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> problemService.getProblemDetail(3L));
+
+        assertEquals(404002, exception.getCode());
+    }
+
+    @Test
+    void listTagsShouldReturnRepositoryTagsInOrder() {
+        TagEntity dp = buildTag("动态规划", 5);
+        dp.setId(1L);
+        TagEntity math = buildTag("数学", 2);
+        math.setId(2L);
+        when(tagRepository.findAllByOrderByProblemCountDescNameAsc()).thenReturn(Arrays.asList(dp, math));
+
+        java.util.List<TagResponse> response = problemService.listTags();
+
+        assertEquals(2, response.size());
+        assertEquals("动态规划", response.get(0).getName());
+        assertEquals(5, response.get(0).getProblemCount());
+        assertEquals("数学", response.get(1).getName());
+    }
+
+    @Test
+    void recordSubmissionResultShouldIncreaseSubmissionAndAcceptedCount() {
+        ProblemEntity entity = buildProblemEntity(8L, "统计题目", true);
+        entity.setSubmissionCount(4);
+        entity.setAcceptedCount(2);
+        when(problemRepository.findById(8L)).thenReturn(Optional.of(entity));
+
+        problemService.recordSubmissionResult(8L, true);
+
+        assertEquals(5, entity.getSubmissionCount());
+        assertEquals(3, entity.getAcceptedCount());
+        verify(problemRepository).save(entity);
+    }
+
+    @Test
+    void recordSubmissionResultShouldOnlyIncreaseSubmissionCountWhenWrongAnswer() {
+        ProblemEntity entity = buildProblemEntity(8L, "统计题目", true);
+        entity.setSubmissionCount(4);
+        entity.setAcceptedCount(2);
+        when(problemRepository.findById(8L)).thenReturn(Optional.of(entity));
+
+        problemService.recordSubmissionResult(8L, false);
+
+        assertEquals(5, entity.getSubmissionCount());
+        assertEquals(2, entity.getAcceptedCount());
+    }
+
+    @Test
+    void recordSubmissionResultShouldRejectPrivateProblem() {
+        ProblemEntity entity = buildProblemEntity(8L, "私有统计题", false);
+        when(problemRepository.findById(8L)).thenReturn(Optional.of(entity));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> problemService.recordSubmissionResult(8L, true));
 
         assertEquals(404002, exception.getCode());
     }

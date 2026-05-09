@@ -5,10 +5,18 @@ add_library(oj_common STATIC
     src/redis_cache.cpp
     src/json_error.cpp
     src/bootstrap.cpp
+    src/http_request.cpp
+    src/http_response.cpp
+    src/router.cpp
+    src/http_server.cpp
 )
 
 add_executable(common_smoke_test
     tests/common_smoke_test.cpp
+)
+
+add_executable(common_http_smoke_test
+    tests/http_smoke_test.cpp
 )
 
 target_include_directories(oj_common PUBLIC
@@ -17,8 +25,10 @@ target_include_directories(oj_common PUBLIC
 
 target_link_libraries(oj_common PUBLIC Threads::Threads)
 target_link_libraries(common_smoke_test PRIVATE oj_common)
+target_link_libraries(common_http_smoke_test PRIVATE oj_common)
 
 add_test(NAME CommonSmokeTest COMMAND common_smoke_test)
+add_test(NAME CommonHttpSmokeTest COMMAND common_http_smoke_test)
 
 if(OJ_ENABLE_MYSQL)
     target_compile_definitions(oj_common PUBLIC OJ_WITH_MYSQL)

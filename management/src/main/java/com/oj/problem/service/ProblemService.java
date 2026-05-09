@@ -5,6 +5,7 @@ import com.oj.problem.dto.request.ProblemUpsertRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TagResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.security.CurrentUser;
 import java.util.List;
@@ -16,6 +17,10 @@ public interface ProblemService {
     ProblemDetailResponse getProblemDetail(Long id);
 
     List<TestCaseResponse> getProblemTestCases(Long id);
+
+    List<TagResponse> listTags();
+
+    void recordSubmissionResult(Long id, boolean accepted);
 
     ProblemMutationResponse createProblem(ProblemUpsertRequest request, CurrentUser currentUser);
 

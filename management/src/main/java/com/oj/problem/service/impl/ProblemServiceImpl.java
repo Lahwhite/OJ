@@ -7,6 +7,7 @@ import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.ProblemListItemResponse;
 import com.oj.problem.dto.response.ProblemMutationResponse;
 import com.oj.problem.dto.response.ProblemPageResponse;
+import com.oj.problem.dto.response.TagResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
 import com.oj.problem.entity.ProblemEntity;
 import com.oj.problem.entity.TagEntity;
@@ -72,7 +73,7 @@ public class ProblemServiceImpl implements ProblemService {
         ProblemEntity problem = problemRepository.findWithTestCasesAndTagsById(id)
                 .filter(ProblemEntity::getIsPublic)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
-        return toDetail(problem);
+        return toDetail(problem, true);
     }
 
     @Override
@@ -82,6 +83,30 @@ public class ProblemServiceImpl implements ProblemService {
                 .filter(ProblemEntity::getIsPublic)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
         return problem.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TagResponse> listTags() {
+        return tagRepository.findAllByOrderByProblemCountDescNameAsc()
+                .stream()
+                .map(this::toTagResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void recordSubmissionResult(Long id, boolean accepted) {
+        ProblemEntity problem = problemRepository.findById(id)
+                .filter(ProblemEntity::getIsPublic)
+                .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
+        int submissionCount = problem.getSubmissionCount() == null ? 0 : problem.getSubmissionCount();
+        int acceptedCount = problem.getAcceptedCount() == null ? 0 : problem.getAcceptedCount();
+        problem.setSubmissionCount(submissionCount + 1);
+        if (accepted) {
+            problem.setAcceptedCount(acceptedCount + 1);
+        }
+        problemRepository.save(problem);
     }
 
     @Override
@@ -164,8 +189,8 @@ public class ProblemServiceImpl implements ProblemService {
             TestCaseEntity testCase = new TestCaseEntity();
             testCase.setInput(request.getInput());
             testCase.setOutput(request.getOutput());
-            testCase.setIsSample(request.getIsSample());
-            testCase.setScore(request.getScore());
+            testCase.setIsSample(Boolean.TRUE.equals(request.getIsSample()));
+            testCase.setScore(request.getScore() == null ? 0 : request.getScore());
             entity.addTestCase(testCase);
         }
     }
@@ -208,7 +233,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         for (TagEntity tag : tagsToAdd) {
-            tag.setProblemCount(tag.getProblemCount() + 1);
+            tag.setProblemCount(safeCount(tag) + 1);
         }
 
         decreaseTagCount(tagsToRemove);
@@ -219,9 +244,12 @@ public class ProblemServiceImpl implements ProblemService {
 
     private void decreaseTagCount(Set<TagEntity> tags) {
         for (TagEntity tag : tags) {
-            int current = tag.getProblemCount() == null ? 0 : tag.getProblemCount();
-            tag.setProblemCount(Math.max(0, current - 1));
+            tag.setProblemCount(Math.max(0, safeCount(tag) - 1));
         }
+    }
+
+    private int safeCount(TagEntity tag) {
+        return tag.getProblemCount() == null ? 0 : tag.getProblemCount();
     }
 
     private ProblemListItemResponse toListItem(ProblemEntity entity) {
@@ -229,14 +257,14 @@ public class ProblemServiceImpl implements ProblemService {
         response.setId(entity.getId());
         response.setTitle(entity.getTitle());
         response.setDifficulty(entity.getDifficulty().name());
-        response.setTags(entity.getTags().stream().map(TagEntity::getName).collect(Collectors.toList()));
+        response.setTags(sortedTagNames(entity));
         response.setSubmissionCount(entity.getSubmissionCount());
         response.setAcceptedCount(entity.getAcceptedCount());
         response.setPassRate(calculatePassRate(entity.getSubmissionCount(), entity.getAcceptedCount()));
         return response;
     }
 
-    private ProblemDetailResponse toDetail(ProblemEntity entity) {
+    private ProblemDetailResponse toDetail(ProblemEntity entity, boolean onlySampleCases) {
         ProblemDetailResponse response = new ProblemDetailResponse();
         response.setId(entity.getId());
         response.setTitle(entity.getTitle());
@@ -248,15 +276,25 @@ public class ProblemServiceImpl implements ProblemService {
         response.setOutputDescription(entity.getOutputDescription());
         response.setSampleInput(entity.getSampleInput());
         response.setSampleOutput(entity.getSampleOutput());
-        response.setTags(entity.getTags().stream().map(TagEntity::getName).collect(Collectors.toList()));
+        response.setTags(sortedTagNames(entity));
         response.setSubmissionCount(entity.getSubmissionCount());
         response.setAcceptedCount(entity.getAcceptedCount());
         response.setPassRate(calculatePassRate(entity.getSubmissionCount(), entity.getAcceptedCount()));
         response.setIsPublic(entity.getIsPublic());
-        response.setTestCases(entity.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList()));
+        response.setTestCases(entity.getTestCases().stream()
+                .filter(testCase -> !onlySampleCases || Boolean.TRUE.equals(testCase.getIsSample()))
+                .map(this::toTestCase)
+                .collect(Collectors.toList()));
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(entity.getUpdatedAt());
         return response;
+    }
+
+    private List<String> sortedTagNames(ProblemEntity entity) {
+        return entity.getTags().stream()
+                .map(TagEntity::getName)
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     private TestCaseResponse toTestCase(TestCaseEntity entity) {
@@ -266,6 +304,15 @@ public class ProblemServiceImpl implements ProblemService {
         response.setOutput(entity.getOutput());
         response.setIsSample(entity.getIsSample());
         response.setScore(entity.getScore());
+        return response;
+    }
+
+    private TagResponse toTagResponse(TagEntity entity) {
+        TagResponse response = new TagResponse();
+        response.setId(entity.getId());
+        response.setName(entity.getName());
+        response.setColor(entity.getColor());
+        response.setProblemCount(entity.getProblemCount());
         return response;
     }
 
