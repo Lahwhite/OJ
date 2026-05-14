@@ -17,9 +17,8 @@ std::vector<LeaderboardRow> LeaderboardService::get_global_leaderboard(std::int3
 
     auto rows = repository_->get_global_rows();
     sort_global(rows);
-    auto sliced = paginate(rows, limit, offset);
-    cache_->set_global_rows(sliced, config_.global_cache_ttl_seconds);
-    return sliced;
+    cache_->set_global_rows(rows, config_.global_cache_ttl_seconds);
+    return paginate(rows, limit, offset);
 }
 
 std::optional<ProblemCompletionStats> LeaderboardService::get_problem_completion_stats(std::int64_t user_id) {
@@ -36,9 +35,8 @@ std::vector<ContestLeaderboardRow> LeaderboardService::get_contest_leaderboard(
 
     auto rows = repository_->get_contest_rows(contest_id);
     sort_contest(rows);
-    auto sliced = paginate(rows, limit, offset);
-    cache_->set_contest_rows(contest_id, sliced, config_.contest_cache_ttl_seconds);
-    return sliced;
+    cache_->set_contest_rows(contest_id, rows, config_.contest_cache_ttl_seconds);
+    return paginate(rows, limit, offset);
 }
 
 void LeaderboardService::on_submission(const SubmissionEvent& event) {
@@ -103,30 +101,5 @@ void LeaderboardService::sort_contest(std::vector<ContestLeaderboardRow>& rows) 
         return a.last_accepted_at < b.last_accepted_at;
     });
 }
-
-template <typename T>
-std::vector<T> LeaderboardService::paginate(const std::vector<T>& rows, std::int32_t limit, std::int32_t offset) {
-    if (offset < 0) {
-        offset = 0;
-    }
-    if (limit <= 0) {
-        limit = static_cast<std::int32_t>(rows.size());
-    }
-
-    const auto begin_idx = static_cast<std::size_t>(std::min<std::int32_t>(offset, static_cast<std::int32_t>(rows.size())));
-    const auto end_idx = static_cast<std::size_t>(
-        std::min<std::int32_t>(offset + limit, static_cast<std::int32_t>(rows.size())));
-
-    return std::vector<T>(rows.begin() + static_cast<std::ptrdiff_t>(begin_idx), rows.begin() + static_cast<std::ptrdiff_t>(end_idx));
-}
-
-template std::vector<LeaderboardRow> LeaderboardService::paginate(
-    const std::vector<LeaderboardRow>&,
-    std::int32_t,
-    std::int32_t);
-template std::vector<ContestLeaderboardRow> LeaderboardService::paginate(
-    const std::vector<ContestLeaderboardRow>&,
-    std::int32_t,
-    std::int32_t);
 
 }  // namespace oj
