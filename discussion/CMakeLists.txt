@@ -24,6 +24,10 @@ target_include_directories(discussion_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/../judge/include/asio
 )
 
+target_compile_definitions(discussion_core PUBLIC
+    DISCUSSION_WEB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/web"
+)
+
 target_link_libraries(discussion_core PUBLIC oj_common Threads::Threads)
 
 if(WIN32)
