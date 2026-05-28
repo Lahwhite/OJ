@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include <nlohmann/json.hpp>
 
@@ -58,6 +59,7 @@ public:
 
 private:
     static crow::response jsonResponse(int status, const nlohmann::json& body);
+    static crow::response webFileResponse(const std::string& relative_path, const std::string& content_type);
     static size_t parsePositiveSize(const char* value, size_t fallback, size_t max_value);
 
     bool validateTopicPayload(const nlohmann::json& body) const;

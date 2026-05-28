@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>讨论区</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/discussion/static/styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+<main class="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8">
+    <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+            <p class="text-sm font-medium text-blue-400">OJ Discussion</p>
+            <h1 class="mt-1 text-3xl font-bold text-gray-800">讨论区</h1>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a id="homeLink" href="http://127.0.0.1:8081/home" class="inline-flex items-center rounded-xl bg-gray-200 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-300">返回用户主页</a>
+            <button id="refreshButton" type="button" class="inline-flex items-center rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">刷新</button>
+        </div>
+    </header>
+
+    <section id="notice" class="mb-5 hidden rounded-xl border px-4 py-3 text-sm"></section>
+
+    <section class="grid flex-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <aside class="flex flex-col gap-5">
+            <form id="filterForm" class="rounded-3xl bg-white p-6 shadow-xl">
+                <label for="problemFilter" class="block text-sm font-medium text-gray-700">题目编号</label>
+                <div class="mt-3 flex gap-3">
+                    <input id="problemFilter" name="problem_id" type="number" min="1" placeholder="全部题目"
+                           class="min-w-0 flex-1 rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                    <button type="submit" class="rounded-xl bg-blue-500 px-5 py-3 font-medium text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">筛选</button>
+                </div>
+            </form>
+
+            <form id="topicForm" class="rounded-3xl bg-white p-6 shadow-xl">
+                <h2 class="text-xl font-bold text-gray-800">发布主题</h2>
+                <label for="topicProblemId" class="mt-5 block text-sm font-medium text-gray-700">题目编号</label>
+                <input id="topicProblemId" type="number" min="1" required
+                       class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+
+                <label for="topicTitle" class="mt-4 block text-sm font-medium text-gray-700">标题</label>
+                <input id="topicTitle" maxlength="200" required placeholder="例如：这题为什么会超时？"
+                       class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+
+                <label for="topicContent" class="mt-4 block text-sm font-medium text-gray-700">内容</label>
+                <textarea id="topicContent" rows="6" maxlength="5000" required placeholder="描述你的思路、疑问或测试用例..."
+                          class="mt-2 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+
+                <button type="submit" class="mt-5 w-full rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">发布</button>
+            </form>
+        </aside>
+
+        <section class="grid min-h-[620px] gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+            <div class="rounded-3xl bg-white p-6 shadow-xl">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h2 class="text-xl font-bold text-gray-800">主题列表</h2>
+                    <span id="topicCount" class="text-sm text-gray-400">0 条</span>
+                </div>
+                <div id="topicList" class="space-y-3"></div>
+                <button id="loadMoreButton" type="button" class="mt-5 hidden w-full rounded-xl bg-gray-200 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-300">加载更多</button>
+            </div>
+
+            <article id="detailPanel" class="rounded-3xl bg-white p-6 shadow-xl">
+                <div id="emptyDetail" class="flex h-full min-h-[520px] flex-col items-center justify-center text-center text-gray-400">
+                    <div class="text-2xl font-bold text-gray-700">选择一个主题</div>
+                    <p class="mt-3 text-sm">查看正文、评论和回复。</p>
+                </div>
+
+                <div id="topicDetail" class="hidden">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                        <span id="detailProblem" class="rounded-lg bg-indigo-50 px-3 py-1 font-medium text-indigo-600"></span>
+                        <span id="detailAuthor"></span>
+                        <span id="detailTime"></span>
+                    </div>
+                    <h2 id="detailTitle" class="mt-4 text-2xl font-bold text-gray-800"></h2>
+                    <p id="detailContent" class="mt-4 whitespace-pre-wrap break-words leading-7 text-gray-700"></p>
+
+                    <div class="mt-7 border-t border-gray-200 pt-5">
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="text-xl font-bold text-gray-800">评论</h3>
+                            <span id="commentCount" class="text-sm text-gray-400">0 条</span>
+                        </div>
+                        <div id="commentList" class="mt-4 space-y-4"></div>
+
+                        <form id="commentForm" class="mt-5">
+                            <input id="parentCommentId" type="hidden">
+                            <div id="replyHint" class="mb-3 hidden rounded-lg bg-indigo-50 px-3 py-2 text-sm text-indigo-600"></div>
+                            <label for="commentContent" class="block text-sm font-medium text-gray-700">发表评论</label>
+                            <textarea id="commentContent" rows="4" maxlength="3000" required placeholder="写下你的想法..."
+                                      class="mt-2 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                            <div class="mt-3 flex justify-end gap-3">
+                                <button id="cancelReplyButton" type="button" class="hidden rounded-xl bg-gray-200 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-300">取消回复</button>
+                                <button type="submit" class="rounded-xl bg-indigo-600 px-6 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">提交评论</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </section>
+</main>
+
+<script src="/discussion/static/app.js"></script>
+</body>
+</html>
