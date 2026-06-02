@@ -132,7 +132,11 @@ JudgeResult JudgeEngine::judge(const std::string& code,
         // 构建执行命令
         std::string execute_command;
         if (language == "python") {
+#ifdef _WIN32
+            execute_command = "python " + output_path;
+#else
             execute_command = "python3 " + output_path;
+#endif
         } else {
             execute_command = "./" + output_path;
         }
