@@ -1,4 +1,5 @@
 #include "discussion_service.h"
+#include "gemini_client.h"
 
 #include "oj/bootstrap.h"
 #include "oj/config.h"
@@ -38,6 +39,24 @@ bool envEnabled(const char* name) {
 
 int main() {
     DiscussionService service;
+
+    DiscussionTopic prompt_topic;
+    prompt_topic.problem_id = 1001;
+    prompt_topic.username = "haha";
+    prompt_topic.title = "Two Sum question";
+    prompt_topic.content = "Can someone explain O(n) solution?";
+    DiscussionComment prompt_comment;
+    prompt_comment.id = 1;
+    prompt_comment.topic_id = 1;
+    prompt_comment.username = "haha";
+    prompt_comment.content = "Use hash map.";
+    const std::string prompt = GeminiClient::buildSummaryPrompt(prompt_topic, {prompt_comment});
+    assert(prompt.find("Two Sum question") != std::string::npos);
+    assert(prompt.find("Use hash map.") != std::string::npos);
+
+    const std::string gemini_response =
+        R"({"candidates":[{"content":{"parts":[{"text":"- Summary focuses on hash map."}]}}]})";
+    assert(GeminiClient::extractTextFromResponse(gemini_response).find("hash map") != std::string::npos);
 
     if (!envEnabled("OJ_DISCUSSION_RUN_DB_TESTS")) {
         try {
@@ -80,6 +99,23 @@ int main() {
     assert(topic.has_value());
     assert(topic->comment_count >= 2);
     assert(topic->username == "haha");
+
+    const int deleted_count = service.deleteCommentByUsername(topic_id, c1, "haha");
+    assert(deleted_count >= 2);
+
+    const auto comments_after_delete = service.listComments(topic_id);
+    for (const auto& comment : comments_after_delete) {
+        assert(comment.id != c1);
+        assert(comment.id != c2);
+    }
+
+    const auto topic_after_delete = service.getTopic(topic_id);
+    assert(topic_after_delete.has_value());
+    assert(topic_after_delete->comment_count <= topic->comment_count - deleted_count);
+
+    const int deleted_topic_count = service.deleteTopicByUsername(topic_id, "haha");
+    assert(deleted_topic_count == 1);
+    assert(!service.getTopic(topic_id).has_value());
 
     oj::shutdownInfrastructure();
     return 0;
