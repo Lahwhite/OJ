@@ -1,5 +1,6 @@
 package org.example.users.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.example.users.entity.User;
 import org.example.users.service.UserService;
@@ -88,6 +89,20 @@ public class AuthController {
             return "redirect:/login";
         }
         return "home";
+    }
+
+    // 展示OI Wiki界面
+    @GetMapping("/redirect-port8000")
+    public String redirectToPort8000(HttpSession session, HttpServletRequest request) {
+        String username = (String) session.getAttribute("loginUser");
+        // 无 Session 时重定向至登录界面
+        if (username == null) {
+            session.setAttribute("homeMsg", "User not logged in");
+            return "redirect:/login";
+        }
+        // 动态获取当前服务器地址，访问8000端口
+        String serverAddr = request.getServerName();
+        return "redirect:http://" + serverAddr + ":8000";
     }
 
     // 处理用户登出

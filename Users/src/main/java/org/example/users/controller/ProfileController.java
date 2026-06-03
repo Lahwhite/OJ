@@ -70,21 +70,11 @@ public class ProfileController {
         if (profileMsg != null) {
             session.removeAttribute("profileMsg");
             switch (profileMsg) {
-                case "File content is empty or invalid" -> {
-                    model.addAttribute("errorMsg", "文件为空或已损坏");
-                }
-                case "Invalid file type" -> {
-                    model.addAttribute("errorMsg", "只允许上传 jpg、jpeg、png、bmp、gif 格式的图片");
-                }
-                case "Avatar upload failed" -> {
-                    model.addAttribute("errorMsg", "头像上传失败");
-                }
-                case "Profile saved successfully" -> {
-                    model.addAttribute("successMsg", "个人资料保存成功");
-                }
-                case "Save failed" -> {
-                    model.addAttribute("errorMsg", "保存失败，请重试");
-                }
+                case "File content is empty or invalid" -> model.addAttribute("errorMsg", "文件为空或已损坏");
+                case "Invalid file type" -> model.addAttribute("errorMsg", "只允许上传 jpg、jpeg、png、bmp、gif 格式的图片");
+                case "Avatar upload failed" -> model.addAttribute("errorMsg", "头像上传失败");
+                case "Profile saved successfully" -> model.addAttribute("successMsg", "个人资料保存成功");
+                case "Save failed" -> model.addAttribute("errorMsg", "保存失败，请重试");
             }
         }
 

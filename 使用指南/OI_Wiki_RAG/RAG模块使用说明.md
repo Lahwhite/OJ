@@ -17,7 +17,11 @@ git clone https://gitee.com/OI-wiki/OI-wiki.git -b gh-pages
 python3 -m http.server 8000
 ```
 
-访问以下页面
+可通过如下方式访问 OI Wiki 页面
 ```
 http://localhost:8000/
 ```
+
+build_index.py 用于构建索引
+searcher.py 用于搜索相关页面
+agent.py 用于调用本地大模型回答问题

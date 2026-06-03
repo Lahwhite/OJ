@@ -50,13 +50,9 @@ public class SandboxController {
             session.removeAttribute("sandboxMsg");
             switch (sandboxMsg) {
                 // 代码为空
-                case "Empty code" -> {
-                    model.addAttribute("errorMsg", "代码为空");
-                }
+                case "Empty code" -> model.addAttribute("errorMsg", "代码为空");
                 // 未选择编程语言
-                case "Language unselected" -> {
-                    model.addAttribute("errorMsg", "未选择编程语言");
-                }
+                case "Language unselected" -> model.addAttribute("errorMsg", "未选择编程语言");
                 // 运行成功
                 case "success" -> {
                     String output = (String) session.getAttribute("output");
@@ -64,9 +60,7 @@ public class SandboxController {
                     session.removeAttribute("output");
                 }
                 // 系统异常
-                case "System Error" -> {
-                    model.addAttribute("errorMsg", "系统异常");
-                }
+                case "System Error" -> model.addAttribute("errorMsg", "系统异常");
                 // 运行出错
                 case "failure" -> {
                     String output = (String) session.getAttribute("output");
@@ -101,7 +95,7 @@ public class SandboxController {
             return "redirect:/sandbox";
         }
         if (code == null || code.isBlank()) {
-            session.setAttribute("sandboxMsg", "Empty code");;
+            session.setAttribute("sandboxMsg", "Empty code");
             return "redirect:/sandbox";
         }
 

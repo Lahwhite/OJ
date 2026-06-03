@@ -67,39 +67,7 @@ public class SandboxServiceImpl implements SandboxService {
                 codeFile.deleteOnExit();
 
                 // 构建 Docker 命令（使用数组避免 Shell 注入）
-                List<String> cmd = new ArrayList<>();
-                cmd.add("docker");
-                cmd.add("run");
-                cmd.add("--rm");
-
-                cmd.add("--memory=" + SandboxConstant.MEMORY_LIMIT);
-                cmd.add("--cpus=" + SandboxConstant.CPU_CORES_LIMIT);
-                cmd.add("--network=" + SandboxConstant.NETWORK_MODE);
-
-                cmd.add("--read-only");
-                cmd.add("-v");
-                // /app 目录只读
-                cmd.add(codeFile.getAbsolutePath() + ":/app/" + language.getFileName() + ":ro");
-
-                cmd.add("--security-opt=no-new-privileges");
-                cmd.add("--user=1000:1000");
-
-                // 根据语言设置 pids-limit
-                int pidsLimit = (language == CodeLanguage.JAVA)
-                        ? SandboxConstant.PIDS_LIMIT_JAVA
-                        : SandboxConstant.PIDS_LIMIT_DEFAULT;
-                cmd.add("--pids-limit=" + pidsLimit);
-
-                // /tmp 目录可写不可执行，/run 目录可写可执行
-                cmd.add("--tmpfs=/tmp:rw,noexec,nosuid,size=" + SandboxConstant.DISK_LIMIT);
-                cmd.add("--tmpfs=/exec:rw,exec,nosuid,uid=1000,gid=1000,size=" + SandboxConstant.DISK_LIMIT);
-
-                cmd.add("-w");
-                cmd.add("/tmp");
-                cmd.add(language.getImage());
-                cmd.add("sh");
-                cmd.add("-c");
-                cmd.add(language.getRunCmd());
+                List<String> cmd = getStrings(codeFile, language);
 
                 log.debug("执行 Docker 命令：{}", String.join(" ", cmd));
 
@@ -193,5 +161,42 @@ public class SandboxServiceImpl implements SandboxService {
         }
 
         return response;
+    }
+
+    private static List<String> getStrings(File codeFile, CodeLanguage language) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add("docker");
+        cmd.add("run");
+        cmd.add("--rm");
+
+        cmd.add("--memory=" + SandboxConstant.MEMORY_LIMIT);
+        cmd.add("--cpus=" + SandboxConstant.CPU_CORES_LIMIT);
+        cmd.add("--network=" + SandboxConstant.NETWORK_MODE);
+
+        cmd.add("--read-only");
+        cmd.add("-v");
+        // /app 目录只读
+        cmd.add(codeFile.getAbsolutePath() + ":/app/" + language.getFileName() + ":ro");
+
+        cmd.add("--security-opt=no-new-privileges");
+        cmd.add("--user=1000:1000");
+
+        // 根据语言设置 pids-limit
+        int pidsLimit = (language == CodeLanguage.JAVA)
+                ? SandboxConstant.PIDS_LIMIT_JAVA
+                : SandboxConstant.PIDS_LIMIT_DEFAULT;
+        cmd.add("--pids-limit=" + pidsLimit);
+
+        // /tmp 目录可写不可执行，/run 目录可写可执行
+        cmd.add("--tmpfs=/tmp:rw,noexec,nosuid,size=" + SandboxConstant.DISK_LIMIT);
+        cmd.add("--tmpfs=/exec:rw,exec,nosuid,uid=1000,gid=1000,size=" + SandboxConstant.DISK_LIMIT);
+
+        cmd.add("-w");
+        cmd.add("/tmp");
+        cmd.add(language.getImage());
+        cmd.add("sh");
+        cmd.add("-c");
+        cmd.add(language.getRunCmd());
+        return cmd;
     }
 }
