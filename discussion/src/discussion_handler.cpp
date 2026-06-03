@@ -6,6 +6,7 @@
 #include "oj/redis_cache.h"
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <limits>
 #include <string>
@@ -28,6 +29,14 @@ DiscussionHandler::DiscussionHandler() {
             content_type = "application/javascript; charset=utf-8";
         }
         return webFileResponse(file_path, content_type);
+    });
+
+    CROW_ROUTE((*app_), "/uploads/avatars/<path>").methods("GET"_method)([](const std::string& file_path) {
+        return userAvatarResponse(file_path);
+    });
+
+    CROW_ROUTE((*app_), "/images/<path>").methods("GET"_method)([](const std::string& file_path) {
+        return userImageResponse(file_path);
     });
 
     CROW_ROUTE((*app_), "/api/discussions/topics").methods("POST"_method)([this](const crow::request& req) {
@@ -109,6 +118,85 @@ crow::response DiscussionHandler::webFileResponse(const std::string& relative_pa
     crow::response response;
     response.set_static_file_info_unsafe(path.string(), content_type);
     return response;
+}
+
+namespace {
+bool isSafeStaticPath(const std::string& relative_path) {
+    return !relative_path.empty() &&
+           relative_path.find("..") == std::string::npos &&
+           relative_path.find(':') == std::string::npos &&
+           relative_path.front() != '/' &&
+           relative_path.front() != '\\';
+}
+
+std::string imageContentType(const std::string& relative_path) {
+    const auto dot = relative_path.find_last_of('.');
+    if (dot == std::string::npos) {
+        return "application/octet-stream";
+    }
+
+    std::string ext = relative_path.substr(dot);
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+
+    if (ext == ".png") {
+        return "image/png";
+    }
+    if (ext == ".jpg" || ext == ".jpeg") {
+        return "image/jpeg";
+    }
+    if (ext == ".gif") {
+        return "image/gif";
+    }
+    if (ext == ".webp") {
+        return "image/webp";
+    }
+    if (ext == ".svg") {
+        return "image/svg+xml";
+    }
+    return "application/octet-stream";
+}
+
+crow::response staticFileFromRoots(const std::string& relative_path,
+                                   const std::vector<std::filesystem::path>& roots,
+                                   const std::string& content_type) {
+    if (!isSafeStaticPath(relative_path)) {
+        return crow::response(404);
+    }
+
+    for (const auto& root : roots) {
+        const auto candidate = root / relative_path;
+        std::error_code ec;
+        if (std::filesystem::is_regular_file(candidate, ec)) {
+            crow::response response;
+            response.set_static_file_info_unsafe(candidate.string(), content_type);
+            return response;
+        }
+    }
+
+    return crow::response(404);
+}
+}  // namespace
+
+crow::response DiscussionHandler::userAvatarResponse(const std::string& relative_path) {
+    const std::vector<std::filesystem::path> avatar_roots = {
+        std::filesystem::path("uploads") / "avatars",
+        std::filesystem::path("Users") / "uploads" / "avatars",
+        std::filesystem::path("..") / "Users" / "uploads" / "avatars",
+        std::filesystem::path("..") / ".." / "Users" / "uploads" / "avatars",
+    };
+    return staticFileFromRoots(relative_path, avatar_roots, imageContentType(relative_path));
+}
+
+crow::response DiscussionHandler::userImageResponse(const std::string& relative_path) {
+    const std::vector<std::filesystem::path> image_roots = {
+        std::filesystem::path("images"),
+        std::filesystem::path("Users") / "src" / "main" / "resources" / "static" / "images",
+        std::filesystem::path("..") / "Users" / "src" / "main" / "resources" / "static" / "images",
+        std::filesystem::path("..") / ".." / "Users" / "src" / "main" / "resources" / "static" / "images",
+    };
+    return staticFileFromRoots(relative_path, image_roots, imageContentType(relative_path));
 }
 
 size_t DiscussionHandler::parsePositiveSize(const char* value, size_t fallback, size_t max_value) {
