@@ -117,6 +117,9 @@ powershell -ExecutionPolicy Bypass -File .\rank\runtime_package\sync_runtime.ps1
 |------|------|------|
 | GET | `/rank` | 排行榜页面 |
 | GET | `/api/leaderboard/global?limit=&offset=` | 总榜 JSON |
+| GET | `/api/leaderboard/global/summary` | 全球统计摘要 |
+| GET | `/api/leaderboard/global/export.csv` | 导出 CSV |
+| GET | `/api/leaderboard/users/:id/insight` | 用户百分位洞察 |
 | GET | `/api/leaderboard/contest/:id?limit=&offset=` | 比赛榜 JSON |
 | GET | `/api/leaderboard/users/:id/stats` | 用户题目完成统计 |
 | GET | `/health` | 健康检查 |

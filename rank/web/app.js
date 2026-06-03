@@ -28,6 +28,13 @@ const els = {
     prevPage: document.querySelector("#prevPage"),
     nextPage: document.querySelector("#nextPage"),
     statsHint: document.querySelector("#statsHint"),
+    exportCsvButton: document.querySelector("#exportCsvButton"),
+    summaryUsers: document.querySelector("#summaryUsers"),
+    summaryMax: document.querySelector("#summaryMax"),
+    summaryAvg: document.querySelector("#summaryAvg"),
+    summaryMedian: document.querySelector("#summaryMedian"),
+    summarySolved: document.querySelector("#summarySolved"),
+    summaryPercentile: document.querySelector("#summaryPercentile"),
 };
 
 const LC_COLORS = {
@@ -215,6 +222,7 @@ async function selectUser(userId) {
         state.selectedStats = stats;
         els.statsHint.textContent = `用户 #${userId}`;
         renderDifficultyChart();
+        await loadUserInsight(userId);
     } catch (error) {
         setNotice(error.message, "error");
     }
@@ -502,6 +510,53 @@ function highlightChartsForUser(userId) {
     }
 }
 
+function renderSummaryBar(summary) {
+    els.summaryUsers.textContent = formatNumber(summary.total_users);
+    els.summaryMax.textContent = formatNumber(summary.max_score);
+    els.summaryAvg.textContent = Number(summary.average_score ?? 0).toFixed(1);
+    els.summaryMedian.textContent = formatNumber(summary.median_score);
+    els.summarySolved.textContent = Number(summary.average_solved ?? 0).toFixed(1);
+}
+
+async function loadGlobalSummary() {
+    if (state.mode !== "global") {
+        els.summaryUsers.textContent = "-";
+        els.summaryMax.textContent = "-";
+        els.summaryAvg.textContent = "-";
+        els.summaryMedian.textContent = "-";
+        els.summarySolved.textContent = "-";
+        els.summaryPercentile.textContent = "-";
+        return;
+    }
+    try {
+        const summary = await fetchJson("/api/leaderboard/global/summary");
+        renderSummaryBar(summary);
+        if (state.selectedUserId) {
+            await loadUserInsight(state.selectedUserId);
+        }
+    } catch {
+        // 摘要接口不可用时保留表格主流程
+    }
+}
+
+async function loadUserInsight(userId) {
+    try {
+        const insight = await fetchJson(`/api/leaderboard/users/${userId}/insight`);
+        if (insight.error) {
+            els.summaryPercentile.textContent = "-";
+            return;
+        }
+        els.summaryPercentile.textContent = `${insight.score_percentile}%`;
+    } catch {
+        els.summaryPercentile.textContent = "-";
+    }
+}
+
+function exportCsv() {
+    const url = apiUrl(`/api/leaderboard/global/export.csv?limit=200&offset=${state.offset}`);
+    window.open(url, "_blank");
+}
+
 async function loadLeaderboard() {
     setNotice("");
     try {
@@ -522,10 +577,12 @@ async function loadLeaderboard() {
         renderPodium();
         renderTable();
         renderCharts();
+        await loadGlobalSummary();
 
         if (state.selectedUserId) {
             await selectUser(state.selectedUserId);
             highlightChartsForUser(state.selectedUserId);
+            await loadUserInsight(state.selectedUserId);
         }
     } catch (error) {
         setNotice(error.message, "error");
@@ -533,6 +590,7 @@ async function loadLeaderboard() {
 }
 
 function bindEvents() {
+    els.exportCsvButton.addEventListener("click", exportCsv);
     els.refreshButton.addEventListener("click", () => loadLeaderboard());
     els.tabGlobal.addEventListener("click", () => setMode("global"));
     els.tabContest.addEventListener("click", () => setMode("contest"));

@@ -1,5 +1,7 @@
 #include "api/leaderboard_api.hpp"
 
+#include "leaderboard/stats_analyzer.hpp"
+
 #include <sstream>
 
 namespace oj {
@@ -88,6 +90,26 @@ std::string LeaderboardApi::get_contest_leaderboard_json(std::int64_t contest_id
     }
     oss << "]}";
     return oss.str();
+}
+
+std::string LeaderboardApi::get_global_summary_json() {
+    const auto rows = service_->get_global_leaderboard(500, 0);
+    const auto summary = StatsAnalyzer::analyze_global(rows);
+    return StatsAnalyzer::summary_to_json(summary);
+}
+
+std::string LeaderboardApi::get_user_insight_json(std::int64_t user_id) {
+    const auto rows = service_->get_global_leaderboard(500, 0);
+    const auto insight = StatsAnalyzer::analyze_user(rows, user_id);
+    if (!insight.has_value()) {
+        return "{\"error\":\"user not found\"}";
+    }
+    return StatsAnalyzer::insight_to_json(insight.value());
+}
+
+std::string LeaderboardApi::get_global_leaderboard_csv(std::int32_t limit, std::int32_t offset) {
+    const auto rows = service_->get_global_leaderboard(limit, offset);
+    return StatsAnalyzer::rows_to_csv(rows, true);
 }
 
 }  // namespace oj

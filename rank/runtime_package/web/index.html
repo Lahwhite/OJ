@@ -26,6 +26,10 @@
                class="lc-btn-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition">
                 返回主页
             </a>
+            <button id="exportCsvButton" type="button"
+                    class="lc-btn-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition">
+                导出 CSV
+            </button>
             <button id="refreshButton" type="button"
                     class="lc-btn-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold shadow transition">
                 刷新数据
@@ -34,6 +38,15 @@
     </header>
 
     <section id="notice" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
+
+    <section id="summaryBar" class="lc-panel mb-5 grid gap-3 rounded-2xl p-4 text-sm md:grid-cols-4 lg:grid-cols-6">
+        <div><span class="text-[var(--lc-muted)]">参赛人数</span><div id="summaryUsers" class="mt-1 text-lg font-bold">-</div></div>
+        <div><span class="text-[var(--lc-muted)]">最高积分</span><div id="summaryMax" class="mt-1 text-lg font-bold text-[#ffa116]">-</div></div>
+        <div><span class="text-[var(--lc-muted)]">平均积分</span><div id="summaryAvg" class="mt-1 text-lg font-bold">-</div></div>
+        <div><span class="text-[var(--lc-muted)]">中位积分</span><div id="summaryMedian" class="mt-1 text-lg font-bold">-</div></div>
+        <div><span class="text-[var(--lc-muted)]">平均通过</span><div id="summarySolved" class="mt-1 text-lg font-bold">-</div></div>
+        <div><span class="text-[var(--lc-muted)]">我的百分位</span><div id="summaryPercentile" class="mt-1 text-lg font-bold">-</div></div>
+    </section>
 
     <section class="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div class="lc-tabs inline-flex rounded-xl p-1" role="tablist">

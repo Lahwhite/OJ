@@ -12,6 +12,7 @@ find_package(Threads REQUIRED)
 
 add_library(leaderboard_core
     src/leaderboard/leaderboard_service.cpp
+    src/leaderboard/stats_analyzer.cpp
     src/api/leaderboard_api.cpp
     src/storage/in_memory_repository.cpp
     src/storage/in_memory_cache.cpp
@@ -58,5 +59,9 @@ target_link_libraries(leaderboard_server PRIVATE leaderboard_http)
 add_executable(leaderboard_tests tests/leaderboard_service_test.cpp)
 target_link_libraries(leaderboard_tests PRIVATE leaderboard_core)
 
+add_executable(leaderboard_extended_tests tests/leaderboard_extended_test.cpp)
+target_link_libraries(leaderboard_extended_tests PRIVATE leaderboard_core)
+
 enable_testing()
 add_test(NAME leaderboard_tests COMMAND leaderboard_tests)
+add_test(NAME leaderboard_extended_tests COMMAND leaderboard_extended_tests)
