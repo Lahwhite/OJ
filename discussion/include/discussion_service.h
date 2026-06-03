@@ -57,6 +57,10 @@ public:
 
     std::optional<DiscussionTopic> getTopic(int64_t topic_id) const;
 
+    int deleteTopic(int64_t topic_id, int64_t user_id);
+
+    int deleteTopicByUsername(int64_t topic_id, const std::string& username);
+
     int64_t createComment(int64_t topic_id,
                           int64_t user_id,
                           const std::string& content,
@@ -66,6 +70,10 @@ public:
                                     const std::string& username,
                                     const std::string& content,
                                     std::optional<int64_t> parent_comment_id);
+
+    int deleteComment(int64_t topic_id, int64_t comment_id, int64_t user_id);
+
+    int deleteCommentByUsername(int64_t topic_id, int64_t comment_id, const std::string& username);
 
     std::vector<DiscussionComment> listComments(int64_t topic_id) const;
 

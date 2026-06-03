@@ -9,6 +9,7 @@
 
 #include "crow_all.h"
 #include "discussion_service.h"
+#include "gemini_client.h"
 
 #include <cstdint>
 #include <memory>
@@ -43,6 +44,11 @@ public:
     crow::response handleGetTopic(const crow::request& req, int64_t topic_id);
 
     /**
+     * @brief 删除主题
+     */
+    crow::response handleDeleteTopic(const crow::request& req, int64_t topic_id);
+
+    /**
      * @brief 创建评论
      */
     crow::response handleCreateComment(const crow::request& req, int64_t topic_id);
@@ -51,6 +57,16 @@ public:
      * @brief 查询评论列表
      */
     crow::response handleListComments(const crow::request& req, int64_t topic_id);
+
+    /**
+     * @brief 删除评论或回复
+     */
+    crow::response handleDeleteComment(const crow::request& req, int64_t topic_id, int64_t comment_id);
+
+    /**
+     * @brief Summarize a discussion topic with Gemini.
+     */
+    crow::response handleSummarizeTopic(const crow::request& req, int64_t topic_id);
 
     /**
      * @brief 启动服务
@@ -66,6 +82,7 @@ private:
     bool validateCommentPayload(const nlohmann::json& body) const;
 
     DiscussionService service_;
+    GeminiClient gemini_client_;
     std::unique_ptr<crow::Crow<crow::CORSHandler>> app_;
 };
 

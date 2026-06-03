@@ -5,6 +5,7 @@ const state = {
     limit: 20,
     filterProblemId: null,
     currentUsername: "",
+    summaryCache: new Map(),
 };
 
 const els = {
@@ -27,6 +28,10 @@ const els = {
     detailTime: document.querySelector("#detailTime"),
     detailTitle: document.querySelector("#detailTitle"),
     detailContent: document.querySelector("#detailContent"),
+    deleteTopicButton: document.querySelector("#deleteTopicButton"),
+    summaryButton: document.querySelector("#summaryButton"),
+    summaryStatus: document.querySelector("#summaryStatus"),
+    summaryPanel: document.querySelector("#summaryPanel"),
     commentCount: document.querySelector("#commentCount"),
     commentList: document.querySelector("#commentList"),
     commentForm: document.querySelector("#commentForm"),
@@ -193,6 +198,8 @@ async function selectTopic(topicId) {
 
     els.emptyDetail.classList.add("hidden");
     els.topicDetail.classList.remove("hidden");
+    els.deleteTopicButton.classList.add("hidden");
+    els.deleteTopicButton.dataset.topicAuthor = "";
     els.detailTitle.textContent = "正在加载...";
     els.detailContent.textContent = "";
     els.commentList.innerHTML = loadingHtml("正在加载评论...");
@@ -212,6 +219,50 @@ function renderDetail(topic) {
     els.detailTime.textContent = formatDate(topic.created_at);
     els.detailTitle.textContent = topic.title;
     els.detailContent.textContent = topic.content;
+    const canDelete = state.currentUsername && topic.username === state.currentUsername;
+    els.deleteTopicButton.classList.toggle("hidden", !canDelete);
+    els.deleteTopicButton.dataset.topicAuthor = displayName(topic);
+    renderSummaryState(topic.id);
+}
+
+function renderSummaryState(topicId) {
+    const cached = state.summaryCache.get(topicId);
+    els.summaryButton.disabled = false;
+    els.summaryButton.textContent = cached ? "重新生成" : "生成总结";
+    els.summaryStatus.textContent = cached ? `由 ${cached.model || "Gemini"} 生成` : "点击按钮后由 Gemini 生成当前主题和评论摘要。";
+    els.summaryPanel.classList.toggle("hidden", !cached);
+    els.summaryPanel.textContent = cached?.summary || "";
+}
+
+async function summarizeTopic() {
+    if (!state.selectedTopicId) {
+        return;
+    }
+
+    els.summaryButton.disabled = true;
+    els.summaryButton.textContent = "生成中...";
+    els.summaryStatus.textContent = "正在调用 Gemini 总结当前讨论...";
+    els.summaryPanel.classList.remove("hidden");
+    els.summaryPanel.textContent = "请稍候。";
+
+    try {
+        const result = await requestJson(`/api/discussions/topics/${state.selectedTopicId}/summary`, {
+            method: "POST",
+            body: JSON.stringify({}),
+        });
+        state.summaryCache.set(state.selectedTopicId, result);
+        renderSummaryState(state.selectedTopicId);
+        setNotice("AI 总结已生成。", "success");
+    } catch (error) {
+        els.summaryStatus.textContent = "总结失败，请稍后重试。";
+        els.summaryPanel.textContent = error.message;
+        setNotice(error.message, "error");
+    } finally {
+        els.summaryButton.disabled = false;
+        if (!state.summaryCache.has(state.selectedTopicId)) {
+            els.summaryButton.textContent = "生成总结";
+        }
+    }
 }
 
 function renderComments(comments) {
@@ -225,6 +276,8 @@ function renderComments(comments) {
     els.commentList.innerHTML = comments.map((comment) => {
         const parent = comment.parent_comment_id ? byId.get(comment.parent_comment_id) : null;
         const parentLine = parent ? `<div class="mb-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-500">回复 ${escapeHtml(displayName(parent))}：${escapeHtml(parent.content).slice(0, 80)}</div>` : "";
+        const canDelete = state.currentUsername && comment.username === state.currentUsername;
+        const deleteButton = canDelete ? `<button type="button" class="delete-comment-button mt-2 text-sm font-medium text-red-400 hover:underline" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">删除</button>` : "";
         return `
             <div class="comment-card" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">
                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -233,7 +286,10 @@ function renderComments(comments) {
                 </div>
                 ${parentLine}
                 <p class="mt-2 whitespace-pre-wrap break-words leading-7 text-gray-700">${escapeHtml(comment.content)}</p>
-                <button type="button" class="reply-button mt-2 text-sm font-medium text-blue-400 hover:underline" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">回复</button>
+                <div class="flex flex-wrap gap-3">
+                    <button type="button" class="reply-button mt-2 text-sm font-medium text-blue-400 hover:underline" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">回复</button>
+                    ${deleteButton}
+                </div>
             </div>
         `;
     }).join("");
@@ -241,6 +297,65 @@ function renderComments(comments) {
     els.commentList.querySelectorAll(".reply-button").forEach((button) => {
         button.addEventListener("click", () => setReply(Number(button.dataset.commentId), button.dataset.commentAuthor));
     });
+    els.commentList.querySelectorAll(".delete-comment-button").forEach((button) => {
+        button.addEventListener("click", () => deleteComment(Number(button.dataset.commentId), button.dataset.commentAuthor));
+    });
+}
+
+async function deleteComment(commentId, author) {
+    if (!state.selectedTopicId) {
+        return;
+    }
+
+    const username = requireUsername();
+    const confirmed = window.confirm(`确定删除 ${author} 的这条评论吗？如果它有回复，回复也会一起删除。`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const result = await requestJson(`/api/discussions/topics/${state.selectedTopicId}/comments/${commentId}`, {
+            method: "DELETE",
+            body: JSON.stringify({ username }),
+        });
+        state.summaryCache.delete(state.selectedTopicId);
+        clearReply();
+        setNotice(`已删除 ${result.deleted_count || 1} 条评论。`, "success");
+        await loadTopics({ reset: true });
+        await selectTopic(state.selectedTopicId);
+    } catch (error) {
+        setNotice(error.message, "error");
+    }
+}
+
+async function deleteTopic() {
+    if (!state.selectedTopicId) {
+        return;
+    }
+
+    const topicId = state.selectedTopicId;
+    const username = requireUsername();
+    const author = els.deleteTopicButton.dataset.topicAuthor || "当前用户";
+    const confirmed = window.confirm(`确定删除 ${author} 的这个主题吗？主题下的评论和回复也会一起删除。`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const result = await requestJson(`/api/discussions/topics/${topicId}`, {
+            method: "DELETE",
+            body: JSON.stringify({ username }),
+        });
+        state.summaryCache.delete(topicId);
+        state.selectedTopicId = null;
+        clearReply();
+        els.topicDetail.classList.add("hidden");
+        els.emptyDetail.classList.remove("hidden");
+        await loadTopics({ reset: true });
+        setNotice(`已删除 ${result.deleted_count || 1} 个主题。`, "success");
+    } catch (error) {
+        setNotice(error.message, "error");
+    }
 }
 
 function setReply(commentId, author) {
@@ -325,6 +440,7 @@ async function submitComment(event) {
             method: "POST",
             body: JSON.stringify(payload),
         });
+        state.summaryCache.delete(state.selectedTopicId);
         els.commentForm.reset();
         clearReply();
         setNotice("评论提交成功。", "success");
@@ -347,6 +463,8 @@ function escapeHtml(value) {
 function bindEvents() {
     els.refreshButton.addEventListener("click", () => loadTopics({ reset: true }).catch((error) => setNotice(error.message, "error")));
     els.loadMoreButton.addEventListener("click", () => loadTopics().catch((error) => setNotice(error.message, "error")));
+    els.summaryButton.addEventListener("click", () => summarizeTopic());
+    els.deleteTopicButton.addEventListener("click", () => deleteTopic());
     els.topicForm.addEventListener("submit", submitTopic);
     els.commentForm.addEventListener("submit", submitComment);
     els.cancelReplyButton.addEventListener("click", clearReply);

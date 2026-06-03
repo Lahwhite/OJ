@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -153,6 +154,17 @@ bool topicExists(sql::Connection& conn, int64_t topic_id) {
     return rs->next();
 }
 
+std::optional<int64_t> topicOwnerUserId(sql::Connection& conn, int64_t topic_id) {
+    std::unique_ptr<sql::PreparedStatement> stmt(
+        conn.prepareStatement("SELECT user_id FROM discussion_topics WHERE id = ?"));
+    stmt->setInt64(1, topic_id);
+    std::unique_ptr<sql::ResultSet> rs(stmt->executeQuery());
+    if (!rs->next()) {
+        return std::nullopt;
+    }
+    return rs->getInt64("user_id");
+}
+
 bool parentCommentBelongsToTopic(sql::Connection& conn, int64_t topic_id, int64_t parent_comment_id) {
     std::unique_ptr<sql::PreparedStatement> stmt(
         conn.prepareStatement("SELECT id FROM discussion_comments WHERE id = ? AND topic_id = ?"));
@@ -160,6 +172,149 @@ bool parentCommentBelongsToTopic(sql::Connection& conn, int64_t topic_id, int64_
     stmt->setInt64(2, topic_id);
     std::unique_ptr<sql::ResultSet> rs(stmt->executeQuery());
     return rs->next();
+}
+
+std::optional<int64_t> commentOwnerUserId(sql::Connection& conn, int64_t topic_id, int64_t comment_id) {
+    std::unique_ptr<sql::PreparedStatement> stmt(
+        conn.prepareStatement("SELECT user_id FROM discussion_comments WHERE id = ? AND topic_id = ?"));
+    stmt->setInt64(1, comment_id);
+    stmt->setInt64(2, topic_id);
+    std::unique_ptr<sql::ResultSet> rs(stmt->executeQuery());
+    if (!rs->next()) {
+        return std::nullopt;
+    }
+    return rs->getInt64("user_id");
+}
+
+int countCommentTree(sql::Connection& conn, int64_t topic_id, int64_t comment_id) {
+    std::unique_ptr<sql::PreparedStatement> stmt(
+        conn.prepareStatement(
+            "WITH RECURSIVE comment_tree AS ("
+            "SELECT id FROM discussion_comments WHERE id = ? AND topic_id = ? "
+            "UNION ALL "
+            "SELECT c.id FROM discussion_comments c "
+            "JOIN comment_tree ct ON c.parent_comment_id = ct.id "
+            "WHERE c.topic_id = ?"
+            ") SELECT COUNT(*) AS deleted_count FROM comment_tree"));
+    stmt->setInt64(1, comment_id);
+    stmt->setInt64(2, topic_id);
+    stmt->setInt64(3, topic_id);
+    std::unique_ptr<sql::ResultSet> rs(stmt->executeQuery());
+    if (!rs->next()) {
+        return 0;
+    }
+    return rs->getInt("deleted_count");
+}
+
+int countTopicComments(sql::Connection& conn, int64_t topic_id) {
+    std::unique_ptr<sql::PreparedStatement> stmt(
+        conn.prepareStatement("SELECT COUNT(*) AS comment_count FROM discussion_comments WHERE topic_id = ?"));
+    stmt->setInt64(1, topic_id);
+    std::unique_ptr<sql::ResultSet> rs(stmt->executeQuery());
+    if (!rs->next()) {
+        return 0;
+    }
+    return rs->getInt("comment_count");
+}
+
+void deleteTopicComments(sql::Connection& conn, int64_t topic_id) {
+    while (countTopicComments(conn, topic_id) > 0) {
+        std::unique_ptr<sql::PreparedStatement> stmt(
+            conn.prepareStatement(
+                "DELETE FROM discussion_comments "
+                "WHERE topic_id = ? "
+                "AND id NOT IN ("
+                "SELECT parent_id FROM ("
+                "SELECT DISTINCT parent_comment_id AS parent_id "
+                "FROM discussion_comments "
+                "WHERE topic_id = ? AND parent_comment_id IS NOT NULL"
+                ") AS referenced_parents"
+                ")"));
+        stmt->setInt64(1, topic_id);
+        stmt->setInt64(2, topic_id);
+        const int deleted_count = stmt->executeUpdate();
+        if (deleted_count <= 0) {
+            throw std::runtime_error("failed to delete topic comments");
+        }
+    }
+}
+
+int deleteCommentWithUserId(sql::Connection& conn, int64_t topic_id, int64_t comment_id, int64_t user_id) {
+    if (!topicExists(conn, topic_id)) {
+        throw std::out_of_range("topic not found");
+    }
+
+    const bool old_autocommit = conn.getAutoCommit();
+    conn.setAutoCommit(false);
+    try {
+        const auto owner_user_id = commentOwnerUserId(conn, topic_id, comment_id);
+        if (!owner_user_id.has_value()) {
+            throw std::out_of_range("comment not found");
+        }
+        if (*owner_user_id != user_id) {
+            throw std::domain_error("permission denied");
+        }
+
+        const int deleted_count = countCommentTree(conn, topic_id, comment_id);
+        if (deleted_count <= 0) {
+            throw std::out_of_range("comment not found");
+        }
+
+        std::unique_ptr<sql::PreparedStatement> delete_stmt(
+            conn.prepareStatement("DELETE FROM discussion_comments WHERE id = ? AND topic_id = ?"));
+        delete_stmt->setInt64(1, comment_id);
+        delete_stmt->setInt64(2, topic_id);
+        delete_stmt->executeUpdate();
+
+        std::unique_ptr<sql::PreparedStatement> update_stmt(
+            conn.prepareStatement(
+                "UPDATE discussion_topics "
+                "SET comment_count = GREATEST(comment_count - ?, 0), updated_at = CURRENT_TIMESTAMP "
+                "WHERE id = ?"));
+        update_stmt->setInt(1, deleted_count);
+        update_stmt->setInt64(2, topic_id);
+        update_stmt->executeUpdate();
+
+        conn.commit();
+        conn.setAutoCommit(old_autocommit);
+        return deleted_count;
+    } catch (...) {
+        conn.rollback();
+        conn.setAutoCommit(old_autocommit);
+        throw;
+    }
+}
+
+int deleteTopicWithUserId(sql::Connection& conn, int64_t topic_id, int64_t user_id) {
+    const bool old_autocommit = conn.getAutoCommit();
+    conn.setAutoCommit(false);
+    try {
+        const auto owner_user_id = topicOwnerUserId(conn, topic_id);
+        if (!owner_user_id.has_value()) {
+            throw std::out_of_range("topic not found");
+        }
+        if (*owner_user_id != user_id) {
+            throw std::domain_error("permission denied");
+        }
+
+        deleteTopicComments(conn, topic_id);
+
+        std::unique_ptr<sql::PreparedStatement> delete_stmt(
+            conn.prepareStatement("DELETE FROM discussion_topics WHERE id = ?"));
+        delete_stmt->setInt64(1, topic_id);
+        const int deleted_count = delete_stmt->executeUpdate();
+        if (deleted_count <= 0) {
+            throw std::out_of_range("topic not found");
+        }
+
+        conn.commit();
+        conn.setAutoCommit(old_autocommit);
+        return deleted_count;
+    } catch (...) {
+        conn.rollback();
+        conn.setAutoCommit(old_autocommit);
+        throw;
+    }
 }
 
 #endif
@@ -365,6 +520,40 @@ std::optional<DiscussionTopic> DiscussionService::getTopic(int64_t topic_id) con
 #endif
 }
 
+int DiscussionService::deleteTopic(int64_t topic_id, int64_t user_id) {
+    if (topic_id <= 0 || user_id <= 0) {
+        throw std::invalid_argument("topic_id and user_id must be positive");
+    }
+    ensureSchema();
+
+#ifndef OJ_WITH_MYSQL
+    return 0;
+#else
+    MysqlConnectionGuard guard;
+    sql::Connection* conn = guard.get();
+    ensureUserExists(*conn, user_id);
+    return deleteTopicWithUserId(*conn, topic_id, user_id);
+#endif
+}
+
+int DiscussionService::deleteTopicByUsername(int64_t topic_id, const std::string& username) {
+    if (topic_id <= 0) {
+        throw std::invalid_argument("topic_id must be positive");
+    }
+    ensureSchema();
+
+#ifndef OJ_WITH_MYSQL
+    (void)topic_id;
+    (void)username;
+    return 0;
+#else
+    MysqlConnectionGuard guard;
+    sql::Connection* conn = guard.get();
+    const int64_t user_id = findUserIdByUsername(*conn, username);
+    return deleteTopicWithUserId(*conn, topic_id, user_id);
+#endif
+}
+
 int64_t DiscussionService::createComment(int64_t topic_id,
                                          int64_t user_id,
                                          const std::string& content,
@@ -497,6 +686,43 @@ int64_t DiscussionService::createCommentByUsername(int64_t topic_id,
         conn->setAutoCommit(old_autocommit);
         throw;
     }
+#endif
+}
+
+int DiscussionService::deleteComment(int64_t topic_id, int64_t comment_id, int64_t user_id) {
+    if (topic_id <= 0 || comment_id <= 0 || user_id <= 0) {
+        throw std::invalid_argument("topic_id, comment_id and user_id must be positive");
+    }
+    ensureSchema();
+
+#ifndef OJ_WITH_MYSQL
+    return 0;
+#else
+    MysqlConnectionGuard guard;
+    sql::Connection* conn = guard.get();
+    ensureUserExists(*conn, user_id);
+    return deleteCommentWithUserId(*conn, topic_id, comment_id, user_id);
+#endif
+}
+
+int DiscussionService::deleteCommentByUsername(int64_t topic_id,
+                                               int64_t comment_id,
+                                               const std::string& username) {
+    if (topic_id <= 0 || comment_id <= 0) {
+        throw std::invalid_argument("topic_id and comment_id must be positive");
+    }
+    ensureSchema();
+
+#ifndef OJ_WITH_MYSQL
+    (void)topic_id;
+    (void)comment_id;
+    (void)username;
+    return 0;
+#else
+    MysqlConnectionGuard guard;
+    sql::Connection* conn = guard.get();
+    const int64_t user_id = findUserIdByUsername(*conn, username);
+    return deleteCommentWithUserId(*conn, topic_id, comment_id, user_id);
 #endif
 }
 

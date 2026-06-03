@@ -41,11 +41,22 @@ DiscussionHandler::DiscussionHandler() {
     CROW_ROUTE((*app_), "/api/discussions/topics/<int>").methods("GET"_method)(
         [this](const crow::request& req, int topic_id) { return handleGetTopic(req, topic_id); });
 
+    CROW_ROUTE((*app_), "/api/discussions/topics/<int>").methods("DELETE"_method)(
+        [this](const crow::request& req, int topic_id) { return handleDeleteTopic(req, topic_id); });
+
     CROW_ROUTE((*app_), "/api/discussions/topics/<int>/comments").methods("POST"_method)(
         [this](const crow::request& req, int topic_id) { return handleCreateComment(req, topic_id); });
 
     CROW_ROUTE((*app_), "/api/discussions/topics/<int>/comments").methods("GET"_method)(
         [this](const crow::request& req, int topic_id) { return handleListComments(req, topic_id); });
+
+    CROW_ROUTE((*app_), "/api/discussions/topics/<int>/comments/<int>").methods("DELETE"_method)(
+        [this](const crow::request& req, int topic_id, int comment_id) {
+            return handleDeleteComment(req, topic_id, comment_id);
+        });
+
+    CROW_ROUTE((*app_), "/api/discussions/topics/<int>/summary").methods("POST"_method)(
+        [this](const crow::request& req, int topic_id) { return handleSummarizeTopic(req, topic_id); });
 
     CROW_ROUTE((*app_), "/health").methods("GET"_method)([this] {
         json body;
@@ -54,6 +65,8 @@ DiscussionHandler::DiscussionHandler() {
         body["mysql_pool_ready"] = oj::MysqlConnectionPool::instance().available();
         body["discussion_database_ready"] = service_.databaseReady();
         body["redis_ready"] = oj::RedisCache::instance().connected();
+        body["gemini_configured"] = GeminiClient::configured();
+        body["gemini_model"] = GeminiClient::activeModel();
         auto st = oj::MysqlConnectionPool::instance().stats();
         body["mysql_idle_connections"] = st.pool_size;
         body["mysql_in_use_connections"] = st.in_use;
@@ -248,6 +261,40 @@ crow::response DiscussionHandler::handleGetTopic(const crow::request& req, int64
     }
 }
 
+crow::response DiscussionHandler::handleDeleteTopic(const crow::request& req, int64_t topic_id) {
+    try {
+        json body = req.body.empty() ? json::object() : json::parse(req.body);
+        if (!body.contains("username") && !body.contains("user_id")) {
+            throw oj::HttpException(400, "bad_request", "missing username or user_id");
+        }
+
+        int deleted_count = 0;
+        if (body.contains("username") && !body["username"].is_null()) {
+            deleted_count = service_.deleteTopicByUsername(topic_id, body["username"].get<std::string>());
+        } else {
+            deleted_count = service_.deleteTopic(topic_id, body["user_id"].get<int64_t>());
+        }
+
+        OJ_LOG_INFO("discussion topic deleted, topic_id=" + std::to_string(topic_id));
+
+        json result;
+        result["topic_id"] = topic_id;
+        result["deleted_count"] = deleted_count;
+        return jsonResponse(200, result);
+    } catch (const oj::HttpException& e) {
+        return jsonResponse(e.http_status, json::parse(oj::makeErrorJson(e.error_code, e.what())));
+    } catch (const std::domain_error& e) {
+        return jsonResponse(403, json::parse(oj::makeErrorJson("permission_denied", e.what())));
+    } catch (const std::out_of_range& e) {
+        return jsonResponse(404, json::parse(oj::makeErrorJson("not_found", e.what())));
+    } catch (const std::invalid_argument& e) {
+        return jsonResponse(400, json::parse(oj::makeErrorJson("bad_request", e.what())));
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR(std::string("handleDeleteTopic failed: ") + e.what());
+        return jsonResponse(500, json::parse(oj::makeErrorJson("internal_error", e.what())));
+    }
+}
+
 crow::response DiscussionHandler::handleCreateComment(const crow::request& req, int64_t topic_id) {
     try {
         json body = json::parse(req.body);
@@ -339,6 +386,82 @@ crow::response DiscussionHandler::handleListComments(const crow::request& req, i
         return jsonResponse(404, json::parse(oj::makeErrorJson("topic_not_found", "topic does not exist")));
     } catch (const std::exception& e) {
         return jsonResponse(500, json::parse(oj::makeErrorJson("internal_error", e.what())));
+    }
+}
+
+crow::response DiscussionHandler::handleDeleteComment(const crow::request& req,
+                                                      int64_t topic_id,
+                                                      int64_t comment_id) {
+    try {
+        json body = req.body.empty() ? json::object() : json::parse(req.body);
+        if (!body.contains("username") && !body.contains("user_id")) {
+            throw oj::HttpException(400, "bad_request", "missing username or user_id");
+        }
+
+        int deleted_count = 0;
+        if (body.contains("username") && !body["username"].is_null()) {
+            deleted_count = service_.deleteCommentByUsername(
+                topic_id,
+                comment_id,
+                body["username"].get<std::string>());
+        } else {
+            deleted_count = service_.deleteComment(
+                topic_id,
+                comment_id,
+                body["user_id"].get<int64_t>());
+        }
+
+        OJ_LOG_INFO("discussion comment deleted, topic_id=" + std::to_string(topic_id) +
+                    " comment_id=" + std::to_string(comment_id) +
+                    " deleted_count=" + std::to_string(deleted_count));
+
+        json result;
+        result["topic_id"] = topic_id;
+        result["comment_id"] = comment_id;
+        result["deleted_count"] = deleted_count;
+        return jsonResponse(200, result);
+    } catch (const oj::HttpException& e) {
+        return jsonResponse(e.http_status, json::parse(oj::makeErrorJson(e.error_code, e.what())));
+    } catch (const std::domain_error& e) {
+        return jsonResponse(403, json::parse(oj::makeErrorJson("permission_denied", e.what())));
+    } catch (const std::out_of_range& e) {
+        return jsonResponse(404, json::parse(oj::makeErrorJson("not_found", e.what())));
+    } catch (const std::invalid_argument& e) {
+        return jsonResponse(400, json::parse(oj::makeErrorJson("bad_request", e.what())));
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR(std::string("handleDeleteComment failed: ") + e.what());
+        return jsonResponse(500, json::parse(oj::makeErrorJson("internal_error", e.what())));
+    }
+}
+
+crow::response DiscussionHandler::handleSummarizeTopic(const crow::request& req, int64_t topic_id) {
+    (void)req;
+    try {
+        if (!GeminiClient::configured()) {
+            throw oj::HttpException(503, "gemini_not_configured", "Gemini API key is not configured");
+        }
+
+        auto topic = service_.getTopic(topic_id);
+        if (!topic.has_value()) {
+            throw oj::HttpException(404, "topic_not_found", "topic does not exist");
+        }
+
+        const auto comments = service_.listComments(topic_id);
+        const auto summary = gemini_client_.summarizeDiscussion(*topic, comments);
+
+        json result;
+        result["topic_id"] = topic_id;
+        result["model"] = summary.model;
+        result["summary"] = summary.summary;
+        result["comment_count"] = comments.size();
+        return jsonResponse(200, result);
+    } catch (const oj::HttpException& e) {
+        return jsonResponse(e.http_status, json::parse(oj::makeErrorJson(e.error_code, e.what())));
+    } catch (const std::out_of_range&) {
+        return jsonResponse(404, json::parse(oj::makeErrorJson("topic_not_found", "topic does not exist")));
+    } catch (const std::exception& e) {
+        OJ_LOG_ERROR(std::string("handleSummarizeTopic failed: ") + e.what());
+        return jsonResponse(502, json::parse(oj::makeErrorJson("gemini_request_failed", e.what())));
     }
 }
 
