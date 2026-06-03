@@ -92,6 +92,25 @@ cmake --build build-msys2 --target leaderboard_server -j
 
 浏览器访问：`http://127.0.0.1:8092/rank`（端口可通过环境变量 `OJ_RANK_PORT` 修改）
 
+### Windows 运行包（与 discussion 一致）
+
+目录：`runtime_package/`
+
+团队同学本地联调可直接运行，无需自行编译：
+
+```powershell
+cd OJ\rank\runtime_package
+powershell -ExecutionPolicy Bypass -File .\start_rank.ps1
+```
+
+更新源码或前端后同步运行包：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\rank\runtime_package\sync_runtime.ps1
+```
+
+说明见 `runtime_package/README.md`。
+
 ### HTTP 接口
 
 | 方法 | 路径 | 说明 |
