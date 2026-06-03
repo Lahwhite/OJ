@@ -29,7 +29,9 @@ std::string LeaderboardApi::get_global_leaderboard_json(std::int32_t limit, std:
     oss << "\"data\":[";
     for (std::size_t i = 0; i < rows.size(); ++i) {
         const auto& r = rows[i];
+        const auto rank = static_cast<std::int64_t>(offset) + static_cast<std::int64_t>(i) + 1;
         oss << "{"
+            << "\"rank\":" << rank << ","
             << "\"user_id\":" << r.user_id << ","
             << "\"username\":" << quote(r.username) << ","
             << "\"solved_count\":" << r.solved_count << ","
@@ -71,7 +73,9 @@ std::string LeaderboardApi::get_contest_leaderboard_json(std::int64_t contest_id
     oss << "\"data\":[";
     for (std::size_t i = 0; i < rows.size(); ++i) {
         const auto& r = rows[i];
+        const auto rank = static_cast<std::int64_t>(offset) + static_cast<std::int64_t>(i) + 1;
         oss << "{"
+            << "\"rank\":" << rank << ","
             << "\"user_id\":" << r.user_id << ","
             << "\"username\":" << quote(r.username) << ","
             << "\"solved_count\":" << r.solved_count << ","

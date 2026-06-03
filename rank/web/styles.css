@@ -1,0 +1,192 @@
+:root {
+    color-scheme: light;
+    --lc-bg: #f7f8fa;
+    --lc-panel: #ffffff;
+    --lc-text: #262626;
+    --lc-muted: #8c8c8c;
+    --lc-border: #eff0f2;
+    --lc-primary: #ffa116;
+    --lc-primary-dark: #e88b00;
+    --lc-easy: #00b8a3;
+    --lc-medium: #ffc01e;
+    --lc-hard: #ff375f;
+    --lc-silver: #c0c4cc;
+    --lc-bronze: #cd7f32;
+    --lc-gold: #ffa116;
+}
+
+.lc-body {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    background:
+        radial-gradient(1200px 500px at 100% -10%, rgb(255 161 22 / 0.12), transparent 55%),
+        radial-gradient(900px 400px at -5% 0%, rgb(0 184 163 / 0.08), transparent 50%),
+        var(--lc-bg);
+    color: var(--lc-text);
+}
+
+.lc-shell {
+    animation: lc-fade-in 420ms ease;
+}
+
+@keyframes lc-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lc-brand {
+    background: rgb(255 161 22 / 0.12);
+    color: var(--lc-primary-dark);
+}
+
+.lc-brand-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--lc-primary);
+    box-shadow: 0 0 0 4px rgb(255 161 22 / 0.2);
+}
+
+.lc-panel {
+    background: var(--lc-panel);
+    border: 1px solid var(--lc-border);
+    box-shadow: 0 8px 30px rgb(38 38 38 / 0.04);
+}
+
+.lc-tabs {
+    background: #fff;
+    border: 1px solid var(--lc-border);
+}
+
+.lc-tab {
+    color: var(--lc-muted);
+    transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.lc-tab.is-active {
+    color: var(--lc-text);
+    background: #fff;
+    box-shadow: 0 4px 14px rgb(38 38 38 / 0.08);
+}
+
+.lc-btn-primary {
+    background: var(--lc-primary);
+    color: #fff;
+}
+
+.lc-btn-primary:hover {
+    background: var(--lc-primary-dark);
+}
+
+.lc-btn-secondary {
+    background: #fff;
+    color: var(--lc-text);
+    border: 1px solid var(--lc-border);
+}
+
+.lc-btn-secondary:hover {
+    border-color: #d9d9d9;
+    background: #fafafa;
+}
+
+.lc-input {
+    background: #fff;
+    border-color: var(--lc-border);
+}
+
+.lc-input:focus {
+    border-color: rgb(255 161 22 / 0.65);
+    box-shadow: 0 0 0 3px rgb(255 161 22 / 0.15);
+}
+
+.lc-table thead {
+    background: #fafafa;
+    color: var(--lc-muted);
+    font-weight: 600;
+}
+
+.lc-table tbody tr {
+    border-top: 1px solid var(--lc-border);
+    transition: background 140ms ease;
+    cursor: pointer;
+}
+
+.lc-table tbody tr:hover,
+.lc-table tbody tr.is-selected {
+    background: rgb(255 161 22 / 0.06);
+}
+
+.lc-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    border-radius: 0.65rem;
+    font-weight: 700;
+}
+
+.lc-rank-badge.is-gold {
+    background: rgb(255 161 22 / 0.15);
+    color: var(--lc-gold);
+}
+
+.lc-rank-badge.is-silver {
+    background: rgb(192 196 204 / 0.2);
+    color: #6b7280;
+}
+
+.lc-rank-badge.is-bronze {
+    background: rgb(205 127 50 / 0.15);
+    color: var(--lc-bronze);
+}
+
+.lc-podium-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid var(--lc-border);
+    background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+    padding: 1.25rem;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.lc-podium-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgb(38 38 38 / 0.08);
+}
+
+.lc-podium-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+}
+
+.lc-podium-card.rank-1::before {
+    background: linear-gradient(90deg, #ffd27a, var(--lc-gold));
+}
+
+.lc-podium-card.rank-2::before {
+    background: linear-gradient(90deg, #e5e7eb, var(--lc-silver));
+}
+
+.lc-podium-card.rank-3::before {
+    background: linear-gradient(90deg, #f0c9a6, var(--lc-bronze));
+}
+
+.lc-chart {
+    min-height: 220px;
+}
+
+@media (max-width: 1279px) {
+    .lc-chart {
+        min-height: 240px;
+    }
+}
