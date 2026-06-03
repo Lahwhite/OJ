@@ -41,6 +41,9 @@ const els = {
     cancelReplyButton: document.querySelector("#cancelReplyButton"),
 };
 
+const NOTICE_BASE_CLASS = "mb-5 max-w-xl break-words rounded-xl border px-4 py-3 text-sm leading-6";
+const DEFAULT_USERS_ORIGIN = "http://127.0.0.1:8081";
+
 function getQueryValue(name) {
     return new URLSearchParams(window.location.search).get(name);
 }
@@ -73,9 +76,87 @@ function displayName(item) {
     return item.nickname || item.username || `用户 #${item.user_id || "-"}`;
 }
 
+function usersAssetOrigin() {
+    const explicitOrigin = getQueryValue("users_origin");
+    if (explicitOrigin) {
+        try {
+            const url = new URL(explicitOrigin, window.location.href);
+            if (url.protocol === "http:" || url.protocol === "https:") {
+                return url.origin;
+            }
+        } catch {
+            // Fall back to the configured home link below.
+        }
+    }
+
+    try {
+        return new URL(els.homeLink.href, window.location.href).origin;
+    } catch {
+        return DEFAULT_USERS_ORIGIN;
+    }
+}
+
+function defaultAvatarUrl() {
+    return "/images/default-avatar.png";
+}
+
+function avatarUrl(item) {
+    const raw = String(item?.avatar || "").trim();
+    if (!raw) {
+        return defaultAvatarUrl();
+    }
+    if (/^(https?:|data:image\/)/i.test(raw)) {
+        return raw;
+    }
+    if (raw.startsWith("/uploads/avatars/") || raw.startsWith("/images/")) {
+        return raw;
+    }
+    if (raw.startsWith("uploads/avatars/") || raw.startsWith("images/")) {
+        return `/${raw}`;
+    }
+    if (raw.startsWith("/")) {
+        return raw;
+    }
+    return `${usersAssetOrigin()}/${raw.replace(/^\.?\//, "")}`;
+}
+
+function avatarInitial(item) {
+    const name = displayName(item).trim();
+    return name ? name.slice(0, 1).toUpperCase() : "U";
+}
+
+function avatarHtml(item, sizeClass = "") {
+    const name = displayName(item);
+    return `
+        <span class="avatar ${sizeClass}">
+            <img class="avatar-img" src="${escapeHtml(avatarUrl(item))}" alt="${escapeHtml(`${name} 的头像`)}" loading="lazy" referrerpolicy="no-referrer">
+            <span class="avatar-fallback" aria-hidden="true">${escapeHtml(avatarInitial(item))}</span>
+        </span>
+    `;
+}
+
+function userInlineHtml(item, sizeClass = "") {
+    return `
+        ${avatarHtml(item, sizeClass)}
+        <span class="truncate">${escapeHtml(displayName(item))}</span>
+    `;
+}
+
+function bindAvatarFallbacks(root) {
+    root.querySelectorAll(".avatar-img").forEach((img) => {
+        img.addEventListener("error", () => {
+            const avatar = img.closest(".avatar");
+            if (avatar) {
+                avatar.classList.add("is-fallback");
+            }
+            img.remove();
+        }, { once: true });
+    });
+}
+
 function setNotice(message, type = "info") {
     if (!message) {
-        els.notice.className = "mb-5 hidden rounded-xl border px-4 py-3 text-sm";
+        els.notice.className = `${NOTICE_BASE_CLASS} hidden`;
         els.notice.textContent = "";
         return;
     }
@@ -85,7 +166,7 @@ function setNotice(message, type = "info") {
         success: "border-green-200 bg-green-50 text-green-700",
         error: "border-red-200 bg-red-50 text-red-700",
     };
-    els.notice.className = `mb-5 rounded-xl border px-4 py-3 text-sm ${themes[type] || themes.info}`;
+    els.notice.className = `${NOTICE_BASE_CLASS} ${themes[type] || themes.info}`;
     els.notice.textContent = message;
 }
 
@@ -147,6 +228,8 @@ async function loadTopics({ reset = false } = {}) {
         await selectTopic(state.topics[0].id);
     } else if (state.selectedTopicId) {
         markActiveTopic();
+    } else {
+        renderSummaryState(null);
     }
 }
 
@@ -173,13 +256,16 @@ function renderTopics() {
             </div>
             <h3 class="mt-3 line-clamp-2 font-bold text-gray-800">${escapeHtml(topic.title)}</h3>
             <p class="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">${escapeHtml(topic.content)}</p>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-400">
-                <span>${escapeHtml(displayName(topic))}</span>
-                <span>${topic.comment_count || 0} 条评论</span>
+            <div class="mt-3 flex items-center justify-between gap-3 text-xs text-gray-400">
+                <span class="inline-flex min-w-0 items-center gap-2 text-gray-500">
+                    ${userInlineHtml(topic, "avatar-sm")}
+                </span>
+                <span class="shrink-0">${topic.comment_count || 0} 条评论</span>
             </div>
         </button>
     `).join("");
 
+    bindAvatarFallbacks(els.topicList);
     els.topicList.querySelectorAll("[data-topic-id]").forEach((button) => {
         button.addEventListener("click", () => selectTopic(Number(button.dataset.topicId)));
     });
@@ -203,6 +289,7 @@ async function selectTopic(topicId) {
     els.detailTitle.textContent = "正在加载...";
     els.detailContent.textContent = "";
     els.commentList.innerHTML = loadingHtml("正在加载评论...");
+    renderSummaryState(topicId);
 
     const [topic, comments] = await Promise.all([
         requestJson(`/api/discussions/topics/${topicId}`),
@@ -215,7 +302,7 @@ async function selectTopic(topicId) {
 
 function renderDetail(topic) {
     els.detailProblem.textContent = `题目 ${topic.problem_id}`;
-    els.detailAuthor.textContent = displayName(topic);
+    els.detailAuthor.innerHTML = userInlineHtml(topic, "avatar-sm");
     els.detailTime.textContent = formatDate(topic.created_at);
     els.detailTitle.textContent = topic.title;
     els.detailContent.textContent = topic.content;
@@ -223,9 +310,19 @@ function renderDetail(topic) {
     els.deleteTopicButton.classList.toggle("hidden", !canDelete);
     els.deleteTopicButton.dataset.topicAuthor = displayName(topic);
     renderSummaryState(topic.id);
+    bindAvatarFallbacks(els.detailAuthor);
 }
 
 function renderSummaryState(topicId) {
+    if (!topicId) {
+        els.summaryButton.disabled = true;
+        els.summaryButton.textContent = "生成总结";
+        els.summaryStatus.textContent = "选择主题后可生成当前讨论摘要。";
+        els.summaryPanel.classList.add("hidden");
+        els.summaryPanel.textContent = "";
+        return;
+    }
+
     const cached = state.summaryCache.get(topicId);
     els.summaryButton.disabled = false;
     els.summaryButton.textContent = cached ? "重新生成" : "生成总结";
@@ -275,13 +372,23 @@ function renderComments(comments) {
     const byId = new Map(comments.map((comment) => [comment.id, comment]));
     els.commentList.innerHTML = comments.map((comment) => {
         const parent = comment.parent_comment_id ? byId.get(comment.parent_comment_id) : null;
-        const parentLine = parent ? `<div class="mb-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-500">回复 ${escapeHtml(displayName(parent))}：${escapeHtml(parent.content).slice(0, 80)}</div>` : "";
+        const parentLine = parent ? `
+            <div class="mb-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                <span class="inline-flex min-w-0 items-center gap-2 align-middle">
+                    <span>回复</span>
+                    ${userInlineHtml(parent, "avatar-xs")}
+                </span>
+                <span>：${escapeHtml(parent.content).slice(0, 80)}</span>
+            </div>
+        ` : "";
         const canDelete = state.currentUsername && comment.username === state.currentUsername;
         const deleteButton = canDelete ? `<button type="button" class="delete-comment-button mt-2 text-sm font-medium text-red-400 hover:underline" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">删除</button>` : "";
         return `
             <div class="comment-card" data-comment-id="${comment.id}" data-comment-author="${escapeHtml(displayName(comment))}">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="font-medium text-gray-800">${escapeHtml(displayName(comment))}</div>
+                    <div class="inline-flex min-w-0 items-center gap-2 font-medium text-gray-800">
+                        ${userInlineHtml(comment)}
+                    </div>
                     <div class="text-xs text-gray-400">${formatDate(comment.created_at)}</div>
                 </div>
                 ${parentLine}
@@ -294,6 +401,7 @@ function renderComments(comments) {
         `;
     }).join("");
 
+    bindAvatarFallbacks(els.commentList);
     els.commentList.querySelectorAll(".reply-button").forEach((button) => {
         button.addEventListener("click", () => setReply(Number(button.dataset.commentId), button.dataset.commentAuthor));
     });
@@ -351,6 +459,7 @@ async function deleteTopic() {
         clearReply();
         els.topicDetail.classList.add("hidden");
         els.emptyDetail.classList.remove("hidden");
+        renderSummaryState(null);
         await loadTopics({ reset: true });
         setNotice(`已删除 ${result.deleted_count || 1} 个主题。`, "success");
     } catch (error) {
@@ -478,10 +587,12 @@ function bindEvents() {
         state.selectedTopicId = null;
         els.topicDetail.classList.add("hidden");
         els.emptyDetail.classList.remove("hidden");
+        renderSummaryState(null);
         loadTopics({ reset: true }).catch((error) => setNotice(error.message, "error"));
     });
 }
 
 initFromQuery();
 bindEvents();
+renderSummaryState(null);
 loadTopics({ reset: true }).catch((error) => setNotice(error.message, "error"));
