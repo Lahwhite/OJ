@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排行榜 · OJ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/rank/static/styles.css">
+</head>
+<body class="lc-body min-h-screen">
+<main class="lc-shell mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <div class="lc-brand mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
+                <span class="lc-brand-dot"></span>
+                OJ Leaderboard
+            </div>
+            <h1 class="text-3xl font-bold tracking-tight text-[var(--lc-text)] md:text-4xl">排行榜</h1>
+            <p class="mt-2 max-w-xl text-sm text-[var(--lc-muted)]">
+                参考 LeetCode 竞赛榜体验：积分排序、题目完成分布与可视化对比。
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <a id="homeLink" href="http://127.0.0.1:8081/home"
+               class="lc-btn-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition">
+                返回主页
+            </a>
+            <button id="refreshButton" type="button"
+                    class="lc-btn-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold shadow transition">
+                刷新数据
+            </button>
+        </div>
+    </header>
+
+    <section id="notice" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
+
+    <section class="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="lc-tabs inline-flex rounded-xl p-1" role="tablist">
+            <button id="tabGlobal" type="button" class="lc-tab is-active rounded-lg px-5 py-2 text-sm font-semibold" data-mode="global">
+                全球排名
+            </button>
+            <button id="tabContest" type="button" class="lc-tab rounded-lg px-5 py-2 text-sm font-semibold" data-mode="contest">
+                竞赛排名
+            </button>
+        </div>
+        <form id="contestForm" class="hidden flex flex-wrap items-center gap-3">
+            <label for="contestId" class="text-sm font-medium text-[var(--lc-muted)]">竞赛 ID</label>
+            <input id="contestId" type="number" min="1" value="1001"
+                   class="lc-input w-32 rounded-lg border px-3 py-2 text-sm outline-none transition">
+            <button type="submit" class="lc-btn-primary rounded-lg px-4 py-2 text-sm font-semibold">加载竞赛榜</button>
+        </form>
+    </section>
+
+    <section id="podium" class="mb-6 grid gap-4 md:grid-cols-3"></section>
+
+    <section class="grid flex-1 gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div class="lc-panel overflow-hidden rounded-2xl">
+            <div class="flex items-center justify-between border-b border-[var(--lc-border)] px-5 py-4">
+                <h2 class="text-lg font-bold text-[var(--lc-text)]">排名列表</h2>
+                <span id="rowCount" class="text-sm text-[var(--lc-muted)]">0 人</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="lc-table w-full min-w-[640px] text-left text-sm">
+                    <thead>
+                    <tr>
+                        <th class="w-16 px-5 py-3">排名</th>
+                        <th class="px-5 py-3">用户</th>
+                        <th class="px-5 py-3 text-right">积分</th>
+                        <th class="px-5 py-3 text-right">通过</th>
+                        <th class="px-5 py-3 text-right hidden sm:table-cell">罚时</th>
+                        <th class="px-5 py-3 text-right hidden md:table-cell">提交</th>
+                    </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t border-[var(--lc-border)] px-5 py-4">
+                <button id="prevPage" type="button" class="lc-btn-secondary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-40" disabled>
+                    上一页
+                </button>
+                <span id="pageInfo" class="text-sm text-[var(--lc-muted)]">第 1 页</span>
+                <button id="nextPage" type="button" class="lc-btn-secondary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-40" disabled>
+                    下一页
+                </button>
+            </div>
+        </div>
+
+        <aside class="flex flex-col gap-5">
+            <div class="lc-panel rounded-2xl p-4">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-[var(--lc-text)]">积分对比</h3>
+                    <span class="text-xs text-[var(--lc-muted)]">Top 8 · 渐变柱</span>
+                </div>
+                <div id="scoreChart" class="lc-chart h-[300px] w-full"></div>
+            </div>
+
+            <div class="lc-panel rounded-2xl p-4">
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <h3 class="text-base font-bold text-[var(--lc-text)]">难度完成分布</h3>
+                    <span id="statsHint" class="text-xs text-[var(--lc-muted)]">点击左侧用户查看</span>
+                </div>
+                <div id="difficultyChart" class="lc-chart h-[280px] w-full"></div>
+            </div>
+
+            <div class="lc-panel rounded-2xl p-4">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-[var(--lc-text)]">通过题数 & 罚时</h3>
+                    <span class="text-xs text-[var(--lc-muted)]">双轴组合</span>
+                </div>
+                <div id="comboChart" class="lc-chart h-[260px] w-full"></div>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<script src="/rank/static/app.js"></script>
+</body>
+</html>

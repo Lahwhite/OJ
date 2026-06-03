@@ -60,6 +60,48 @@
   - `leaderboard_global` / `leaderboard_contest` / `user_problem_stats` 为聚合表
   - 通过提交事件异步或同步更新聚合表
 
+## 前端页面（LeetCode 风格）
+
+目录：`web/`
+
+- 全球排名 / 竞赛排名切换
+- 前三名领奖台卡片
+- ECharts 高级柱状图：积分渐变横条、难度堆叠柱、通过数+罚时双轴组合图
+- 点击表格行联动难度分布与用户统计
+
+启动带前端的 HTTP 服务：
+
+```bash
+cmake -S . -B build
+cmake --build build --target leaderboard_server
+./build/leaderboard_server
+```
+
+### MSYS2（UCRT64）构建
+
+在 **MSYS2 UCRT64** 终端中（或把 `C:\msys64\ucrt64\bin` 加入 PATH）：
+
+```bash
+pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+
+cd /f/软工实验（）新/OJ/rank   # 按你的实际路径调整
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ -S . -B build-msys2
+cmake --build build-msys2 --target leaderboard_server -j
+./build-msys2/leaderboard_server.exe
+```
+
+浏览器访问：`http://127.0.0.1:8092/rank`（端口可通过环境变量 `OJ_RANK_PORT` 修改）
+
+### HTTP 接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/rank` | 排行榜页面 |
+| GET | `/api/leaderboard/global?limit=&offset=` | 总榜 JSON |
+| GET | `/api/leaderboard/contest/:id?limit=&offset=` | 比赛榜 JSON |
+| GET | `/api/leaderboard/users/:id/stats` | 用户题目完成统计 |
+| GET | `/health` | 健康检查 |
+
 ## 构建与测试
 
 ```bash
