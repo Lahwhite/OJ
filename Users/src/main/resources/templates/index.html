@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎界面</title>
+    <!-- 通过 CDN 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+
+<div class="text-4xl font-bold text-gray-800 mb-16">欢迎使用本 OJ 系统</div>
+
+<div class="text-xl font-bold text-gray-800 mb-20">这是一个南京大学本科生小组项目</div>
+
+<!-- 底部链接 -->
+<div class="mt-8 text-lg">
+    <a href="/login" class="text-blue-400 hover:underline">用户登录/注册</a>
+</div>
+<div class="mt-8 text-lg">
+    <!-- 安全防护 & 隐私防护 -->
+    <a href="mailto:2489752933@qq.com" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
+        联系邮箱
+    </a>
+</div>
+
+</body>
+</html>

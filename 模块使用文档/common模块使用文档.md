@@ -12,7 +12,7 @@
 - 基础设施启动/关闭编排（bootstrap）
 - HTTP 服务器轻量框架（路由分发、统一响应、请求日志）
 
-当前建议：`judge`、`discussion`、`rank` 直接链接 `oj_common`；`management`（Java）保持配置语义对齐，不直接调用 C++ 接口。
+当前建议：`judge`、`discussion`、`rank` 直接链接 `oj_common`；`Problems`（Java）保持配置语义对齐，不直接调用 C++ 接口。
 
 ---
 
@@ -44,7 +44,8 @@ common/
 │   └── router.cpp
 ├── tests/
 │   ├── common_smoke_test.cpp
-│   └── http_smoke_test.cpp
+│   ├── http_smoke_test.cpp
+│   └── real_env_integration_test.cpp
 └── CMakeLists.txt
 ```
 
@@ -71,6 +72,9 @@ cmake --build . --target common_smoke_test
 
 cmake --build . --target common_http_smoke_test
 .\common\common_http_smoke_test.exe
+
+cmake --build . --target common_real_env_integration_test
+.\common\common_real_env_integration_test.exe
 ```
 
 > 若路径含中文导致 MinGW/Ninja 路径问题，可临时映射盘符后构建：
@@ -82,6 +86,8 @@ cmake --build X:/build-ascii --target common_smoke_test
 X:/build-ascii/common/common_smoke_test.exe
 cmake --build X:/build-ascii --target common_http_smoke_test
 X:/build-ascii/common/common_http_smoke_test.exe
+cmake --build X:/build-ascii --target common_real_env_integration_test
+X:/build-ascii/common/common_real_env_integration_test.exe
 subst X: /D
 ```
 
@@ -225,6 +231,8 @@ http GET /health -> 200 1ms
 cmake .. -G "MinGW Makefiles" -DOJ_ENABLE_MYSQL=ON -DMYSQL_CONCPP_INCLUDE="C:/path/to/mysql-connector/include" -DMYSQL_CONCPP_LIB="C:/path/to/mysqlcppconn.lib"
 ```
 
+说明：当前 `MYSQL_CONCPP_INCLUDE` 已作为 `PUBLIC` 头文件目录传播，下游链接 `oj_common` 的模块可直接复用这组头文件路径。
+
 ### 6.2 启用 Redis（hiredis）
 
 ```powershell
@@ -251,7 +259,7 @@ cmake .. -G "MinGW Makefiles" -DOJ_ENABLE_REDIS=ON
 4. 新增代码不再重复定义 MySQL/Redis/日志环境变量名
 5. 新增 HTTP 服务时统一使用 `HttpServer + Router + HttpResponse`
 
-### management（Java）
+### Problems（Java）
 
 - 不直接调用 common C++ 接口
 - 保持 `spring.datasource` 读取同一套 `OJ_MYSQL_*` 环境变量
@@ -277,6 +285,13 @@ cmake .. -G "MinGW Makefiles" -DOJ_ENABLE_REDIS=ON
 - 缺失路由统一 404 JSON
 - HTTP 响应报文组装（状态行、Content-Type、Content-Length、body）
 
+`common_real_env_integration_test` 当前覆盖：
+
+- bootstrap 写入真实日志文件
+- HTTP 服务真实启动、监听与响应
+- 本机 MySQL / Redis 端口可达性检查
+- 开启/未开启可选依赖时的运行期降级验证
+
 运行方式：
 
 ```powershell
@@ -285,12 +300,16 @@ cmake --build . --target common_smoke_test
 
 cmake --build . --target common_http_smoke_test
 .\common\common_http_smoke_test.exe
+
+cmake --build . --target common_real_env_integration_test
+.\common\common_real_env_integration_test.exe
 ```
 
 通过标准：
 
 - 输出 `Common smoke tests passed.`
 - 输出 `Common HTTP smoke tests passed.`
+- 输出 `Real environment integration tests passed.`
 
 ---
 
@@ -299,4 +318,5 @@ cmake --build . --target common_http_smoke_test
 - common 核心功能已实现并可接入。
 - 当前定位是“课程项目功能可用版”，非高并发生产版。
 - HTTP 轻量框架当前支持基础 GET/POST/PUT/DELETE 精确路径匹配，不包含动态路由参数和 multipart 解析。
+- `discussion` 当前虽然主要基于 Crow 提供 Web 能力，但 `common` 内的轻量 HTTP 框架仍保留，可供其他 C++ 子模块复用。
 - 若后续调整环境变量名/默认值，需同步更新本文件与各模块配置。

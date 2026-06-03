@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题目管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-800">
+<main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-8">
+    <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+            <p class="text-sm font-medium text-blue-400">OJ Problems</p>
+            <h1 class="mt-1 text-3xl font-bold text-gray-800">题目管理</h1>
+            <p class="mt-2 text-sm text-gray-500">浏览题目、查看详情，并在管理员模式下维护题库。</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a id="homeLink" href="http://127.0.0.1:8081/home"
+               class="inline-flex items-center rounded-xl bg-gray-200 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-300">
+                返回用户主页
+            </a>
+            <button id="refreshButton" type="button"
+                    class="inline-flex items-center rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+                刷新
+            </button>
+        </div>
+    </header>
+
+    <section id="notice" class="mb-5 hidden rounded-xl border px-4 py-3 text-sm"></section>
+
+    <section class="grid flex-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside class="flex flex-col gap-5">
+            <form id="filterForm" class="rounded-3xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-800">筛选题目</h2>
+                    <button id="resetFilterButton" type="button" class="text-sm font-medium text-blue-400 hover:underline">重置</button>
+                </div>
+
+                <label for="keywordFilter" class="mt-5 block text-sm font-medium text-gray-700">关键词</label>
+                <input id="keywordFilter" name="keyword" placeholder="搜索标题或描述"
+                       class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+
+                <label for="difficultyFilter" class="mt-4 block text-sm font-medium text-gray-700">难度</label>
+                <select id="difficultyFilter" name="difficulty"
+                        class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                    <option value="">全部难度</option>
+                    <option value="easy">简单</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困难</option>
+                </select>
+
+                <label for="tagFilter" class="mt-4 block text-sm font-medium text-gray-700">标签</label>
+                <input id="tagFilter" name="tag" placeholder="例如：数组"
+                       class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+
+                <button type="submit"
+                        class="mt-5 w-full rounded-xl bg-blue-500 px-5 py-3 font-medium text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    应用筛选
+                </button>
+            </form>
+
+            <section class="rounded-3xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="text-xl font-bold text-gray-800">管理员模式</h2>
+                    <span id="adminStatus" class="rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">未配置</span>
+                </div>
+                <p class="mt-3 text-sm leading-6 text-gray-500">录入管理员 JWT 后，可新建、编辑和删除题目。Token 仅保存在当前浏览器。</p>
+                <label for="adminToken" class="mt-4 block text-sm font-medium text-gray-700">管理员 JWT</label>
+                <textarea id="adminToken" rows="3" placeholder="粘贴 JWT，无需填写 Bearer"
+                          class="mt-2 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                <div class="mt-3 flex gap-3">
+                    <button id="saveTokenButton" type="button"
+                            class="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-indigo-700">
+                        保存 Token
+                    </button>
+                    <button id="clearTokenButton" type="button"
+                            class="rounded-xl bg-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-300">
+                        清除
+                    </button>
+                </div>
+                <button id="createProblemButton" type="button"
+                        class="mt-4 w-full rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+                    新建题目
+                </button>
+            </section>
+        </aside>
+
+        <section class="grid min-h-[680px] gap-5 xl:grid-cols-[minmax(320px,0.82fr)_minmax(0,1.18fr)]">
+            <section class="rounded-3xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">题目列表</h2>
+                        <p id="problemCount" class="mt-1 text-sm text-gray-400">正在加载...</p>
+                    </div>
+                    <select id="pageSize" aria-label="每页题目数"
+                            class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="10">每页 10 条</option>
+                        <option value="20" selected>每页 20 条</option>
+                        <option value="50">每页 50 条</option>
+                    </select>
+                </div>
+                <div id="problemList" class="mt-5 space-y-3"></div>
+                <div class="mt-5 flex items-center justify-between gap-3">
+                    <button id="previousPageButton" type="button"
+                            class="rounded-xl bg-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-40">
+                        上一页
+                    </button>
+                    <span id="pageLabel" class="text-sm text-gray-400">第 1 页</span>
+                    <button id="nextPageButton" type="button"
+                            class="rounded-xl bg-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-40">
+                        下一页
+                    </button>
+                </div>
+            </section>
+
+            <article class="rounded-3xl bg-white p-6 shadow-xl">
+                <div id="emptyDetail" class="flex h-full min-h-[580px] flex-col items-center justify-center text-center text-gray-400">
+                    <div class="text-2xl font-bold text-gray-700">选择一道题目</div>
+                    <p class="mt-3 text-sm">查看题目描述、输入输出、样例和统计信息。</p>
+                </div>
+                <div id="problemDetail" class="hidden"></div>
+            </article>
+        </section>
+    </section>
+</main>
+
+<div id="editorModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/50 px-4 py-8">
+    <div class="mx-auto max-w-5xl rounded-3xl bg-white p-6 shadow-2xl md:p-8">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="text-sm font-medium text-blue-400">OJ Problems</p>
+                <h2 id="editorTitle" class="mt-1 text-2xl font-bold text-gray-800">新建题目</h2>
+            </div>
+            <button id="closeEditorButton" type="button" class="rounded-xl bg-gray-200 px-4 py-2 text-gray-700 transition hover:bg-gray-300">关闭</button>
+        </div>
+
+        <form id="problemForm" class="mt-6 space-y-6">
+            <input id="editorProblemId" type="hidden">
+            <section class="grid gap-4 md:grid-cols-2">
+                <label class="md:col-span-2">
+                    <span class="block text-sm font-medium text-gray-700">题目标题</span>
+                    <input id="titleInput" required maxlength="255"
+                           class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">难度</span>
+                    <select id="difficultyInput" required
+                            class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                        <option value="easy">简单</option>
+                        <option value="medium">中等</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">标签</span>
+                    <input id="tagsInput" placeholder="使用英文逗号分隔，例如：数组, 动态规划"
+                           class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">时间限制（ms）</span>
+                    <input id="timeLimitInput" type="number" min="1" required value="1000"
+                           class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">内存限制（MB）</span>
+                    <input id="memoryLimitInput" type="number" min="1" required value="128"
+                           class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400">
+                </label>
+                <label class="md:col-span-2">
+                    <span class="block text-sm font-medium text-gray-700">题目描述</span>
+                    <textarea id="descriptionInput" rows="6" required
+                              class="mt-2 w-full resize-y rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">输入说明</span>
+                    <textarea id="inputDescriptionInput" rows="4" required
+                              class="mt-2 w-full resize-y rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">输出说明</span>
+                    <textarea id="outputDescriptionInput" rows="4" required
+                              class="mt-2 w-full resize-y rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">样例输入</span>
+                    <textarea id="sampleInputInput" rows="4" required
+                              class="code-input mt-2 w-full resize-y rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                </label>
+                <label>
+                    <span class="block text-sm font-medium text-gray-700">样例输出</span>
+                    <textarea id="sampleOutputInput" rows="4" required
+                              class="code-input mt-2 w-full resize-y rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-indigo-400"></textarea>
+                </label>
+                <label class="flex items-center gap-3 text-sm font-medium text-gray-700 md:col-span-2">
+                    <input id="publicInput" type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-400">
+                    公开题目
+                </label>
+            </section>
+
+            <section class="border-t border-gray-200 pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">测试用例</h3>
+                        <p class="mt-1 text-sm text-gray-500">至少保留一个测试用例。样例用例会展示给用户。</p>
+                    </div>
+                    <button id="addTestCaseButton" type="button"
+                            class="rounded-xl bg-blue-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-600">
+                        添加测试用例
+                    </button>
+                </div>
+                <div id="testCaseEditorList" class="mt-4 space-y-4"></div>
+            </section>
+
+            <div class="flex justify-end gap-3 border-t border-gray-200 pt-5">
+                <button id="cancelEditorButton" type="button"
+                        class="rounded-xl bg-gray-200 px-6 py-3 font-medium text-gray-700 transition hover:bg-gray-300">
+                    取消
+                </button>
+                <button type="submit"
+                        class="rounded-xl bg-indigo-600 px-6 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+                    保存题目
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>

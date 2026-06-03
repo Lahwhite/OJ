@@ -16,6 +16,7 @@ find_package(Threads REQUIRED)
 add_library(discussion_core
     src/discussion_service.cpp
     src/discussion_handler.cpp
+    src/gemini_client.cpp
 )
 
 target_include_directories(discussion_core PUBLIC
@@ -27,12 +28,16 @@ target_include_directories(discussion_core PUBLIC
 target_link_libraries(discussion_core PUBLIC oj_common Threads::Threads)
 
 if(WIN32)
-    # Crow requires Winsock libraries on Windows.
-    target_link_libraries(discussion_core PUBLIC ws2_32 mswsock)
+    # Crow requires Winsock libraries on Windows; Gemini summaries use WinINet.
+    target_link_libraries(discussion_core PUBLIC ws2_32 mswsock wininet)
 endif()
 
 add_executable(discussion_server src/main.cpp)
 target_link_libraries(discussion_server PRIVATE discussion_core)
+
+target_compile_definitions(discussion_core PUBLIC
+    DISCUSSION_WEB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/web"
+)
 
 enable_testing()
 

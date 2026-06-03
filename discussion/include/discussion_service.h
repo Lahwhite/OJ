@@ -1,8 +1,6 @@
 /**
  * @file discussion_service.h
- * @brief 讨论区业务服务
- * @author OJ Team
- * @date 2026-04-20
+ * @brief Discussion module business service.
  */
 #ifndef DISCUSSION_SERVICE_H
 #define DISCUSSION_SERVICE_H
@@ -11,86 +9,79 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-/**
- * @struct DiscussionTopic
- * @brief 讨论主题结构体
- */
 struct DiscussionTopic {
-    int64_t id = 0;                    ///< 主题ID
-    int64_t problem_id = 0;            ///< 关联题目ID
-    int64_t user_id = 0;               ///< 发布用户ID
-    std::string title;                 ///< 标题
-    std::string content;               ///< 内容
-    std::string created_at;            ///< 创建时间
-    std::string updated_at;            ///< 更新时间
-    int comment_count = 0;             ///< 评论数量
+    int64_t id = 0;
+    int64_t problem_id = 0;
+    int64_t user_id = 0;
+    std::string username;
+    std::string nickname;
+    std::string avatar;
+    std::string title;
+    std::string content;
+    std::string created_at;
+    std::string updated_at;
+    int comment_count = 0;
 };
 
-/**
- * @struct DiscussionComment
- * @brief 讨论评论结构体
- */
 struct DiscussionComment {
-    int64_t id = 0;                    ///< 评论ID
-    int64_t topic_id = 0;              ///< 所属主题ID
-    int64_t user_id = 0;               ///< 评论用户ID
-    int64_t parent_comment_id = 0;     ///< 父评论ID（0表示顶级评论）
-    std::string content;               ///< 评论内容
-    std::string created_at;            ///< 创建时间
+    int64_t id = 0;
+    int64_t topic_id = 0;
+    int64_t user_id = 0;
+    std::string username;
+    std::string nickname;
+    std::string avatar;
+    int64_t parent_comment_id = 0;
+    std::string content;
+    std::string created_at;
 };
 
-/**
- * @class DiscussionService
- * @brief 讨论区业务类（线程安全）
- */
 class DiscussionService {
 public:
-    /**
-     * @brief 创建主题
-     */
+    bool databaseReady() const;
+
     int64_t createTopic(int64_t problem_id,
                         int64_t user_id,
                         const std::string& title,
                         const std::string& content);
 
-    /**
-     * @brief 查询主题列表
-     */
+    int64_t createTopicByUsername(int64_t problem_id,
+                                  const std::string& username,
+                                  const std::string& title,
+                                  const std::string& content);
+
     std::vector<DiscussionTopic> listTopics(std::optional<int64_t> problem_id,
                                             size_t limit,
                                             size_t offset) const;
 
-    /**
-     * @brief 获取主题详情
-     */
     std::optional<DiscussionTopic> getTopic(int64_t topic_id) const;
 
-    /**
-     * @brief 创建评论
-     */
+    int deleteTopic(int64_t topic_id, int64_t user_id);
+
+    int deleteTopicByUsername(int64_t topic_id, const std::string& username);
+
     int64_t createComment(int64_t topic_id,
                           int64_t user_id,
                           const std::string& content,
                           std::optional<int64_t> parent_comment_id);
 
-    /**
-     * @brief 查询主题评论
-     */
+    int64_t createCommentByUsername(int64_t topic_id,
+                                    const std::string& username,
+                                    const std::string& content,
+                                    std::optional<int64_t> parent_comment_id);
+
+    int deleteComment(int64_t topic_id, int64_t comment_id, int64_t user_id);
+
+    int deleteCommentByUsername(int64_t topic_id, int64_t comment_id, const std::string& username);
+
     std::vector<DiscussionComment> listComments(int64_t topic_id) const;
 
 private:
-    static std::string nowTimeString();
+    void ensureSchema() const;
 
-    mutable std::mutex mutex_;
-    int64_t next_topic_id_ = 1;
-    int64_t next_comment_id_ = 1;
-
-    std::unordered_map<int64_t, DiscussionTopic> topics_;
-    std::unordered_map<int64_t, std::vector<DiscussionComment>> comments_by_topic_;
-    std::unordered_map<int64_t, int64_t> comment_to_topic_;
+    mutable std::mutex schema_mutex_;
+    mutable bool schema_initialized_ = false;
 };
 
 #endif  // DISCUSSION_SERVICE_H

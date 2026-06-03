@@ -113,7 +113,10 @@ void InMemoryLeaderboardRepository::apply_submission_event(const SubmissionEvent
         if (event.is_accepted) {
             cit->second.score += score_delta;
             cit->second.last_accepted_at = event.submit_at;
-            cit->second.solved_count += 1;
+            ContestAcceptedKey contest_key {event.contest_id, event.user_id, event.problem_id};
+            if (accepted_contest_problem_once_.insert(contest_key).second) {
+                cit->second.solved_count += 1;
+            }
         }
     }
 }

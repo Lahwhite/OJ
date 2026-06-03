@@ -9,9 +9,11 @@
 
 #include "crow_all.h"
 #include "discussion_service.h"
+#include "gemini_client.h"
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include <nlohmann/json.hpp>
 
@@ -42,6 +44,11 @@ public:
     crow::response handleGetTopic(const crow::request& req, int64_t topic_id);
 
     /**
+     * @brief 删除主题
+     */
+    crow::response handleDeleteTopic(const crow::request& req, int64_t topic_id);
+
+    /**
      * @brief 创建评论
      */
     crow::response handleCreateComment(const crow::request& req, int64_t topic_id);
@@ -52,18 +59,30 @@ public:
     crow::response handleListComments(const crow::request& req, int64_t topic_id);
 
     /**
+     * @brief 删除评论或回复
+     */
+    crow::response handleDeleteComment(const crow::request& req, int64_t topic_id, int64_t comment_id);
+
+    /**
+     * @brief Summarize a discussion topic with Gemini.
+     */
+    crow::response handleSummarizeTopic(const crow::request& req, int64_t topic_id);
+
+    /**
      * @brief 启动服务
      */
     void startServer(uint16_t port);
 
 private:
     static crow::response jsonResponse(int status, const nlohmann::json& body);
+    static crow::response webFileResponse(const std::string& relative_path, const std::string& content_type);
     static size_t parsePositiveSize(const char* value, size_t fallback, size_t max_value);
 
     bool validateTopicPayload(const nlohmann::json& body) const;
     bool validateCommentPayload(const nlohmann::json& body) const;
 
     DiscussionService service_;
+    GeminiClient gemini_client_;
     std::unique_ptr<crow::Crow<crow::CORSHandler>> app_;
 };
 

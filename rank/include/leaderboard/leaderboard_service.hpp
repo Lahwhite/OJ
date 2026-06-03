@@ -2,6 +2,7 @@
 
 #include "leaderboard/repository.hpp"
 
+#include <algorithm>
 #include <memory>
 
 namespace oj {
@@ -41,17 +42,17 @@ private:
 
 template <typename T>
 std::vector<T> LeaderboardService::paginate(const std::vector<T>& rows, std::int32_t limit, std::int32_t offset) {
-    if (limit <= 0 || offset < 0 || rows.empty()) {
-        return {};
+    if (offset < 0) {
+        offset = 0;
+    }
+    if (limit <= 0) {
+        limit = static_cast<std::int32_t>(rows.size());
     }
 
-    const auto begin_index = static_cast<std::size_t>(offset);
-    if (begin_index >= rows.size()) {
-        return {};
-    }
-
-    const auto end_index = std::min(rows.size(), begin_index + static_cast<std::size_t>(limit));
-    return std::vector<T>(rows.begin() + static_cast<std::ptrdiff_t>(begin_index), rows.begin() + static_cast<std::ptrdiff_t>(end_index));
+    const auto begin_idx = static_cast<std::size_t>(std::min<std::int32_t>(offset, static_cast<std::int32_t>(rows.size())));
+    const auto end_idx = static_cast<std::size_t>(
+        std::min<std::int32_t>(offset + limit, static_cast<std::int32_t>(rows.size())));
+    return std::vector<T>(rows.begin() + static_cast<std::ptrdiff_t>(begin_idx), rows.begin() + static_cast<std::ptrdiff_t>(end_idx));
 }
 
 }  // namespace oj
