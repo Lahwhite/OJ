@@ -159,6 +159,15 @@ class ProblemControllerTest {
     }
 
     @Test
+    void createProblemShouldReturnUnauthorizedWhenAuthorizationHeaderMissing() throws Exception {
+        mockMvc.perform(post("/v1/problems")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequestJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401003));
+    }
+
+    @Test
     void createProblemShouldReturnBadRequestWhenBodyInvalid() throws Exception {
         mockMvc.perform(post("/v1/problems")
                         .header("Authorization", "Bearer token")
