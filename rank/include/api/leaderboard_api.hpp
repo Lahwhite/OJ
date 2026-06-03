@@ -14,6 +14,9 @@ public:
     std::string get_global_leaderboard_json(std::int32_t limit, std::int32_t offset);
     std::string get_problem_stats_json(std::int64_t user_id);
     std::string get_contest_leaderboard_json(std::int64_t contest_id, std::int32_t limit, std::int32_t offset);
+    std::string get_global_summary_json();
+    std::string get_user_insight_json(std::int64_t user_id);
+    std::string get_global_leaderboard_csv(std::int32_t limit, std::int32_t offset);
 
 private:
     std::shared_ptr<LeaderboardService> service_;

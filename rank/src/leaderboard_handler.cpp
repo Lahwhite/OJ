@@ -101,6 +101,22 @@ LeaderboardHandler::LeaderboardHandler(std::shared_ptr<LeaderboardApi> api) : ap
         return json_body(200, api_->get_global_leaderboard_json(limit, offset));
     });
 
+    CROW_ROUTE((*app_), "/api/leaderboard/global/summary").methods("GET"_method)([this] {
+        return json_body(200, api_->get_global_summary_json());
+    });
+
+    CROW_ROUTE((*app_), "/api/leaderboard/global/export.csv").methods("GET"_method)([this](const crow::request& req) {
+        const auto limit = parse_int_param(req.url_params.get("limit"), 200, 1, 500);
+        const auto offset = parse_int_param(req.url_params.get("offset"), 0, 0, 100000);
+        crow::response response(200, api_->get_global_leaderboard_csv(limit, offset));
+        response.add_header("Content-Type", "text/csv; charset=utf-8");
+        response.add_header("Content-Disposition", "attachment; filename=\"global_leaderboard.csv\"");
+        return response;
+    });
+
+    CROW_ROUTE((*app_), "/api/leaderboard/users/<int>/insight").methods("GET"_method)(
+        [this](std::int64_t user_id) { return json_body(200, api_->get_user_insight_json(user_id)); });
+
     CROW_ROUTE((*app_), "/api/leaderboard/contest/<int>").methods("GET"_method)(
         [this](const crow::request& req, std::int64_t contest_id) {
             const auto limit = parse_int_param(req.url_params.get("limit"), 50, 1, 200);

@@ -92,12 +92,34 @@ cmake --build build-msys2 --target leaderboard_server -j
 
 浏览器访问：`http://127.0.0.1:8092/rank`（端口可通过环境变量 `OJ_RANK_PORT` 修改）
 
+### Windows 运行包（与 discussion 一致）
+
+目录：`runtime_package/`
+
+团队同学本地联调可直接运行，无需自行编译：
+
+```powershell
+cd OJ\rank\runtime_package
+powershell -ExecutionPolicy Bypass -File .\start_rank.ps1
+```
+
+更新源码或前端后同步运行包：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\rank\runtime_package\sync_runtime.ps1
+```
+
+说明见 `runtime_package/README.md`。
+
 ### HTTP 接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/rank` | 排行榜页面 |
 | GET | `/api/leaderboard/global?limit=&offset=` | 总榜 JSON |
+| GET | `/api/leaderboard/global/summary` | 全球统计摘要 |
+| GET | `/api/leaderboard/global/export.csv` | 导出 CSV |
+| GET | `/api/leaderboard/users/:id/insight` | 用户百分位洞察 |
 | GET | `/api/leaderboard/contest/:id?limit=&offset=` | 比赛榜 JSON |
 | GET | `/api/leaderboard/users/:id/stats` | 用户题目完成统计 |
 | GET | `/health` | 健康检查 |
