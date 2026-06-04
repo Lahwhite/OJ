@@ -28,7 +28,7 @@
 默认服务地址：
 
 ```text
-http://localhost:8080/api/
+http://localhost:8080/problems/
 ```
 
 默认数据库配置在 `src/main/resources/application.yml`：
@@ -72,16 +72,16 @@ mvn clean spring-boot:run
 启动后访问：
 
 ```text
-http://localhost:8080/api/
+http://localhost:8080/problems/
 ```
 
 ## 主要接口
 
 公开接口：
 
-- `GET /api/v1/problems`
-- `GET /api/v1/problems/{id}`
-- `GET /api/v1/problems/{id}/test-cases`
+- `GET /problems/v1/problems`
+- `GET /problems/v1/problems/{id}`
+- `GET /problems/v1/problems/{id}/test-cases`
 
 管理员接口，需要请求头：
 
@@ -89,9 +89,9 @@ http://localhost:8080/api/
 Authorization: Bearer <JWT_TOKEN>
 ```
 
-- `POST /api/v1/problems`
-- `PUT /api/v1/problems/{id}`
-- `DELETE /api/v1/problems/{id}`
+- `POST /problems/v1/problems`
+- `PUT /problems/v1/problems/{id}`
+- `DELETE /problems/v1/problems/{id}`
 
 ## 数据库初始化
 
@@ -109,7 +109,7 @@ src/main/resources/init-data.sql
 
 默认核心表：
 
-- `users`
+- `problem_users`
 - `problems`
 - `test_cases`
 - `tags`

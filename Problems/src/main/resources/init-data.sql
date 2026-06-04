@@ -1,7 +1,7 @@
 USE oj;
 
-INSERT INTO users (username, email, password_hash, role)
-VALUES ('admin', 'admin@example.com', 'test_password_hash', 'admin');
+INSERT INTO problem_users (username, role)
+VALUES ('admin', 'admin');
 
 INSERT INTO problems (
     title,
