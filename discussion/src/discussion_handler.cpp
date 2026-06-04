@@ -563,6 +563,6 @@ void DiscussionHandler::startServer(uint16_t port) {
                  "DELETE"_method,
                  "OPTIONS"_method);
 
-    OJ_LOG_INFO("discussion HTTP server starting, port=" + std::to_string(port));
-    app_->port(port).multithreaded().run();
+    OJ_LOG_INFO("discussion HTTP server starting, bindaddr=0.0.0.0, port=" + std::to_string(port));
+    app_->bindaddr("0.0.0.0").port(port).multithreaded().run();
 }
