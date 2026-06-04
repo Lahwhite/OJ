@@ -47,7 +47,7 @@ class ProblemServiceIntegrationTest {
         assertEquals("数据库流程题", page.getProblems().get(0).getTitle());
 
         ProblemDetailResponse detail = problemService.getProblemDetail(problemId);
-        assertEquals(1, detail.getTestCases().size());
+        assertEquals(2, detail.getTestCases().size());
         assertTrue(detail.getTestCases().get(0).getIsSample());
 
         problemService.recordSubmissionResult(problemId, true);
