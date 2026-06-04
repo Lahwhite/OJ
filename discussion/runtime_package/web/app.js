@@ -487,15 +487,9 @@ function requireUsername() {
         return state.currentUsername;
     }
 
-    const typed = window.prompt("请输入当前登录用户名，用于创建讨论内容：");
-    if (!typed || !typed.trim()) {
-        throw new Error("缺少用户名，无法提交。");
-    }
-    state.currentUsername = typed.trim();
-    const url = new URL(window.location.href);
-    url.searchParams.set("username", state.currentUsername);
-    window.history.replaceState({}, "", url);
-    return state.currentUsername;
+    const loginUrl = new URL("/login", usersAssetOrigin());
+    window.location.assign(loginUrl.toString());
+    throw new Error("User not logged in, redirecting to login.");
 }
 
 async function submitTopic(event) {
