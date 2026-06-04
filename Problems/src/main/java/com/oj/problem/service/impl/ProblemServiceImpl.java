@@ -105,6 +105,20 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     @Transactional
+    public void recordSubmissionResult(Long id, boolean accepted) {
+        ProblemEntity entity = problemRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
+        int submissionCount = entity.getSubmissionCount() == null ? 0 : entity.getSubmissionCount();
+        int acceptedCount = entity.getAcceptedCount() == null ? 0 : entity.getAcceptedCount();
+        entity.setSubmissionCount(submissionCount + 1);
+        if (accepted) {
+            entity.setAcceptedCount(acceptedCount + 1);
+        }
+        problemRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
     public void deleteProblem(Long id, CurrentUser currentUser) {
         ProblemEntity entity = problemRepository.findWithTestCasesAndTagsById(id)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));

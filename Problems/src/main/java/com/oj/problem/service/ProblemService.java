@@ -21,5 +21,7 @@ public interface ProblemService {
 
     ProblemMutationResponse updateProblem(Long id, ProblemUpsertRequest request, CurrentUser currentUser);
 
+    void recordSubmissionResult(Long id, boolean accepted);
+
     void deleteProblem(Long id, CurrentUser currentUser);
 }
