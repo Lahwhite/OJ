@@ -18,7 +18,11 @@
     点击右侧“提问”按钮，体验检索增强生成（RAG）
 </div>
 
-<button id="openDrawer" class="fixed right-6 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+<a href="/redirect-port8000" class="fixed right-6 top-[40%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+    OI Wiki
+</a>
+<button id="openDrawer" class="fixed right-6 top-[50%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
 rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
     <svg class="h-5 w-5" style="fill: none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -26,13 +30,19 @@ rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:out
     提问
 </button>
 
-<a href="/profile" class="fixed left-6 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+<a href="/profile" class="fixed left-6 top-[40%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
 rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
     个人资料
 </a>
-<a href="/redirect-port8000" class="fixed left-6 top-[60%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+<a th:href="@{${'http://'+globalIp+':'+discussionPort+'/discussion'}(username=${session.loginUser}, return_url=${'http://'+globalIp+':'+currentPort+'/home'})}"
+class="fixed left-6 top-[50%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
 rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
-    OI Wiki
+    讨论区
+</a>
+<a th:href="@{${'http://'+globalIp+':'+rankPort+'/rank'}(return_url=${'http://'+globalIp+':'+currentPort+'/home'})}"
+class="fixed left-6 top-[60%] -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 flex items-center justify-center gap-2
+rounded-2xl shadow-lg shadow-indigo-400/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+    排行榜
 </a>
 
 <!-- 底部链接 -->
