@@ -9,7 +9,7 @@ public class ProblemQueryRequest {
     @Min(1)
     private Integer page = 1;
 
-    @Min(1)
+    // 每页默认 20 条，最多给到 100，防止一次查太多
     @Max(100)
     private Integer size = 20;
 

@@ -18,6 +18,7 @@ HttpResponse HttpResponse::json(int statusCode, const std::string& bodyText) {
 }
 
 std::string HttpResponse::toHttpString() const {
+    // 这里直接手动拼 HTTP 报文，简单也够用
     std::ostringstream out;
     out << "HTTP/1.1 " << status << " " << statusText(status) << "\r\n";
 

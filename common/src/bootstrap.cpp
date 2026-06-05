@@ -7,6 +7,7 @@
 namespace oj {
 
 static LogLevel parseLogLevel(const std::string& s) {
+    // 配置里没写或者写错时，默认按 info 处理
     if (s == "debug") {
         return LogLevel::Debug;
     }
@@ -20,6 +21,7 @@ static LogLevel parseLogLevel(const std::string& s) {
 }
 
 void initInfrastructure(const AppConfig& config) {
+    // 先起日志，后面的初始化过程也能打到日志里
     Logger::instance().init(parseLogLevel(config.log_level), config.log_file);
     OJ_LOG_INFO("OJ public infrastructure starting");
 

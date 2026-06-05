@@ -5,6 +5,7 @@
 namespace oj {
 
 std::string makeErrorJson(const std::string& error_code, const std::string& message) {
+    // 这里只手动转义一小部分常见字符，够错误信息返回用了
     auto appendJsonString = [](std::ostringstream& out, const std::string& value) {
         for (unsigned char c : value) {
             switch (c) {
