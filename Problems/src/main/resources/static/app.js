@@ -83,6 +83,14 @@ function isAllowedReturnUrl(value) {
     }
 }
 
+function detailUrl(problemId) {
+    const params = new URLSearchParams({ id: String(problemId) });
+    const returnUrl = new URLSearchParams(window.location.search).get("return_url");
+    if (returnUrl && isAllowedReturnUrl(returnUrl)) params.set("return_url", returnUrl);
+    if (state.currentUserId) params.set("user_id", String(state.currentUserId));
+    return `./problem-detail.html?${params.toString()}`;
+}
+
 function setNotice(message, type = "info") {
     if (!message) {
         els.notice.className = "mb-5 hidden rounded-xl border px-4 py-3 text-sm";
@@ -321,6 +329,7 @@ function renderDetail(problem) {
                 <div class="mt-3 flex flex-wrap gap-2">${tagBadges(problem.tags)}</div>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="${detailUrl(problem.id)}" class="rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700">做题</a>
                 <button id="editProblemButton" type="button" class="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-indigo-700">编辑</button>
                 <button id="deleteProblemButton" type="button" class="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100">删除</button>
             </div>
