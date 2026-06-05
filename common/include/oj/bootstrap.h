@@ -8,5 +8,6 @@ namespace oj {
 void initInfrastructure(const AppConfig& config);
 
 // 进程退出前做资源回收
+void shutdownInfrastructure();
 
 }  // namespace oj
