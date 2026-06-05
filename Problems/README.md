@@ -44,9 +44,12 @@ spring:
 可以通过环境变量覆盖默认值，例如 PowerShell：
 
 ```powershell
-$env:OJ_DB_USERNAME="root"
-$env:OJ_DB_PASSWORD="123456"
+$env:OJ_DB_URL="jdbc:mysql://127.0.0.1:3306/myOJ?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8"
+$env:OJ_DB_USERNAME="<your_mysql_username>"
+$env:OJ_DB_PASSWORD="<your_mysql_password>"
 ```
+
+默认账号适合部署环境统一创建授权；本地联调时建议只用环境变量覆盖，不要直接提交个人数据库账号或密码到配置文件。
 
 常用环境变量：
 
@@ -57,6 +60,7 @@ $env:OJ_DB_PASSWORD="123456"
 - `OJ_DB_USERNAME`
 - `OJ_DB_PASSWORD`
 - `OJ_JWT_SECRET`
+- `OJ_PROBLEM_STATUS_TOKEN`
 - `OJ_JPA_DDL_AUTO`
 - `OJ_SHOW_SQL`
 
@@ -74,6 +78,14 @@ mvn clean spring-boot:run
 ```text
 http://localhost:8080/problems/
 ```
+
+如果需要展示某个用户的 AC 状态，在页面 URL 中带上用户 ID：
+
+```text
+http://localhost:8080/problems/?user_id=1
+```
+
+前端会自动读取 `GET /problems/v1/problem-status/users/{userId}`，并在题目列表左侧显示 `✓` 或 `-`，详情页显示是否通过、历史最高分、最近得分和最近提交时间。
 
 ## 主要接口
 
@@ -93,6 +105,43 @@ Authorization: Bearer <JWT_TOKEN>
 - `PUT /problems/v1/problems/{id}`
 - `DELETE /problems/v1/problems/{id}`
 
+AC 状态接口：
+
+- `GET /problems/v1/problem-status/users/{userId}`
+- `GET /problems/v1/problem-status/users/{userId}/problems/{problemId}`
+
+其他模块更新状态时调用：
+
+```http
+PUT /problems/v1/problem-status
+X-Service-Token: <OJ_PROBLEM_STATUS_TOKEN>
+Content-Type: application/json
+```
+
+```json
+{
+  "userId": 1,
+  "problemId": 1001,
+  "accepted": true,
+  "score": 100,
+  "maxScore": 100,
+  "submittedAt": "2026-06-04T20:30:00"
+}
+```
+
+字段说明：
+
+- `userId`：用户 ID
+- `problemId`：题目 ID
+- `accepted`：本次提交是否通过
+- `score`：本次得分
+- `maxScore`：该题满分
+- `submittedAt`：本次提交时间，ISO-8601 格式
+
+更新规则：同一 `userId + problemId` 只保留一条状态；`accepted` 一旦为 true 不会被后续失败提交覆盖；`bestScore` 取历史最高分；`lastScore`、`maxScore` 和 `lastSubmittedAt` 记录最近一次提交。
+
+其他模块只需要在评测或计分完成后调用该接口即可，Problems 模块只负责存储和展示 AC 状态，不参与代码评测。
+
 ## 数据库初始化
 
 建表脚本：
@@ -111,6 +160,7 @@ src/main/resources/init-data.sql
 
 - `problem_users`
 - `problems`
+- `problem_user_status`
 - `test_cases`
 - `tags`
 - `problem_tags`
@@ -125,11 +175,16 @@ src/main/resources/init-data.sql
 mvn clean test
 ```
 
-查看覆盖率：
+验证覆盖率：
 
 ```powershell
-mvn clean verify
+mvn test jacoco:check@check
 ```
+
+当前 JaCoCo 覆盖率门槛：
+
+- 行覆盖率不低于 90%
+- 分支覆盖率不低于 60%
 
 JaCoCo 报告生成在：
 
@@ -140,6 +195,9 @@ target/site/jacoco/index.html
 当前验证结果：
 
 ```text
-Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 42, Failures: 0, Errors: 0, Skipped: 0
+LINE: 324 covered / 335 total = 96.72%
+BRANCH: 59 covered / 84 total = 70.24%
+All coverage checks have been met.
 BUILD SUCCESS
 ```

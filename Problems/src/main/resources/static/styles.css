@@ -32,6 +32,26 @@ textarea {
     box-shadow: 0 12px 28px rgb(99 102 241 / 0.18);
 }
 
+.status-mark {
+    display: inline-flex;
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.status-accepted {
+    color: rgb(34 197 94);
+}
+
+.status-unaccepted,
+.status-unknown {
+    color: rgb(75 85 99);
+}
+
 .code-block,
 .code-input {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;

@@ -43,3 +43,23 @@ VALUES ('入门', '#1890ff', 1);
 
 INSERT INTO problem_tags (problem_id, tag_id)
 VALUES (1, 1);
+
+INSERT INTO problem_user_status (
+    user_id,
+    problem_id,
+    accepted,
+    best_score,
+    last_score,
+    max_score,
+    last_submitted_at,
+    accepted_at
+) VALUES (
+    1,
+    1,
+    TRUE,
+    100,
+    100,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);

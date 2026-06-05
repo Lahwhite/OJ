@@ -1,4 +1,5 @@
 const API_BASE = new URL("./v1/problems", window.location.href).pathname.replace(/\/$/, "");
+const STATUS_API_BASE = new URL("./v1/problem-status", window.location.href).pathname.replace(/\/$/, "");
 const TOKEN_STORAGE_KEY = "oj-problems-admin-token";
 
 const state = {
@@ -12,6 +13,8 @@ const state = {
     tag: "",
     keyword: "",
     token: window.localStorage.getItem(TOKEN_STORAGE_KEY) || "",
+    currentUserId: null,
+    problemStatuses: new Map(),
 };
 
 const els = {
@@ -62,6 +65,10 @@ function initFromQuery() {
     const returnUrl = params.get("return_url");
     if (returnUrl && isAllowedReturnUrl(returnUrl)) {
         els.homeLink.href = returnUrl;
+    }
+    const userId = Number(params.get("user_id") || params.get("userId"));
+    if (Number.isInteger(userId) && userId > 0) {
+        state.currentUserId = userId;
     }
     els.adminToken.value = state.token;
     updateAdminStatus();
@@ -141,6 +148,7 @@ async function loadProblems({ keepSelection = false } = {}) {
     state.total = pageData.total || 0;
     state.page = pageData.page || state.page;
     state.size = pageData.size || state.size;
+    await loadProblemStatuses();
 
     if (!keepSelection || !state.problems.some((problem) => problem.id === state.selectedProblemId)) {
         state.selectedProblemId = null;
@@ -166,6 +174,21 @@ function emptyHtml(text) {
     return `<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400">${text}</div>`;
 }
 
+async function loadProblemStatuses() {
+    state.problemStatuses = new Map();
+    if (!state.currentUserId) {
+        return;
+    }
+    try {
+        const data = await requestJson(`${STATUS_API_BASE}/users/${state.currentUserId}`);
+        (data?.statuses || []).forEach((status) => {
+            state.problemStatuses.set(Number(status.problemId), status);
+        });
+    } catch (error) {
+        setNotice("个人 AC 状态暂时不可用，仍可继续浏览题目。", "info");
+    }
+}
+
 function renderProblems() {
     els.problemCount.textContent = `共 ${state.total} 道题目`;
     if (state.problems.length === 0) {
@@ -174,15 +197,20 @@ function renderProblems() {
     }
     els.problemList.innerHTML = state.problems.map((problem) => `
         <button type="button" class="problem-card w-full bg-white text-left ${problem.id === state.selectedProblemId ? "is-active" : ""}" data-problem-id="${problem.id}">
-            <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-medium text-gray-400">#${problem.id}</span>
-                ${difficultyBadge(problem.difficulty)}
-            </div>
-            <h3 class="mt-3 line-clamp-2 font-bold text-gray-800">${escapeHtml(problem.title)}</h3>
-            <div class="mt-3 flex flex-wrap gap-2">${tagBadges(problem.tags)}</div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-400">
-                <span>通过率 ${formatRate(problem.passRate)}</span>
-                <span>${problem.acceptedCount || 0} / ${problem.submissionCount || 0}</span>
+            <div class="grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3">
+                ${statusIconHtml(problem.id)}
+                <div class="min-w-0">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-xs font-medium text-gray-400">P${problem.id}</span>
+                        ${difficultyBadge(problem.difficulty)}
+                    </div>
+                    <h3 class="mt-3 line-clamp-2 font-bold text-gray-800">${escapeHtml(problem.title)}</h3>
+                    <div class="mt-3 flex flex-wrap gap-2">${tagBadges(problem.tags)}</div>
+                    <div class="mt-3 flex items-center justify-between gap-3 text-xs text-gray-400">
+                        <span>通过率 ${formatRate(problem.passRate)}</span>
+                        <span>${problem.acceptedCount || 0} / ${problem.submissionCount || 0}</span>
+                    </div>
+                </div>
             </div>
         </button>
     `).join("");
@@ -211,6 +239,47 @@ function difficultyBadge(difficulty) {
 function tagBadges(tags = []) {
     if (!tags.length) return '<span class="text-xs text-gray-400">暂无标签</span>';
     return tags.map((tag) => `<span class="rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">${escapeHtml(tag)}</span>`).join("");
+}
+
+function getProblemStatus(problemId) {
+    return state.problemStatuses.get(Number(problemId)) || null;
+}
+
+function statusIconHtml(problemId) {
+    if (!state.currentUserId) {
+        return '<span class="status-mark status-unknown" aria-label="未选择用户">-</span>';
+    }
+    const status = getProblemStatus(problemId);
+    if (status?.accepted) {
+        return '<span class="status-mark status-accepted" title="已通过" aria-label="已通过">✓</span>';
+    }
+    return '<span class="status-mark status-unaccepted" title="未通过" aria-label="未通过">-</span>';
+}
+
+function statusSummaryHtml(problemId) {
+    if (!state.currentUserId) {
+        return "";
+    }
+    const status = getProblemStatus(problemId);
+    const accepted = Boolean(status?.accepted);
+    return `
+        <section class="mt-5 rounded-xl border ${accepted ? "border-green-100 bg-green-50" : "border-gray-200 bg-gray-50"} p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    ${statusIconHtml(problemId)}
+                    <div>
+                        <p class="text-sm font-medium ${accepted ? "text-green-700" : "text-gray-600"}">${accepted ? "已通过" : "未通过"}</p>
+                        <p class="mt-1 text-xs text-gray-400">用户 #${state.currentUserId} 的题目状态</p>
+                    </div>
+                </div>
+                <div class="grid gap-3 text-sm sm:grid-cols-3">
+                    <div><span class="text-gray-400">历史最高分</span><strong class="ml-2 text-gray-700">${status?.bestScore ?? 0}</strong></div>
+                    <div><span class="text-gray-400">最近得分</span><strong class="ml-2 text-gray-700">${status?.lastScore ?? "-"}</strong></div>
+                    <div><span class="text-gray-400">最近提交</span><strong class="ml-2 text-gray-700">${formatDateTime(status?.lastSubmittedAt)}</strong></div>
+                </div>
+            </div>
+        </section>
+    `;
 }
 
 function markActiveProblem() {
@@ -244,6 +313,7 @@ function renderDetail(problem) {
             <div>
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-sm font-medium text-gray-400">#${problem.id}</span>
+                    ${statusIconHtml(problem.id)}
                     ${difficultyBadge(problem.difficulty)}
                     ${problem.isPublic === false ? '<span class="rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">未公开</span>' : ""}
                 </div>
@@ -262,6 +332,7 @@ function renderDetail(problem) {
             <div><dt class="text-gray-400">通过率</dt><dd class="mt-1 font-medium text-gray-700">${formatRate(problem.passRate)} (${problem.acceptedCount || 0} / ${problem.submissionCount || 0})</dd></div>
         </dl>
 
+        ${statusSummaryHtml(problem.id)}
         ${detailSection("题目描述", textBlock(problem.description))}
         ${detailSection("输入说明", textBlock(problem.inputDescription))}
         ${detailSection("输出说明", textBlock(problem.outputDescription))}
@@ -448,6 +519,17 @@ async function deleteProblem(problem) {
 
 function formatRate(rate) {
     return `${((Number(rate) || 0) * 100).toFixed(1)}%`;
+}
+
+function formatDateTime(value) {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
+    return date.toLocaleString();
 }
 
 function escapeHtml(value) {
