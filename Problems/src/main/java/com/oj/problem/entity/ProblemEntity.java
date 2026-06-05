@@ -30,6 +30,7 @@ public class ProblemEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 题面基础信息
     @Column(nullable = false, length = 255)
     private String title;
 

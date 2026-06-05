@@ -20,6 +20,7 @@ public class TestCaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 一个题目对应多个测试用例
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
     private ProblemEntity problem;

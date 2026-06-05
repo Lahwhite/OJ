@@ -21,6 +21,7 @@ public interface ProblemService {
 
     ProblemMutationResponse updateProblem(Long id, ProblemUpsertRequest request, CurrentUser currentUser);
 
+    // 评测完成后用这个接口回写提交统计
     void recordSubmissionResult(Long id, boolean accepted);
 
     void deleteProblem(Long id, CurrentUser currentUser);

@@ -52,6 +52,7 @@ public class ProblemServiceImpl implements ProblemService {
     @Override
     @Transactional(readOnly = true)
     public ProblemPageResponse listProblems(ProblemQueryRequest queryRequest) {
+        // 按创建时间倒序分页，page 从 1 开始但 PageRequest 从 0 开始所以要减 1
         Pageable pageable = PageRequest.of(
                 queryRequest.getPage() - 1,
                 queryRequest.getSize(),

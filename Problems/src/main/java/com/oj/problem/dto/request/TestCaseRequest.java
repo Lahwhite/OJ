@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 
 public class TestCaseRequest {
 
+    // 创建或更新题目时带上的测试用例
     @NotBlank(message = "测试输入不能为空")
     private String input;
 

@@ -16,6 +16,7 @@ public class ProblemUpsertRequest {
     @Size(max = 255, message = "题目标题长度不能超过255")
     private String title;
 
+    // 题面主要内容
     @NotBlank(message = "题目描述不能为空")
     private String description;
 

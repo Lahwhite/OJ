@@ -38,6 +38,7 @@ public class ProblemController {
     }
 
     @GetMapping
+    // 题目列表页走这个接口
     public ApiResponse<ProblemPageResponse> listProblems(@Valid ProblemQueryRequest queryRequest) {
         return ApiResponse.success(problemService.listProblems(queryRequest));
     }

@@ -29,6 +29,7 @@ bool RedisCache::connect(const std::string& host,
     OJ_LOG_WARN("Redis: built without OJ_WITH_REDIS; cache disabled");
     return false;
 #else
+    // 这里每次重新 connect 前先断开旧连接，省得状态不干净
     disconnect();
     redisContext* c = redisConnect(host.c_str(), static_cast<int>(port));
     if (!c || c->err) {

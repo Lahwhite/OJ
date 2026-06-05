@@ -1,5 +1,7 @@
+// 题目详情页逻辑：加载题面、初始化 Monaco 编辑器、处理提交
 const API_BASE = new URL("./v1/problems", window.location.href).pathname.replace(/\/$/, "");
 
+// 各语言默认模板代码，切换语言时如果用户没写过就填这个
 const DEFAULT_CODE = {
     cpp: `#include <bits/stdc++.h>
 using namespace std;
@@ -47,6 +49,7 @@ rl.on('close', () => {
 });`
 };
 
+// Monaco 编辑器语言标识符映射
 const MONACO_LANGUAGE = {
     cpp: "cpp",
     java: "java", 
@@ -55,13 +58,15 @@ const MONACO_LANGUAGE = {
     javascript: "javascript"
 };
 
+// 页面全局状态
 const state = {
     problem: null,
     editor: null,
     currentLanguage: "cpp",
-    userCode: {}
+    userCode: {}  // 每种语言各保存一份用户代码，切换时不会丢失
 };
 
+// 缓存常用 DOM 元素，避免重复查询
 const els = {
     notice: document.querySelector("#notice"),
     homeLink: document.querySelector("#homeLink"),
@@ -78,6 +83,7 @@ const els = {
     memoryLimit: document.querySelector("#memoryLimit")
 };
 
+// 从 URL 读取题目 id、return_url 等参数
 function getParams() {
     const p = new URLSearchParams(window.location.search);
     return {
@@ -102,6 +108,7 @@ function setNotice(message, type = "info") {
     els.notice.textContent = message;
 }
 
+// 转义 HTML 特殊字符，避免 XSS
 function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -131,6 +138,7 @@ function formatRate(rate) {
     return `${((Number(rate) || 0) * 100).toFixed(1)}%`;
 }
 
+// 从后端拉取题目详情
 async function loadProblem(id) {
     try {
         const res = await fetch(`${API_BASE}/${id}`);
@@ -148,6 +156,7 @@ async function loadProblem(id) {
     }
 }
 
+// 渲染顶部标题栏：题号、题名、难度、时间/内存限制
 function renderHeader(problem) {
     els.problemTitle.innerHTML = `
         <span class="text-sm text-gray-400">#${problem.id}</span>
@@ -159,6 +168,7 @@ function renderHeader(problem) {
     els.memoryLimit.textContent = `${problem.memoryLimit ?? "-"} MB`;
 }
 
+// 渲染题面正文：描述、输入输出说明、样例、统计数据
 function renderContent(problem) {
     const tagHtml = tagBadges(problem.tags || []);
     const hasSample = problem.sampleInput || problem.sampleOutput;
@@ -220,6 +230,7 @@ function renderContent(problem) {
     `;
 }
 
+// 初始化 Monaco 编辑器，异步加载 CDN 资源
 function initMonaco(language) {
     require.config({ 
         paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" }
@@ -243,12 +254,14 @@ function initMonaco(language) {
             padding: { top: 16, bottom: 16 }
         });
         
+        // 实时同步代码到 state，防止切换语言时丢失
         state.editor.onDidChangeModelContent(() => {
             state.userCode[state.currentLanguage] = state.editor.getValue();
         });
     });
 }
 
+// 切换编程语言，保存当前语言代码后切换到新语言
 function switchLanguage(lang) {
     if (!state.editor) return;
     state.userCode[state.currentLanguage] = state.editor.getValue();
@@ -257,6 +270,7 @@ function switchLanguage(lang) {
     state.editor.setValue(state.userCode[lang] ?? DEFAULT_CODE[lang] ?? "");
 }
 
+// 重置代码为默认模板，需要用户确认
 function resetCode() {
     if (!state.editor) return;
     if (!window.confirm("确定重置代码？当前编辑内容将丢失。")) return;
@@ -273,6 +287,7 @@ function hideResult() {
     els.resultPanel.classList.add("hidden");
 }
 
+// 运行按钮：当前只做样例展示，评测引擎尚未接入
 function handleRun() {
     if (!state.editor) return;
     const code = state.editor.getValue().trim();
@@ -305,6 +320,7 @@ function handleRun() {
     `);
 }
 
+// 提交按钮：当前只记录提交动作，实际评测待接入
 function handleSubmit() {
     if (!state.editor) return;
     const code = state.editor.getValue().trim();
@@ -323,6 +339,7 @@ function handleSubmit() {
     `);
 }
 
+// 绑定所有交互事件
 function bindEvents() {
     els.languageSelect.addEventListener("change", () => switchLanguage(els.languageSelect.value));
     els.resetButton.addEventListener("click", resetCode);
@@ -331,6 +348,7 @@ function bindEvents() {
     els.closeResult.addEventListener("click", hideResult);
 }
 
+// 页面入口：读参数、加载题目、渲染页面、初始化编辑器
 async function init() {
     const { id, returnUrl } = getParams();
     

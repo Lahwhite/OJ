@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
     }
 
+    // 处理参数校验失败的情况，把所有字段错误拼成一条消息返回
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()

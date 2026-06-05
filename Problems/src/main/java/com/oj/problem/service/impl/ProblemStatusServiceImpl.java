@@ -28,6 +28,7 @@ public class ProblemStatusServiceImpl implements ProblemStatusService {
         this.statusRepository = statusRepository;
     }
 
+    // 评测结果回写时，如果没有记录就新建，有记录就更新
     @Override
     @Transactional
     public ProblemStatusResponse upsertStatus(SubmissionResultRequest request) {

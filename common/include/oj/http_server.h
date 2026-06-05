@@ -7,6 +7,7 @@
 
 namespace oj {
 
+// 负责监听端口并把请求交给 Router 处理
 class HttpServer {
 public:
     HttpServer();

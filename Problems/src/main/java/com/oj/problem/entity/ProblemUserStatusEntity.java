@@ -30,6 +30,7 @@ public class ProblemUserStatusEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 这里只记用户 id，不再额外连用户表
     @Column(name = "user_id", nullable = false)
     private Long userId;
 

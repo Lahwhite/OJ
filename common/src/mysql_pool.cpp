@@ -28,12 +28,12 @@ MysqlConnectionPool::~MysqlConnectionPool() {
 }
 
 bool MysqlConnectionPool::initialize(const std::string& host,
-                                       unsigned port,
-                                       const std::string& user,
-                                       const std::string& password,
-                                       const std::string& database,
-                                       size_t pool_min,
-                                       size_t pool_max) {
+                                     unsigned port,
+                                     const std::string& user,
+                                     const std::string& password,
+                                     const std::string& database,
+                                     size_t pool_min,
+                                     size_t pool_max) {
 #ifndef OJ_WITH_MYSQL
     (void)host;
     (void)port;
@@ -61,6 +61,7 @@ bool MysqlConnectionPool::initialize(const std::string& host,
     pool_max_ = pool_max;
 
     for (size_t i = 0; i < pool_min; ++i) {
+        // 提前建好最小连接数，避免第一批请求现建现等
         void* c = nullptr;
         if (!createConnection(c) || !c) {
             OJ_LOG_ERROR("MySQL pool: failed to create initial connection");
@@ -112,12 +113,14 @@ void* MysqlConnectionPool::acquire() {
     if (!initialized_) {
         return nullptr;
     }
+    // 循环等待可用连接，要么从 idle 池里取，要么新建一个
     for (;;) {
         while (!idle_.empty()) {
             void* c = idle_.front();
             idle_.pop();
             return c;
         }
+        // 池子用完了，但还没达到上限，尝试新建
         if (total_created_ < pool_max_) {
             void* c = nullptr;
             lock.unlock();
@@ -130,6 +133,7 @@ void* MysqlConnectionPool::acquire() {
             OJ_LOG_ERROR("MySQL pool: createConnection failed under load");
             return nullptr;
         }
+        // 等不到就超时返回 null
         if (cv_.wait_for(lock, std::chrono::seconds(30)) == std::cv_status::timeout) {
             OJ_LOG_WARN("MySQL pool: acquire timeout");
             return nullptr;
@@ -156,6 +160,7 @@ void MysqlConnectionPool::release(void* conn) {
 }
 
 MysqlPoolStats MysqlConnectionPool::stats() const {
+    // 这里只给出最基础的池状态统计
     MysqlPoolStats s;
     std::lock_guard<std::mutex> lock(mutex_);
     const size_t idle = idle_.size();

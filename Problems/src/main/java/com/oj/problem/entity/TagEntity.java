@@ -17,6 +17,7 @@ public class TagEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 标签名全局唯一，前端筛选会直接用到
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 

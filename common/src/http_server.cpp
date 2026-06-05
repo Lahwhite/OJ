@@ -27,6 +27,7 @@ namespace oj {
 namespace {
 
 std::string trim(const std::string& s) {
+    // header 解析时会用到，主要去掉前后空白
     size_t start = 0;
     while (start < s.size() && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r')) {
         ++start;
@@ -63,6 +64,7 @@ Router& HttpServer::router() {
 }
 
 bool HttpServer::start(uint16_t port) {
+    // 这个实现先走最直白的阻塞式监听逻辑
     if (running_.load()) {
         OJ_LOG_WARN("http server already running");
         return false;
@@ -142,6 +144,7 @@ void HttpServer::cleanupSocketLayer() {
 }
 
 void HttpServer::serveLoop() {
+    // 主循环只负责 accept，请求处理扔给子线程
     while (running_.load()) {
         sockaddr_in client_addr{};
 #if defined(_WIN32)

@@ -9,6 +9,7 @@ namespace oj {
 
 enum class LogLevel { Debug, Info, Warning, Error };
 
+// 这里没做很复杂的日志框架，主要图一个简单好用
 class Logger {
 public:
     static Logger& instance();

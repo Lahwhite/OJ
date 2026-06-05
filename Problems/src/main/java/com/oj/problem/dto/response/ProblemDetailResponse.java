@@ -5,6 +5,7 @@ import java.util.List;
 
 public class ProblemDetailResponse {
 
+    // 详情页需要的字段基本都放在这里
     private Long id;
     private String title;
     private String description;

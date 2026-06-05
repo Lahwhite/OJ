@@ -1,5 +1,6 @@
 package com.oj.problem.common;
 
+// 统一响应体，code 用业务错误码而不是直接复用 HTTP 状态码，方便前端区分具体错误类型
 public class ApiResponse<T> {
 
     private final int code;

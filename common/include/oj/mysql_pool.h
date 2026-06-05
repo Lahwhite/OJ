@@ -14,6 +14,7 @@ struct MysqlPoolStats {
     size_t in_use{0};
 };
 
+// 单例连接池，进程内共享
 class MysqlConnectionPool {
 public:
     static MysqlConnectionPool& instance();
@@ -28,6 +29,7 @@ public:
 
     void shutdown();
 
+    // 连接的借出和归还都走这两个接口
     void* acquire();
     void release(void* conn);
 
