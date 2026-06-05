@@ -1,4 +1,4 @@
-USE oj;
+USE myOJ;
 
 INSERT INTO problem_users (username, role)
 VALUES ('admin', 'admin');
@@ -44,6 +44,12 @@ VALUES ('入门', '#1890ff', 1);
 INSERT INTO problem_tags (problem_id, tag_id)
 VALUES (1, 1);
 
+select * from `myOJ`.`problem_users`;
+select * from `myOJ`.`problems`;
+select * from `myOJ`.`test_cases`;
+select * from `myOJ`.`tags`;
+select * from `myOJ`.`problem_tags`;
+
 INSERT INTO problem_user_status (
     user_id,
     problem_id,
@@ -63,3 +69,5 @@ INSERT INTO problem_user_status (
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 );
+
+select * from `myOJ`.`problem_user_status`;
