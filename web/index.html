@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OJ 评测结果可视化</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo">OJ</span>
+        <div>
+          <h1>评测结果可视化</h1>
+          <p class="header__sub">加载 <code>judge_engine</code> 生成的 <code>judge_result_*.json</code></p>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel panel--input" id="input-panel">
+      <h2>导入结果</h2>
+      <div class="input-grid">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="拖放或选择 JSON 文件">
+          <div class="dropzone__icon">📄</div>
+          <p class="dropzone__title">拖放 JSON 到此处</p>
+          <p class="dropzone__hint">或点击选择 <code>judge_result_*.json</code></p>
+          <input type="file" id="file-input" accept=".json,application/json" hidden />
+        </div>
+        <div class="paste-area">
+          <label for="json-paste">粘贴 JSON</label>
+          <textarea id="json-paste" rows="8" placeholder='{"verdict":"AC","total_score":100,...}'></textarea>
+          <div class="paste-actions">
+            <button type="button" class="btn btn--primary" id="btn-parse">解析并展示</button>
+            <button type="button" class="btn btn--ghost" id="btn-clear">清空</button>
+          </div>
+        </div>
+      </div>
+      <p class="parse-error hidden" id="parse-error" role="alert"></p>
+    </section>
+
+    <main class="result hidden" id="result-panel">
+      <section class="hero" id="hero">
+        <div class="hero__verdict" id="hero-verdict">—</div>
+        <div class="hero__meta">
+          <span class="hero__lang" id="hero-lang"></span>
+          <span class="hero__status-code" id="hero-status"></span>
+        </div>
+        <p class="hero__error hidden" id="hero-error"></p>
+      </section>
+
+      <section class="stats" id="stats-row">
+        <article class="stat-card">
+          <span class="stat-card__label">得分</span>
+          <span class="stat-card__value" id="stat-score">—</span>
+          <div class="progress" aria-hidden="true">
+            <div class="progress__bar" id="score-bar"></div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">总用时</span>
+          <span class="stat-card__value" id="stat-runtime">—</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">峰值内存</span>
+          <span class="stat-card__value" id="stat-memory">—</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">通过用例</span>
+          <span class="stat-card__value" id="stat-passed">—</span>
+        </article>
+      </section>
+
+      <section class="cases" id="cases-section">
+        <div class="cases__head">
+          <h2>测试用例</h2>
+          <span class="cases__count" id="cases-count"></span>
+        </div>
+        <div class="cases__grid" id="cases-grid"></div>
+        <table class="cases-table hidden" id="cases-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>判定</th>
+              <th>通过</th>
+              <th>用时</th>
+              <th>内存</th>
+              <th>得分</th>
+            </tr>
+          </thead>
+          <tbody id="cases-tbody"></tbody>
+        </table>
+      </section>
+
+      <details class="raw-json">
+        <summary>原始 JSON</summary>
+        <pre id="raw-json"></pre>
+      </details>
+    </main>
+
+    <footer class="footer">
+      <p>由 <code>judge_engine</code> 内嵌展示 · 评测完成后自动打开本页</p>
+    </footer>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

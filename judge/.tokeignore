@@ -1,0 +1,6 @@
+./tests/
+./.vscode/
+./build/
+./include/asio/
+./include/nlohmann/
+./include/crow_all.h

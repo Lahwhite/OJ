@@ -1,7 +1,6 @@
 #ifndef DEFAULT_LANGUAGE_CONFIG_H
 #define DEFAULT_LANGUAGE_CONFIG_H
 
-// 内置默认语言配置。用于找不到外部 config/languages.json 时的回退加载。
 inline constexpr const char* kDefaultLanguageConfigJson = R"({
   "languages": {
     "c": {
@@ -55,4 +54,4 @@ inline constexpr const char* kDefaultLanguageConfigJson = R"({
   }
 })";
 
-#endif // DEFAULT_LANGUAGE_CONFIG_H
+#endif

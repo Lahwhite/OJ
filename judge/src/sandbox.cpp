@@ -1,48 +1,43 @@
-/**
- * @file sandbox.cpp
- * @brief 沙箱环境实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "sandbox.h"
 #include <iostream>
-#include <windows.h>
-#include <process.h>
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cstring>
 
-/**
- * @brief 构造函数
- * @param config 沙箱配置
- */
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <process.h>
+
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/resource.h>
+#include <cerrno>
+#include <chrono>
+#endif
+
 Sandbox::Sandbox(const SandboxConfig& config) : config_(config) {
 }
 
-/**
- * @brief 设置资源限制
- * @return 是否设置成功
- */
+// 预留接口：Windows 下资源限制尚未实现
 bool Sandbox::setupResourceLimits() {
-    // 在Windows中，资源限制通过Job对象实现
     return true;
 }
 
-/**
- * @brief 创建隔离环境
- * @return 是否创建成功
- */
+// 预留接口：进程隔离环境尚未实现
 bool Sandbox::createIsolatedEnvironment() {
-    // 在Windows中，隔离环境可以通过AppContainer或其他沙箱技术实现
     return true;
 }
 
-/**
- * @brief 执行命令
- * @param command 命令字符串
- * @param input 输入数据
- * @return 执行结果
- */
+#ifdef _WIN32
+
+// Windows 沙箱：通过管道重定向 stdin/stdout/stderr 并监控超时
 SandboxResult Sandbox::execute(const std::string& command, const std::string& input) {
     SandboxResult result;
     result.exit_code = -1;
@@ -50,118 +45,256 @@ SandboxResult Sandbox::execute(const std::string& command, const std::string& in
     result.memory_kb = 0;
     result.timeout = false;
     result.memory_exceeded = false;
-    
-    // 创建进程信息结构
+
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
-    
-    // 创建管道用于捕获输出
+
     HANDLE hOutputRead, hOutputWrite;
     HANDLE hErrorRead, hErrorWrite;
+    HANDLE hInputRead, hInputWrite;
     SECURITY_ATTRIBUTES saAttr;
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
-    
+
+    // 创建三组管道：标准输出、标准错误、标准输入
     if (!CreatePipe(&hOutputRead, &hOutputWrite, &saAttr, 0)) {
         result.error = "Failed to create output pipe";
         return result;
     }
-    
     if (!CreatePipe(&hErrorRead, &hErrorWrite, &saAttr, 0)) {
         result.error = "Failed to create error pipe";
-        CloseHandle(hOutputRead);
-        CloseHandle(hOutputWrite);
+        CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
         return result;
     }
-    
-    // 设置进程的标准输出和错误
+    if (!CreatePipe(&hInputRead, &hInputWrite, &saAttr, 0)) {
+        result.error = "Failed to create input pipe";
+        CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
+        CloseHandle(hErrorRead);  CloseHandle(hErrorWrite);
+        return result;
+    }
+
+    // 将子进程的标准流绑定到管道句柄
     si.hStdOutput = hOutputWrite;
-    si.hStdError = hErrorWrite;
-    si.dwFlags |= STARTF_USESTDHANDLES;
-    
-    // 处理命令行 - 在Windows中，需要使用cmd.exe执行内置命令
+    si.hStdError  = hErrorWrite;
+    si.hStdInput  = hInputRead;
+    si.dwFlags   |= STARTF_USESTDHANDLES;
+
+    // 经 cmd.exe 执行，兼容复杂命令行
     std::string full_command = "cmd.exe /c " + command;
-    
-    // CreateProcessA需要可修改的字符串
-    char* cmd_line = new char[full_command.size() + 1];
-    strcpy(cmd_line, full_command.c_str());
-    
-    // 启动进程
+    std::vector<char> cmd_buf(full_command.begin(), full_command.end());
+    cmd_buf.push_back('\0');
+
     BOOL bSuccess = CreateProcessA(
-        NULL,                  // 应用程序名称
-        cmd_line,              // 命令行
-        NULL,                  // 进程安全属性
-        NULL,                  // 线程安全属性
-        TRUE,                  // 继承句柄
-        0,                     // 创建标志
-        NULL,                  // 环境变量
-        NULL,                  // 当前目录
-        &si,                   // 启动信息
-        &pi                    // 进程信息
-    );
-    
+        NULL, cmd_buf.data(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+
     if (!bSuccess) {
         DWORD error_code = GetLastError();
         char error_msg[256];
         FormatMessageA(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            error_msg, sizeof(error_msg), NULL
-        );
+            error_msg, sizeof(error_msg), NULL);
         result.error = "Failed to create process: " + std::string(error_msg);
-        delete[] cmd_line;
-        CloseHandle(hOutputRead);
-        CloseHandle(hOutputWrite);
-        CloseHandle(hErrorRead);
-        CloseHandle(hErrorWrite);
+        CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
+        CloseHandle(hErrorRead);  CloseHandle(hErrorWrite);
+        CloseHandle(hInputRead);  CloseHandle(hInputWrite);
         return result;
     }
-    
-    // 释放命令行内存
-    delete[] cmd_line;
-    
-    // 关闭不需要的管道句柄
+
+    // 关闭父进程侧写端，防止管道死锁
     CloseHandle(hOutputWrite);
     CloseHandle(hErrorWrite);
-    
-    // 等待进程完成或超时
-    DWORD dwMilliseconds = config_.time_limit_ms;
-    DWORD dwWaitResult = WaitForSingleObject(pi.hProcess, dwMilliseconds);
-    
+    CloseHandle(hInputRead);
+
+    // 向子进程 stdin 写入测试输入
+    if (!input.empty()) {
+        size_t total = 0;
+        while (total < input.size()) {
+            DWORD dwWritten = 0;
+            const DWORD to_write = static_cast<DWORD>(input.size() - total);
+            if (!WriteFile(hInputWrite, input.data() + total, to_write, &dwWritten, NULL) || dwWritten == 0) {
+                break;
+            }
+            total += dwWritten;
+        }
+    }
+    CloseHandle(hInputWrite);
+
+    // 等待进程结束，超时则强制终止
+    DWORD dwWaitResult = WaitForSingleObject(pi.hProcess, static_cast<DWORD>(config_.time_limit_ms));
     if (dwWaitResult == WAIT_TIMEOUT) {
-        // 超时，终止进程
         TerminateProcess(pi.hProcess, 1);
         result.timeout = true;
     }
-    
-    // 获取进程退出代码
+
     DWORD dwExitCode;
     GetExitCodeProcess(pi.hProcess, &dwExitCode);
-    result.exit_code = dwExitCode;
-    
-    // 读取输出
+    result.exit_code = static_cast<int>(dwExitCode);
+
+    // 读取子进程 stdout/stderr 作为运行输出
     char buffer[4096];
     DWORD dwRead;
-    
-    // 读取标准输出
     while (ReadFile(hOutputRead, buffer, sizeof(buffer), &dwRead, NULL) && dwRead > 0) {
         result.output.append(buffer, dwRead);
     }
-    
-    // 读取标准错误
     while (ReadFile(hErrorRead, buffer, sizeof(buffer), &dwRead, NULL) && dwRead > 0) {
         result.error.append(buffer, dwRead);
     }
-    
-    // 清理
+
+    // 释放所有句柄，防止资源泄漏
     CloseHandle(hOutputRead);
     CloseHandle(hErrorRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    
+
     return result;
 }
+
+#else
+
+// Linux 沙箱：fork + 管道 + setrlimit 限制内存，轮询检测超时
+SandboxResult Sandbox::execute(const std::string& command, const std::string& input) {
+    SandboxResult result;
+    result.exit_code = -1;
+    result.runtime_ms = 0;
+    result.memory_kb = 0;
+    result.timeout = false;
+    result.memory_exceeded = false;
+
+    int stdout_pipe[2], stderr_pipe[2], stdin_pipe[2];
+    if (pipe(stdout_pipe) != 0 || pipe(stderr_pipe) != 0 || pipe(stdin_pipe) != 0) {
+        result.error = "Failed to create pipes: " + std::string(strerror(errno));
+        return result;
+    }
+
+    const auto start_time = std::chrono::steady_clock::now();
+
+    // fork 子进程执行用户程序
+    pid_t pid = fork();
+    if (pid < 0) {
+        result.error = "fork() failed: " + std::string(strerror(errno));
+        close(stdout_pipe[0]); close(stdout_pipe[1]);
+        close(stderr_pipe[0]); close(stderr_pipe[1]);
+        close(stdin_pipe[0]);  close(stdin_pipe[1]);
+        return result;
+    }
+
+    if (pid == 0) {
+        // 子进程：重定向标准流到管道
+        dup2(stdin_pipe[0],  STDIN_FILENO);
+        dup2(stdout_pipe[1], STDOUT_FILENO);
+        dup2(stderr_pipe[1], STDERR_FILENO);
+
+        close(stdin_pipe[0]);  close(stdin_pipe[1]);
+        close(stdout_pipe[0]); close(stdout_pipe[1]);
+        close(stderr_pipe[0]); close(stderr_pipe[1]);
+
+        // 设置虚拟内存上限（RLIMIT_AS）
+        if (config_.memory_limit_mb > 0) {
+            struct rlimit rl;
+            rl.rlim_cur = static_cast<rlim_t>(config_.memory_limit_mb) * 1024 * 1024;
+            rl.rlim_max = rl.rlim_cur;
+            setrlimit(RLIMIT_AS, &rl);
+        }
+
+        // 通过 shell 执行命令字符串
+        execl("/bin/sh", "sh", "-c", command.c_str(), nullptr);
+        _exit(127);
+    }
+
+    // 父进程：关闭子进程侧管道端
+    close(stdin_pipe[0]);
+    close(stdout_pipe[1]);
+    close(stderr_pipe[1]);
+
+    if (!input.empty()) {
+        size_t total = 0;
+        while (total < input.size()) {
+            ssize_t n = write(stdin_pipe[1], input.data() + total, input.size() - total);
+            if (n <= 0) break;
+            total += static_cast<size_t>(n);
+        }
+    }
+    close(stdin_pipe[1]);
+
+    // 非阻塞读管道，便于与超时检测配合轮询
+    auto setNonBlocking = [](int fd) {
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags != -1) fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    };
+    setNonBlocking(stdout_pipe[0]);
+    setNonBlocking(stderr_pipe[0]);
+
+    bool timed_out = false;
+    const int time_limit_ms = config_.time_limit_ms;
+
+    // 轮询读取输出并检查子进程是否退出
+    while (true) {
+        char buf[4096];
+        ssize_t n;
+        while ((n = read(stdout_pipe[0], buf, sizeof(buf))) > 0) {
+            result.output.append(buf, static_cast<size_t>(n));
+        }
+        while ((n = read(stderr_pipe[0], buf, sizeof(buf))) > 0) {
+            result.error.append(buf, static_cast<size_t>(n));
+        }
+
+        int status = 0;
+        pid_t waited = waitpid(pid, &status, WNOHANG);
+        if (waited == pid) {
+            if (WIFEXITED(status)) {
+                result.exit_code = WEXITSTATUS(status);
+            } else if (WIFSIGNALED(status)) {
+                result.exit_code = -WTERMSIG(status);
+            }
+            break;
+        }
+
+        const auto elapsed = std::chrono::steady_clock::now() - start_time;
+        const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        // 超出时限：发送 SIGKILL 并标记 timeout
+        if (elapsed_ms >= time_limit_ms) {
+            kill(pid, SIGKILL);
+            waitpid(pid, nullptr, 0);
+            result.timeout = true;
+            result.exit_code = -1;
+            break;
+        }
+
+        usleep(5000);
+    }
+
+    // 进程退出后再排空管道中剩余数据
+    {
+        char buf[4096];
+        ssize_t n;
+        while ((n = read(stdout_pipe[0], buf, sizeof(buf))) > 0) {
+            result.output.append(buf, static_cast<size_t>(n));
+        }
+        while ((n = read(stderr_pipe[0], buf, sizeof(buf))) > 0) {
+            result.error.append(buf, static_cast<size_t>(n));
+        }
+    }
+
+    close(stdout_pipe[0]);
+    close(stderr_pipe[0]);
+
+    // 记录实际运行耗时（Linux 路径由父进程计时）
+    const auto elapsed = std::chrono::steady_clock::now() - start_time;
+    result.runtime_ms = static_cast<int>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
+
+    result.memory_kb = 0;  // 当前实现未采集内存用量
+
+    if (result.exit_code == 127) {
+        result.error = "Command not found or failed to execute: " + command + "\n" + result.error;
+    }
+
+    return result;
+}
+
+#endif // _WIN32

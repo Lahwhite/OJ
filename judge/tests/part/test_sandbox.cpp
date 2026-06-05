@@ -13,7 +13,6 @@ int main() {
     
     Sandbox sandbox(config);
     
-    // 测试不同的命令
     std::string commands[] = {
         "echo hello",
         "cmd /c echo hello",

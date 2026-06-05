@@ -1,14 +1,10 @@
-/**
- * @file language_config.cpp
- * @brief 语言配置管理实现
- * @author OJ Team
- * @date 2024-01-01
- */
 #include "language_config.h"
 #include <fstream>
 #include <iostream>
 
 namespace {
+
+// 从 JSON 的 languages 节点填充语言元数据表
 bool fillLanguagesFromJson(const nlohmann::json& config, std::unordered_map<std::string, LanguageInfo>& languages) {
     if (!config.contains("languages")) {
         std::cerr << "Invalid language config: missing 'languages' field" << std::endl;
@@ -17,6 +13,7 @@ bool fillLanguagesFromJson(const nlohmann::json& config, std::unordered_map<std:
 
     languages.clear();
     const auto& json_languages = config["languages"];
+    // 遍历 languages 对象，每个 key 为语言 ID
     for (const auto& [lang_id, lang_info] : json_languages.items()) {
         LanguageInfo info;
         info.id = lang_id;
@@ -38,17 +35,10 @@ bool fillLanguagesFromJson(const nlohmann::json& config, std::unordered_map<std:
 }
 }  // namespace
 
-/**
- * @brief 构造函数
- */
 LanguageConfig::LanguageConfig() {
 }
 
-/**
- * @brief 加载语言配置
- * @param config_path 配置文件路径
- * @return 是否加载成功
- */
+// 从磁盘 JSON 文件加载语言配置
 bool LanguageConfig::load(const std::string& config_path) {
     std::ifstream config_file(config_path);
     if (!config_file.is_open()) {
@@ -67,11 +57,7 @@ bool LanguageConfig::load(const std::string& config_path) {
     return fillLanguagesFromJson(config, languages_);
 }
 
-/**
- * @brief 从 JSON 字符串加载语言配置
- * @param json_content JSON 内容
- * @return 是否加载成功
- */
+// 从内置 JSON 字符串加载（配置文件缺失时的回退方案）
 bool LanguageConfig::loadFromJsonString(const std::string& json_content) {
     nlohmann::json config;
     try {
@@ -84,11 +70,7 @@ bool LanguageConfig::loadFromJsonString(const std::string& json_content) {
     return fillLanguagesFromJson(config, languages_);
 }
 
-/**
- * @brief 获取语言信息
- * @param language_id 语言ID
- * @return 语言信息指针，不存在则返回nullptr
- */
+// 按语言 ID 查询配置，未找到返回 nullptr
 const LanguageInfo* LanguageConfig::getLanguage(const std::string& language_id) const {
     auto it = languages_.find(language_id);
     if (it == languages_.end()) {
@@ -97,10 +79,7 @@ const LanguageInfo* LanguageConfig::getLanguage(const std::string& language_id) 
     return &(it->second);
 }
 
-/**
- * @brief 获取支持的语言列表
- * @return 语言ID列表
- */
+// 返回已加载的全部语言 ID 列表
 std::vector<std::string> LanguageConfig::getSupportedLanguages() const {
     std::vector<std::string> language_ids;
     for (const auto& [id, _] : languages_) {

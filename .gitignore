@@ -38,7 +38,6 @@
 *.exe
 *.out
 *.app
-*.log
 
 # debug information files
 *.dwo
@@ -53,9 +52,6 @@ cmake-build-*/
 **/build/
 **/build-*/
 **/cmake-build-*/
-
-# Judge runtime scratch file
-judge/temp_output
 
 # IntelliJ IDEA
 .idea/
