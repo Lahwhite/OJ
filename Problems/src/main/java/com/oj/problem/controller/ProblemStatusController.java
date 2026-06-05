@@ -31,6 +31,7 @@ public class ProblemStatusController {
         this.serviceToken = serviceToken;
     }
 
+    // 评测结果回写走这个接口，外部模块要带 service token
     @PutMapping
     public ApiResponse<ProblemStatusResponse> upsertStatus(
             @RequestHeader(value = "X-Service-Token", required = false) String token,

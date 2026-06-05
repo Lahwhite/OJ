@@ -5,6 +5,7 @@
 
 namespace oj {
 
+// Redis 这里主要是做一个很薄的封装，常用的 set/get/del 够用了
 class RedisCache {
 public:
     static RedisCache& instance();
