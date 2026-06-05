@@ -29,6 +29,7 @@ struct AppConfig {
     unsigned mysql_pool_max = kDefaultMysqlPoolMax;
 
     std::string redis_host = kDefaultRedisHost;
+    // Redis 配置
     unsigned redis_port = kDefaultRedisPort;
     std::string redis_password;
     int redis_db = kDefaultRedisDb;

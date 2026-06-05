@@ -15,6 +15,7 @@ Logger& Logger::instance() {
 void Logger::init(LogLevel level, const std::string& log_file_path) {
     std::lock_guard<std::mutex> lock(mutex_);
     level_ = level;
+    // 每次 init 都把旧文件句柄关掉，防止重复打开
     file_.close();
     if (!log_file_path.empty()) {
         file_.open(log_file_path, std::ios::out | std::ios::app);
