@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 
 public class SubmissionResultRequest {
 
+    // 评测模块回写结果时用这个 DTO
     @NotNull(message = "用户ID不能为空")
     private Long userId;
 

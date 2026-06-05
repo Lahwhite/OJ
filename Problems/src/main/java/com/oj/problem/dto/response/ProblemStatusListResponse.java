@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ProblemStatusListResponse {
 
+    // 查询某个用户所有题目的做题状态
     private Long userId;
     private List<ProblemStatusResponse> statuses;
 

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public class ProblemStatusResponse {
 
+    // 用户在单个题目上的做题状态记录
     private Long userId;
     private Long problemId;
     private Boolean accepted;
