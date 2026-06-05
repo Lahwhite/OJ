@@ -28,12 +28,12 @@ MysqlConnectionPool::~MysqlConnectionPool() {
 }
 
 bool MysqlConnectionPool::initialize(const std::string& host,
-                                       unsigned port,
-                                       const std::string& user,
-                                       const std::string& password,
-                                       const std::string& database,
-                                       size_t pool_min,
-                                       size_t pool_max) {
+                                     unsigned port,
+                                     const std::string& user,
+                                     const std::string& password,
+                                     const std::string& database,
+                                     size_t pool_min,
+                                     size_t pool_max) {
 #ifndef OJ_WITH_MYSQL
     (void)host;
     (void)port;
@@ -61,6 +61,7 @@ bool MysqlConnectionPool::initialize(const std::string& host,
     pool_max_ = pool_max;
 
     for (size_t i = 0; i < pool_min; ++i) {
+        // 提前建好最小连接数，避免第一批请求现建现等
         void* c = nullptr;
         if (!createConnection(c) || !c) {
             OJ_LOG_ERROR("MySQL pool: failed to create initial connection");
@@ -159,6 +160,7 @@ void MysqlConnectionPool::release(void* conn) {
 }
 
 MysqlPoolStats MysqlConnectionPool::stats() const {
+    // 这里只给出最基础的池状态统计
     MysqlPoolStats s;
     std::lock_guard<std::mutex> lock(mutex_);
     const size_t idle = idle_.size();

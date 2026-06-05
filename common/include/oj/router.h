@@ -9,10 +9,12 @@
 
 namespace oj {
 
+// method + path 映射到一个 handler，先保持实现简单
 class Router {
 public:
     using Handler = std::function<HttpResponse(const HttpRequest&)>;
 
+    // 先支持最常见的四种方法
     void get(const std::string& path, Handler handler);
     void post(const std::string& path, Handler handler);
     void put(const std::string& path, Handler handler);

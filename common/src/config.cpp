@@ -42,6 +42,7 @@ static std::string getenvOr(const char* key, const std::string& def) {
 }
 
 static unsigned getenvUInt(const char* key, unsigned def) {
+    // 这里统一把数字配置从字符串转成无符号整数
     std::string s = getenvOr(key, "");
     if (s.empty()) {
         return def;
@@ -50,6 +51,7 @@ static unsigned getenvUInt(const char* key, unsigned def) {
 }
 
 AppConfig loadConfigFromEnv() {
+    // 默认配置先兜底，再让环境变量覆盖
     AppConfig c;
     c.mysql_host = getenvOr(kEnvMysqlHost, c.mysql_host);
     c.mysql_port = getenvUInt(kEnvMysqlPort, c.mysql_port);
