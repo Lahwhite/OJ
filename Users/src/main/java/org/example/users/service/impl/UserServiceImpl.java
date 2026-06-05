@@ -1,6 +1,8 @@
 package org.example.users.service.impl;
 
+import org.example.users.entity.ProblemUser;
 import org.example.users.entity.User;
+import org.example.users.repository.ProblemUserRepository;
 import org.example.users.repository.UserRepository;
 import org.example.users.service.UserService;
 import org.springframework.stereotype.Service;
@@ -8,9 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final ProblemUserRepository problemUserRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, ProblemUserRepository problemUserRepository) {
         this.userRepository = userRepository;
+        this.problemUserRepository = problemUserRepository;
     }
 
     @Override
@@ -35,5 +39,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void insertUser(String username, String password) {
         userRepository.save(new User(username, password));
+    }
+
+    //
+    @Override
+    public Long getBindUserId(String username) {
+        // 直接通过 username 查询 problem_users 表，该字段有唯一约束
+        ProblemUser problemUser = problemUserRepository.findByUsername(username);
+        // 存在则返回其 ID，否则返回 null
+        return problemUser != null ? problemUser.getId() : null;
     }
 }

@@ -9,4 +9,6 @@ public interface UserService {
     boolean checkUsername(String username);
     // 将用户名、密码插入数据库
     void insertUser(String username, String password);
+    // 获取 problem_users 中和用户名绑定的用户id
+    Long getBindUserId(String username);
 }
