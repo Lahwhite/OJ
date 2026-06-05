@@ -112,12 +112,14 @@ void* MysqlConnectionPool::acquire() {
     if (!initialized_) {
         return nullptr;
     }
+    // 循环等待可用连接，要么从 idle 池里取，要么新建一个
     for (;;) {
         while (!idle_.empty()) {
             void* c = idle_.front();
             idle_.pop();
             return c;
         }
+        // 池子用完了，但还没达到上限，尝试新建
         if (total_created_ < pool_max_) {
             void* c = nullptr;
             lock.unlock();
@@ -130,6 +132,7 @@ void* MysqlConnectionPool::acquire() {
             OJ_LOG_ERROR("MySQL pool: createConnection failed under load");
             return nullptr;
         }
+        // 等不到就超时返回 null
         if (cv_.wait_for(lock, std::chrono::seconds(30)) == std::cv_status::timeout) {
             OJ_LOG_WARN("MySQL pool: acquire timeout");
             return nullptr;

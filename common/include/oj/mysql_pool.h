@@ -14,6 +14,8 @@ struct MysqlPoolStats {
     size_t in_use{0};
 };
 
+// 单例连接池，进程内共享，避免重复创建连接的开销
+// 单例连接池，进程内共享
 class MysqlConnectionPool {
 public:
     static MysqlConnectionPool& instance();

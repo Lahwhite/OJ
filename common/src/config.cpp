@@ -23,6 +23,8 @@ constexpr const char* kEnvLogFile = "OJ_LOG_FILE";
 constexpr const char* kEnvLogLevel = "OJ_LOG_LEVEL";
 }  // namespace
 
+// Windows 下 getenv 不安全，用 _dupenv_s 代替
+// Linux 直接用标准库的 getenv 就行
 static std::string getenvOr(const char* key, const std::string& def) {
 #if defined(_WIN32)
     char* buf = nullptr;

@@ -40,7 +40,7 @@ void Router::add(const std::string& method, const std::string& path, Handler han
 }
 
 std::string Router::routeKey(const std::string& method, const std::string& path) {
-    return method + " " + path;
+    return method + " " + path; // "METHOD /path" 格式，查找是 O(1)
 }
 
 }  // namespace oj

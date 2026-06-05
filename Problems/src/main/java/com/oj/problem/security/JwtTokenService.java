@@ -39,6 +39,7 @@ public class JwtTokenService {
 
     private CurrentUser parseToken(String token) {
         try {
+            // JWT 格式：header.payload.signature，我们只验证签名和解析 payload
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
                 throw new IllegalArgumentException("Token无效");
@@ -47,6 +48,7 @@ public class JwtTokenService {
             if (!signature.equals(parts[2])) {
                 throw new IllegalArgumentException("Token无效");
             }
+            // payload 是 base64 编码的 JSON，解析出 role 和 userId
             Map<String, Object> claims = objectMapper.readValue(
                     Base64.getUrlDecoder().decode(parts[1]),
                     new TypeReference<Map<String, Object>>() {
