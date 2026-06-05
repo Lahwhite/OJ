@@ -41,6 +41,10 @@ $sqlSrc = Join-Path $rankDir "sql\leaderboard_schema.sql"
 $sqlDst = Join-Path $packageDir "sql"
 New-Item -ItemType Directory -Force -Path $sqlDst | Out-Null
 Copy-Item $sqlSrc (Join-Path $sqlDst "leaderboard_schema.sql") -Force
+$seedSrc = Join-Path $rankDir "sql\seed_demo.sql"
+if (Test-Path $seedSrc) {
+    Copy-Item $seedSrc (Join-Path $sqlDst "seed_demo.sql") -Force
+}
 
 $dlls = @(
     "libgcc_s_seh-1.dll",
