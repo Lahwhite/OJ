@@ -37,6 +37,22 @@ bool testRouterDispatch() {
            expect(res.body == "{\"status\":\"ok\"}", "router returns handler body");
 }
 
+bool testRouterPrefixMatch() {
+    oj::Router router;
+    router.get_prefix("/api/items/", [](const oj::HttpRequest& req) {
+        return oj::HttpResponse::json(200, "{\"path\":\"" + req.path + "\"}");
+    });
+
+    oj::HttpRequest req;
+    req.method = "GET";
+    req.path = "/api/items/42";
+
+    oj::HttpResponse res = router.dispatch(req);
+    return expect(res.status == 200, "router matches GET prefix route") &&
+           expect(res.body.find("/api/items/42") != std::string::npos,
+                  "prefix handler receives full path");
+}
+
 // 布尔返回值通常用于表示是否执行成功
 bool testRouterNotFound() {
     oj::Router router;
@@ -74,6 +90,7 @@ int main() {
     // 布尔返回值通常用于表示是否执行成功
     bool ok = true;
     ok = testRouterDispatch() && ok;
+    ok = testRouterPrefixMatch() && ok;
     ok = testRouterNotFound() && ok;
     ok = testHttpWireFormat() && ok;
 

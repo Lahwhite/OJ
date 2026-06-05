@@ -7,6 +7,8 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace oj {
 
@@ -23,6 +25,9 @@ public:
     // 过程型函数：主要通过副作用完成状态更新
     void del(const std::string& path, Handler handler);
 
+    /** Match paths that start with prefix (longest prefix wins after exact routes). */
+    void get_prefix(const std::string& prefix, Handler handler);
+
     HttpResponse dispatch(const HttpRequest& request) const;
 
 private:
@@ -31,6 +36,7 @@ private:
     static std::string routeKey(const std::string& method, const std::string& path);
 
     std::unordered_map<std::string, Handler> routes_;
+    std::vector<std::pair<std::string, Handler>> prefix_routes_;
 };
 
 }  // namespace oj
