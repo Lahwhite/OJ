@@ -2,6 +2,7 @@ package com.oj.problem.dto.response;
 
 public class TagResponse {
 
+    // 标签管理和筛选展示都复用这个响应对象
     private Long id;
     private String name;
     private String color;

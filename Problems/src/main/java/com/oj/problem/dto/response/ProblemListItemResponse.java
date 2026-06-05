@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ProblemListItemResponse {
 
+    // 列表页里每一行题目的展示数据
     private Long id;
     private String title;
     private String difficulty;

@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ProblemPageResponse {
 
+    // 分页查询的统一返回结构
     private long total;
     private int page;
     private int size;

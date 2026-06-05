@@ -2,6 +2,7 @@ package com.oj.problem.dto.response;
 
 public class TestCaseResponse {
 
+    // 这里只返回测试用例的基础信息
     private Long id;
     private String input;
     private String output;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public class ProblemMutationResponse {
 
+    // 创建或更新题目后，前端回显用这几个字段就够了
     private Long id;
     private String title;
     private LocalDateTime createdAt;
