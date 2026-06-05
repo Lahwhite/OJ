@@ -1,9 +1,7 @@
-﻿// ������ҳ����Ŀ�б�չʾ������鿴����ɾ�Ĳ��Լ��û�����״̬
 const API_BASE = new URL("./v1/problems", window.location.href).pathname.replace(/\/$/, "");
 const STATUS_API_BASE = new URL("./v1/problem-status", window.location.href).pathname.replace(/\/$/, "");
 const TOKEN_STORAGE_KEY = "oj-problems-admin-token";
 
-// 全局状态，页面所有交互都基于这里
 const state = {
     problems: [],
     selectedProblemId: null,
@@ -19,7 +17,6 @@ const state = {
     problemStatuses: new Map(),
 };
 
-// 缓存页面所有 DOM 元素，避免重复查询
 const els = {
     notice: document.querySelector("#notice"),
     homeLink: document.querySelector("#homeLink"),
@@ -63,7 +60,6 @@ const els = {
     testCaseEditorList: document.querySelector("#testCaseEditorList"),
 };
 
-// 从 URL 读参数：return_url 用于返回导航，user_id 用于显示用户做题状态
 function initFromQuery() {
     const params = new URLSearchParams(window.location.search);
     const returnUrl = params.get("return_url");
@@ -87,7 +83,6 @@ function isAllowedReturnUrl(value) {
     }
 }
 
-// 生成题目详情页的跳转链接，带上当前的 return_url 和 user_id
 function detailUrl(problemId) {
     const params = new URLSearchParams({ id: String(problemId) });
     const returnUrl = new URLSearchParams(window.location.search).get("return_url");
@@ -111,16 +106,14 @@ function setNotice(message, type = "info") {
     els.notice.textContent = message;
 }
 
-// 更新管理员 token 状态显示
 function updateAdminStatus() {
     const enabled = Boolean(state.token);
-    els.adminStatus.textContent = enabled ? "已配�? : "未配�?;
+    els.adminStatus.textContent = enabled ? "已配置" : "未配置";
     els.adminStatus.className = enabled
         ? "rounded-lg bg-green-50 px-3 py-1 text-xs font-medium text-green-700"
         : "rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500";
 }
 
-// 统一的 JSON 请求方法，自动处理错误状态码
 async function requestJson(url, options = {}) {
     const response = await fetch(url, {
         ...options,
@@ -132,20 +125,18 @@ async function requestJson(url, options = {}) {
     const text = await response.text();
     const body = text ? JSON.parse(text) : null;
     if (!response.ok || (body && body.code >= 400)) {
-        throw new Error(body?.message || `请求失败�?{response.status}`);
+        throw new Error(body?.message || `请求失败：${response.status}`);
     }
     return body?.data ?? null;
 }
 
-// 生成带 JWT 的请求头，未配置时直接抛错
 function authHeaders() {
     if (!state.token) {
-        throw new Error("请先保存管理�?JWT�?);
+        throw new Error("请先保存管理员 JWT。");
     }
     return { Authorization: `Bearer ${state.token}` };
 }
 
-// 拼接分页和筛选参数到列表请求 URL
 function listUrl() {
     const params = new URLSearchParams({
         page: String(state.page),
@@ -157,7 +148,6 @@ function listUrl() {
     return `${API_BASE}?${params.toString()}`;
 }
 
-// 分页加载题目列表，keepSelection=true 时保持当前选中题目
 async function loadProblems({ keepSelection = false } = {}) {
     setNotice("");
     els.problemList.innerHTML = loadingHtml("正在加载题目...");
@@ -192,7 +182,6 @@ function emptyHtml(text) {
     return `<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400">${text}</div>`;
 }
 
-// 拉取用户所有题目的做题状态，用于在列表里显示 AC 标记
 async function loadProblemStatuses() {
     state.problemStatuses = new Map();
     if (!state.currentUserId) {
@@ -204,15 +193,14 @@ async function loadProblemStatuses() {
             state.problemStatuses.set(Number(status.problemId), status);
         });
     } catch (error) {
-        setNotice("个人 AC 状态暂时不可用，仍可继续浏览题目�?, "info");
+        setNotice("个人 AC 状态暂时不可用，仍可继续浏览题目。", "info");
     }
 }
 
-// 渲染左侧题目卡片列表
 function renderProblems() {
-    els.problemCount.textContent = `�?${state.total} 道题目`;
+    els.problemCount.textContent = `共 ${state.total} 道题目`;
     if (state.problems.length === 0) {
-        els.problemList.innerHTML = emptyHtml("没有找到符合条件的题目�?);
+        els.problemList.innerHTML = emptyHtml("没有找到符合条件的题目。");
         return;
     }
     els.problemList.innerHTML = state.problems.map((problem) => `
@@ -227,7 +215,7 @@ function renderProblems() {
                     <h3 class="mt-3 line-clamp-2 font-bold text-gray-800">${escapeHtml(problem.title)}</h3>
                     <div class="mt-3 flex flex-wrap gap-2">${tagBadges(problem.tags)}</div>
                     <div class="mt-3 flex items-center justify-between gap-3 text-xs text-gray-400">
-                        <span>通过�?${formatRate(problem.passRate)}</span>
+                        <span>通过率 ${formatRate(problem.passRate)}</span>
                         <span>${problem.acceptedCount || 0} / ${problem.submissionCount || 0}</span>
                     </div>
                 </div>
@@ -239,17 +227,16 @@ function renderProblems() {
     });
 }
 
-// 更新分页控件的状态和文字
 function renderPagination() {
     const totalPages = Math.max(1, Math.ceil(state.total / state.size));
-    els.pageLabel.textContent = `�?${state.page} / ${totalPages} 页`;
+    els.pageLabel.textContent = `第 ${state.page} / ${totalPages} 页`;
     els.previousPageButton.disabled = state.page <= 1;
     els.nextPageButton.disabled = state.page >= totalPages;
 }
 
 function difficultyBadge(difficulty) {
     const themes = {
-        easy: ["简�?, "bg-green-50 text-green-700"],
+        easy: ["简单", "bg-green-50 text-green-700"],
         medium: ["中等", "bg-yellow-50 text-yellow-700"],
         hard: ["困难", "bg-red-50 text-red-700"],
     };
@@ -262,24 +249,21 @@ function tagBadges(tags = []) {
     return tags.map((tag) => `<span class="rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">${escapeHtml(tag)}</span>`).join("");
 }
 
-// 从状态 Map 里取单题做题状态
 function getProblemStatus(problemId) {
     return state.problemStatuses.get(Number(problemId)) || null;
 }
 
-// 生成题目列表里的 AC/未通过 状态小图标 HTML
 function statusIconHtml(problemId) {
     if (!state.currentUserId) {
         return '<span class="status-mark status-unknown" aria-label="未选择用户">-</span>';
     }
     const status = getProblemStatus(problemId);
     if (status?.accepted) {
-        return '<span class="status-mark status-accepted" title="已通过" aria-label="已通过">�?/span>';
+        return '<span class="status-mark status-accepted" title="已通过" aria-label="已通过">✓</span>';
     }
     return '<span class="status-mark status-unaccepted" title="未通过" aria-label="未通过">-</span>';
 }
 
-// 生成详情页里的做题状态摘要 HTML
 function statusSummaryHtml(problemId) {
     if (!state.currentUserId) {
         return "";
@@ -293,27 +277,25 @@ function statusSummaryHtml(problemId) {
                     ${statusIconHtml(problemId)}
                     <div>
                         <p class="text-sm font-medium ${accepted ? "text-green-700" : "text-gray-600"}">${accepted ? "已通过" : "未通过"}</p>
-                        <p class="mt-1 text-xs text-gray-400">用户 #${state.currentUserId} 的题目状�?/p>
+                        <p class="mt-1 text-xs text-gray-400">用户 #${state.currentUserId} 的题目状态</p>
                     </div>
                 </div>
                 <div class="grid gap-3 text-sm sm:grid-cols-3">
                     <div><span class="text-gray-400">历史最高分</span><strong class="ml-2 text-gray-700">${status?.bestScore ?? 0}</strong></div>
-                    <div><span class="text-gray-400">最近得�?/span><strong class="ml-2 text-gray-700">${status?.lastScore ?? "-"}</strong></div>
-                    <div><span class="text-gray-400">最近提�?/span><strong class="ml-2 text-gray-700">${formatDateTime(status?.lastSubmittedAt)}</strong></div>
+                    <div><span class="text-gray-400">最近得分</span><strong class="ml-2 text-gray-700">${status?.lastScore ?? "-"}</strong></div>
+                    <div><span class="text-gray-400">最近提交</span><strong class="ml-2 text-gray-700">${formatDateTime(status?.lastSubmittedAt)}</strong></div>
                 </div>
             </div>
         </section>
     `;
 }
 
-// 同步左侧列表里当前选中题目的高亮样式
 function markActiveProblem() {
     els.problemList.querySelectorAll("[data-problem-id]").forEach((button) => {
         button.classList.toggle("is-active", Number(button.dataset.problemId) === state.selectedProblemId);
     });
 }
 
-// 点击题目时切换详情展示
 async function selectProblem(problemId) {
     state.selectedProblemId = problemId;
     markActiveProblem();
@@ -325,14 +307,12 @@ async function selectProblem(problemId) {
     renderDetail(problem);
 }
 
-// 没有选中题目时显示占位提示
 function showEmptyDetail() {
     els.problemDetail.classList.add("hidden");
     els.problemDetail.innerHTML = "";
     els.emptyDetail.classList.remove("hidden");
 }
 
-// 渲染右侧题目详情区域
 function renderDetail(problem) {
     els.emptyDetail.classList.add("hidden");
     els.problemDetail.classList.remove("hidden");
@@ -358,7 +338,7 @@ function renderDetail(problem) {
         <dl class="mt-5 grid gap-3 rounded-xl bg-gray-50 p-4 text-sm sm:grid-cols-3">
             <div><dt class="text-gray-400">时间限制</dt><dd class="mt-1 font-medium text-gray-700">${problem.timeLimit} ms</dd></div>
             <div><dt class="text-gray-400">内存限制</dt><dd class="mt-1 font-medium text-gray-700">${problem.memoryLimit} MB</dd></div>
-            <div><dt class="text-gray-400">通过�?/dt><dd class="mt-1 font-medium text-gray-700">${formatRate(problem.passRate)} (${problem.acceptedCount || 0} / ${problem.submissionCount || 0})</dd></div>
+            <div><dt class="text-gray-400">通过率</dt><dd class="mt-1 font-medium text-gray-700">${formatRate(problem.passRate)} (${problem.acceptedCount || 0} / ${problem.submissionCount || 0})</dd></div>
         </dl>
 
         ${statusSummaryHtml(problem.id)}
@@ -393,27 +373,26 @@ function renderTestCases(testCases) {
         <section class="mt-6 border-t border-gray-200 pt-5">
             <div class="flex items-center justify-between gap-3">
                 <h3 class="text-lg font-bold text-gray-800">公开测试用例</h3>
-                <span class="text-sm text-gray-400">${samples.length} 条样�?/ �?${testCases.length} �?/span>
+                <span class="text-sm text-gray-400">${samples.length} 条样例 / 共 ${testCases.length} 条</span>
             </div>
             <div class="mt-3 space-y-3">
                 ${samples.length ? samples.map((testCase, index) => `
                     <details class="rounded-xl border border-gray-200 px-4 py-3">
-                        <summary class="cursor-pointer text-sm font-medium text-gray-700">样例用例 ${index + 1} · ${testCase.score || 0} �?/summary>
+                        <summary class="cursor-pointer text-sm font-medium text-gray-700">样例用例 ${index + 1} · ${testCase.score || 0} 分</summary>
                         <div class="mt-3 grid gap-3 md:grid-cols-2">
                             ${codeCard("输入", testCase.input)}
                             ${codeCard("输出", testCase.output)}
                         </div>
                     </details>
-                `).join("") : emptyHtml("暂无公开样例用例�?)}
+                `).join("") : emptyHtml("暂无公开样例用例。")}
             </div>
         </section>
     `;
 }
 
-// 打开题目编辑器，传 problem 则为编辑，不传则为新建
 function openEditor(problem = null) {
     if (!state.token) {
-        setNotice("请先保存管理�?JWT，再维护题目�?, "error");
+        setNotice("请先保存管理员 JWT，再维护题目。", "error");
         els.adminToken.focus();
         return;
     }
@@ -439,13 +418,11 @@ function openEditor(problem = null) {
     els.titleInput.focus();
 }
 
-// 关闭编辑器弹窗
 function closeEditor() {
     els.editorModal.classList.add("hidden");
     document.body.classList.remove("overflow-hidden");
 }
 
-// 动态往编辑器里添加一条测试用例表单
 function addTestCaseEditor(testCase = {}) {
     const wrapper = document.createElement("div");
     wrapper.className = "test-case-editor rounded-2xl border border-gray-200 bg-gray-50 p-4";
@@ -464,7 +441,7 @@ function addTestCaseEditor(testCase = {}) {
                 <textarea required rows="4" class="test-case-output code-input mt-2 w-full resize-y rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-400">${escapeHtml(testCase.output || "")}</textarea>
             </label>
             <label>
-                <span class="block text-sm font-medium text-gray-700">分�?/span>
+                <span class="block text-sm font-medium text-gray-700">分值</span>
                 <input type="number" min="0" required value="${Number(testCase.score) || 0}" class="test-case-score mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400">
             </label>
             <label class="flex items-center gap-3 self-end py-3 text-sm font-medium text-gray-700">
@@ -475,7 +452,7 @@ function addTestCaseEditor(testCase = {}) {
     `;
     wrapper.querySelector(".remove-test-case").addEventListener("click", () => {
         if (els.testCaseEditorList.children.length === 1) {
-            setNotice("至少需要保留一个测试用例�?, "error");
+            setNotice("至少需要保留一个测试用例。", "error");
             return;
         }
         wrapper.remove();
@@ -485,14 +462,12 @@ function addTestCaseEditor(testCase = {}) {
     updateTestCaseLabels();
 }
 
-// 重新给测试用例编号，移除后保持序号连续
 function updateTestCaseLabels() {
     els.testCaseEditorList.querySelectorAll(".test-case-label").forEach((label, index) => {
         label.textContent = `测试用例 ${index + 1}`;
     });
 }
 
-// 从编辑器表单收集所有字段并组装成提交给后端的对象
 function collectPayload() {
     const tags = els.tagsInput.value.split(",").map((tag) => tag.trim()).filter(Boolean);
     const testCases = [...els.testCaseEditorList.querySelectorAll(".test-case-editor")].map((wrapper) => ({
@@ -517,7 +492,6 @@ function collectPayload() {
     };
 }
 
-// 表单提交：新建或更新题目
 async function submitProblem(event) {
     event.preventDefault();
     const problemId = Number(els.editorProblemId.value) || null;
@@ -528,7 +502,7 @@ async function submitProblem(event) {
             body: JSON.stringify(collectPayload()),
         });
         closeEditor();
-        setNotice(problemId ? "题目更新成功�? : "题目创建成功�?, "success");
+        setNotice(problemId ? "题目更新成功。" : "题目创建成功。", "success");
         await loadProblems({ keepSelection: true });
         await selectProblem(mutation.id);
     } catch (error) {
@@ -536,9 +510,8 @@ async function submitProblem(event) {
     }
 }
 
-// 确认后删除题目，删除成功后刷新列表
 async function deleteProblem(problem) {
-    if (!window.confirm(`确定删除题目 #${problem.id}�?{problem.title}」吗？此操作无法撤销。`)) return;
+    if (!window.confirm(`确定删除题目 #${problem.id}「${problem.title}」吗？此操作无法撤销。`)) return;
     try {
         await requestJson(`${API_BASE}/${problem.id}`, {
             method: "DELETE",
@@ -546,19 +519,17 @@ async function deleteProblem(problem) {
         });
         state.selectedProblemId = null;
         state.selectedProblem = null;
-        setNotice("题目删除成功�?, "success");
+        setNotice("题目删除成功。", "success");
         await loadProblems();
     } catch (error) {
         setNotice(error.message, "error");
     }
 }
 
-// 通过率格式化为百分比字符串
 function formatRate(rate) {
     return `${((Number(rate) || 0) * 100).toFixed(1)}%`;
 }
 
-// 时间格式化，值为 null 时返回 '-'
 function formatDateTime(value) {
     if (!value) {
         return "-";
@@ -570,7 +541,6 @@ function formatDateTime(value) {
     return date.toLocaleString();
 }
 
-// 转义 HTML 特殊字符，防止 XSS
 function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -580,7 +550,6 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-// 绑定页面所有交互事件
 function bindEvents() {
     els.refreshButton.addEventListener("click", () => loadProblems({ keepSelection: true }).catch(handleError));
     els.filterForm.addEventListener("submit", (event) => {
@@ -620,10 +589,10 @@ function bindEvents() {
         state.token = els.adminToken.value.trim().replace(/^Bearer\s+/i, "");
         if (state.token) {
             window.localStorage.setItem(TOKEN_STORAGE_KEY, state.token);
-            setNotice("管理�?JWT 已保存在当前浏览器�?, "success");
+            setNotice("管理员 JWT 已保存在当前浏览器。", "success");
         } else {
             window.localStorage.removeItem(TOKEN_STORAGE_KEY);
-            setNotice("JWT 已清除�?, "info");
+            setNotice("JWT 已清除。", "info");
         }
         updateAdminStatus();
     });
@@ -632,7 +601,7 @@ function bindEvents() {
         els.adminToken.value = "";
         window.localStorage.removeItem(TOKEN_STORAGE_KEY);
         updateAdminStatus();
-        setNotice("JWT 已清除�?, "info");
+        setNotice("JWT 已清除。", "info");
     });
     els.createProblemButton.addEventListener("click", () => openEditor());
     els.closeEditorButton.addEventListener("click", closeEditor);
@@ -647,7 +616,6 @@ function bindEvents() {
     els.problemForm.addEventListener("submit", submitProblem);
 }
 
-// 统一错误处理，把错误消息展示到顶部通知栏
 function handleError(error) {
     setNotice(error.message, "error");
 }
