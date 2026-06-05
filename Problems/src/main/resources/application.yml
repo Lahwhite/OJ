@@ -24,3 +24,7 @@ spring:
 security:
   jwt:
     secret: ${OJ_JWT_SECRET:oj-management-dev-secret}
+
+problem:
+  status:
+    service-token: ${OJ_PROBLEM_STATUS_TOKEN:dev-problem-status-token}

@@ -49,3 +49,25 @@ select * from `myOJ`.`problems`;
 select * from `myOJ`.`test_cases`;
 select * from `myOJ`.`tags`;
 select * from `myOJ`.`problem_tags`;
+
+INSERT INTO problem_user_status (
+    user_id,
+    problem_id,
+    accepted,
+    best_score,
+    last_score,
+    max_score,
+    last_submitted_at,
+    accepted_at
+) VALUES (
+    1,
+    1,
+    TRUE,
+    100,
+    100,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+select * from `myOJ`.`problem_user_status`;
