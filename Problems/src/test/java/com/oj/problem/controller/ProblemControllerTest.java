@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.controller;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -32,15 +33,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
+// 类定义：封装这一部分的职责边界
 class ProblemControllerTest {
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemService problemService;
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private JwtTokenService jwtTokenService;
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private MockMvc mockMvc;
+    // 内部实现细节，避免直接暴露给外部调用方
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -177,6 +183,7 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.code").value(400001));
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String validRequestJson() throws Exception {
         java.util.Map<String, Object> request = new java.util.LinkedHashMap<>();
         request.put("title", "题目");
@@ -194,15 +201,18 @@ class ProblemControllerTest {
                 buildTestCase("1 2", "3", true, 20),
                 buildTestCase("2 3", "5", false, 80)
         ));
+        // 返回本阶段计算结果，供上层流程继续使用
         return objectMapper.writeValueAsString(request);
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private java.util.Map<String, Object> buildTestCase(String input, String output, boolean isSample, int score) {
         java.util.Map<String, Object> testCase = new java.util.LinkedHashMap<>();
         testCase.put("input", input);
         testCase.put("output", output);
         testCase.put("isSample", isSample);
         testCase.put("score", score);
+        // 返回本阶段计算结果，供上层流程继续使用
         return testCase;
     }
 }

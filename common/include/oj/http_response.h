@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include <string>
@@ -5,6 +6,7 @@
 
 namespace oj {
 
+// 类定义：把相关状态与行为封装在一起
 class HttpResponse {
 public:
     int status{200};

@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.service.impl;
 
 import com.oj.problem.dto.request.ProblemQueryRequest;
@@ -39,11 +40,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
+// 对外暴露的方法或字段，通常承接模块间协作
 public class ProblemServiceImpl implements ProblemService {
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private final ProblemRepository problemRepository;
+    // 内部实现细节，避免直接暴露给外部调用方
     private final TagRepository tagRepository;
 
+    // 对外暴露的方法或字段，通常承接模块间协作
     public ProblemServiceImpl(ProblemRepository problemRepository, TagRepository tagRepository) {
         this.problemRepository = problemRepository;
         this.tagRepository = tagRepository;
@@ -51,6 +56,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     @Transactional(readOnly = true)
+    // 对外暴露的方法或字段，通常承接模块间协作
     public ProblemPageResponse listProblems(ProblemQueryRequest queryRequest) {
         // 按创建时间倒序分页，page 从 1 开始但 PageRequest 从 0 开始所以要减 1
         Pageable pageable = PageRequest.of(
@@ -64,54 +70,65 @@ public class ProblemServiceImpl implements ProblemService {
         response.setPage(queryRequest.getPage());
         response.setSize(queryRequest.getSize());
         response.setProblems(page.getContent().stream().map(this::toListItem).collect(Collectors.toList()));
+        // 返回本阶段计算结果，供上层流程继续使用
         return response;
     }
 
     @Override
     @Transactional(readOnly = true)
+    // 对外暴露的方法或字段，通常承接模块间协作
     public ProblemDetailResponse getProblemDetail(Long id) {
         ProblemEntity problem = problemRepository.findWithTestCasesAndTagsById(id)
                 .filter(ProblemEntity::getIsPublic)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
+        // 返回本阶段计算结果，供上层流程继续使用
         return toDetail(problem);
     }
 
     @Override
     @Transactional(readOnly = true)
+    // 对外暴露的方法或字段，通常承接模块间协作
     public List<TestCaseResponse> getProblemTestCases(Long id) {
         ProblemEntity problem = problemRepository.findWithTestCasesAndTagsById(id)
                 .filter(ProblemEntity::getIsPublic)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
+        // 返回本阶段计算结果，供上层流程继续使用
         return problem.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList());
     }
 
     @Override
     @Transactional
+    // 对外暴露的方法或字段，通常承接模块间协作
     public ProblemMutationResponse createProblem(ProblemUpsertRequest request, CurrentUser currentUser) {
         ProblemEntity entity = new ProblemEntity();
         applyRequest(entity, request, currentUser);
         ProblemEntity saved = problemRepository.save(entity);
+        // 返回本阶段计算结果，供上层流程继续使用
         return toMutation(saved);
     }
 
     @Override
     @Transactional
+    // 对外暴露的方法或字段，通常承接模块间协作
     public ProblemMutationResponse updateProblem(Long id, ProblemUpsertRequest request, CurrentUser currentUser) {
         ProblemEntity entity = problemRepository.findWithTestCasesAndTagsById(id)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
         applyRequest(entity, request, currentUser);
         ProblemEntity saved = problemRepository.save(entity);
+        // 返回本阶段计算结果，供上层流程继续使用
         return toMutation(saved);
     }
 
     @Override
     @Transactional
+    // 对外暴露的方法或字段，通常承接模块间协作
     public void recordSubmissionResult(Long id, boolean accepted) {
         ProblemEntity entity = problemRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
         int submissionCount = entity.getSubmissionCount() == null ? 0 : entity.getSubmissionCount();
         int acceptedCount = entity.getAcceptedCount() == null ? 0 : entity.getAcceptedCount();
         entity.setSubmissionCount(submissionCount + 1);
+        // 条件分支：根据当前输入或状态选择不同处理路径
         if (accepted) {
             entity.setAcceptedCount(acceptedCount + 1);
         }
@@ -120,6 +137,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     @Transactional
+    // 对外暴露的方法或字段，通常承接模块间协作
     public void deleteProblem(Long id, CurrentUser currentUser) {
         ProblemEntity entity = problemRepository.findWithTestCasesAndTagsById(id)
                 .orElseThrow(() -> new BusinessException(404002, "题目不存在", HttpStatus.NOT_FOUND));
@@ -127,15 +145,19 @@ public class ProblemServiceImpl implements ProblemService {
         problemRepository.delete(entity);
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private Specification<ProblemEntity> buildSpecification(ProblemQueryRequest queryRequest) {
+        // 返回本阶段计算结果，供上层流程继续使用
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.isTrue(root.get("isPublic")));
 
+            // 条件分支：根据当前输入或状态选择不同处理路径
             if (queryRequest.getDifficulty() != null) {
                 predicates.add(cb.equal(root.get("difficulty"), queryRequest.getDifficulty()));
             }
 
+            // 条件分支：根据当前输入或状态选择不同处理路径
             if (StringUtils.hasText(queryRequest.getKeyword())) {
                 String keyword = "%" + queryRequest.getKeyword().trim().toLowerCase(Locale.ROOT) + "%";
                 predicates.add(cb.or(
@@ -144,16 +166,19 @@ public class ProblemServiceImpl implements ProblemService {
                 ));
             }
 
+            // 条件分支：根据当前输入或状态选择不同处理路径
             if (StringUtils.hasText(queryRequest.getTag())) {
                 Join<Object, Object> tagJoin = root.join("tags", JoinType.LEFT);
                 predicates.add(cb.equal(cb.lower(tagJoin.get("name")), queryRequest.getTag().trim().toLowerCase(Locale.ROOT)));
                 query.distinct(true);
             }
 
+            // 返回本阶段计算结果，供上层流程继续使用
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private void applyRequest(ProblemEntity entity, ProblemUpsertRequest request, CurrentUser currentUser) {
         entity.setTitle(request.getTitle().trim());
         entity.setDescription(request.getDescription().trim());
@@ -165,6 +190,7 @@ public class ProblemServiceImpl implements ProblemService {
         entity.setSampleInput(request.getSampleInput());
         entity.setSampleOutput(request.getSampleOutput());
         entity.setIsPublic(Boolean.TRUE.equals(request.getIsPublic()));
+        // 条件分支：根据当前输入或状态选择不同处理路径
         if (entity.getCreatedBy() == null) {
             entity.setCreatedBy(currentUser.getUserId());
         }
@@ -173,8 +199,10 @@ public class ProblemServiceImpl implements ProblemService {
         syncTags(entity, request.getTags());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private void syncTestCases(ProblemEntity entity, List<TestCaseRequest> testCases) {
         entity.clearTestCases();
+        // 循环处理：逐项遍历集合并完成同步或映射
         for (TestCaseRequest request : testCases) {
             TestCaseEntity testCase = new TestCaseEntity();
             testCase.setInput(request.getInput());
@@ -185,6 +213,7 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private void syncTags(ProblemEntity entity, List<String> requestedTags) {
         List<String> normalizedNames = requestedTags == null
                 ? Collections.emptyList()
@@ -203,8 +232,10 @@ public class ProblemServiceImpl implements ProblemService {
 
         Set<TagEntity> newTags = new LinkedHashSet<>();
         Set<String> newTagNames = new LinkedHashSet<>();
+        // 循环处理：逐项遍历集合并完成同步或映射
         for (String name : normalizedNames) {
             TagEntity tag = existingMap.get(name);
+            // 条件分支：根据当前输入或状态选择不同处理路径
             if (tag == null) {
                 tag = new TagEntity();
                 tag.setName(name);
@@ -222,6 +253,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .filter(tag -> !newTagNames.contains(tag.getName()))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
+        // 循环处理：逐项遍历集合并完成同步或映射
         for (TagEntity tag : tagsToAdd) {
             tag.setProblemCount(tag.getProblemCount() + 1);
         }
@@ -232,13 +264,16 @@ public class ProblemServiceImpl implements ProblemService {
         entity.getTags().addAll(newTags);
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private void decreaseTagCount(Set<TagEntity> tags) {
+        // 循环处理：逐项遍历集合并完成同步或映射
         for (TagEntity tag : tags) {
             int current = tag.getProblemCount() == null ? 0 : tag.getProblemCount();
             tag.setProblemCount(Math.max(0, current - 1));
         }
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemListItemResponse toListItem(ProblemEntity entity) {
         ProblemListItemResponse response = new ProblemListItemResponse();
         response.setId(entity.getId());
@@ -248,9 +283,11 @@ public class ProblemServiceImpl implements ProblemService {
         response.setSubmissionCount(entity.getSubmissionCount());
         response.setAcceptedCount(entity.getAcceptedCount());
         response.setPassRate(calculatePassRate(entity.getSubmissionCount(), entity.getAcceptedCount()));
+        // 返回本阶段计算结果，供上层流程继续使用
         return response;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemDetailResponse toDetail(ProblemEntity entity) {
         ProblemDetailResponse response = new ProblemDetailResponse();
         response.setId(entity.getId());
@@ -271,9 +308,11 @@ public class ProblemServiceImpl implements ProblemService {
         response.setTestCases(entity.getTestCases().stream().map(this::toTestCase).collect(Collectors.toList()));
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(entity.getUpdatedAt());
+        // 返回本阶段计算结果，供上层流程继续使用
         return response;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private TestCaseResponse toTestCase(TestCaseEntity entity) {
         TestCaseResponse response = new TestCaseResponse();
         response.setId(entity.getId());
@@ -281,22 +320,29 @@ public class ProblemServiceImpl implements ProblemService {
         response.setOutput(entity.getOutput());
         response.setIsSample(entity.getIsSample());
         response.setScore(entity.getScore());
+        // 返回本阶段计算结果，供上层流程继续使用
         return response;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemMutationResponse toMutation(ProblemEntity entity) {
         ProblemMutationResponse response = new ProblemMutationResponse();
         response.setId(entity.getId());
         response.setTitle(entity.getTitle());
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(entity.getUpdatedAt());
+        // 返回本阶段计算结果，供上层流程继续使用
         return response;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private Double calculatePassRate(Integer submissionCount, Integer acceptedCount) {
+        // 条件分支：根据当前输入或状态选择不同处理路径
         if (submissionCount == null || submissionCount == 0) {
+            // 返回本阶段计算结果，供上层流程继续使用
             return 0D;
         }
+        // 返回本阶段计算结果，供上层流程继续使用
         return acceptedCount == null ? 0D : acceptedCount.doubleValue() / submissionCount.doubleValue();
     }
 }

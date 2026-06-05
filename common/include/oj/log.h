@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include <chrono>
@@ -14,18 +15,26 @@ class Logger {
 public:
     static Logger& instance();
 
+    // 过程型函数：主要通过副作用完成状态更新
     void init(LogLevel level, const std::string& log_file_path = "");
+    // 过程型函数：主要通过副作用完成状态更新
     void setLevel(LogLevel level);
 
+    // 过程型函数：主要通过副作用完成状态更新
     void debug(const std::string& msg);
+    // 过程型函数：主要通过副作用完成状态更新
     void info(const std::string& msg);
+    // 过程型函数：主要通过副作用完成状态更新
     void warning(const std::string& msg);
+    // 过程型函数：主要通过副作用完成状态更新
     void error(const std::string& msg);
 
 private:
     Logger() = default;
+    // 过程型函数：主要通过副作用完成状态更新
     void write(LogLevel lvl, const std::string& msg);
     static const char* levelName(LogLevel lvl);
+    // 布尔返回值通常用于表示是否执行成功
     bool shouldLog(LogLevel lvl) const;
 
     std::mutex mutex_;

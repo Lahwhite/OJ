@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include "oj/http_request.h"
@@ -17,12 +18,15 @@ public:
     // 先支持最常见的四种方法
     void get(const std::string& path, Handler handler);
     void post(const std::string& path, Handler handler);
+    // 过程型函数：主要通过副作用完成状态更新
     void put(const std::string& path, Handler handler);
+    // 过程型函数：主要通过副作用完成状态更新
     void del(const std::string& path, Handler handler);
 
     HttpResponse dispatch(const HttpRequest& request) const;
 
 private:
+    // 过程型函数：主要通过副作用完成状态更新
     void add(const std::string& method, const std::string& path, Handler handler);
     static std::string routeKey(const std::string& method, const std::string& path);
 

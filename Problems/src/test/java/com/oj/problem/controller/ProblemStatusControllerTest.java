@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.controller;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -23,12 +24,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
+// 类定义：封装这一部分的职责边界
 class ProblemStatusControllerTest {
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemStatusService problemStatusService;
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private MockMvc mockMvc;
+    // 内部实现细节，避免直接暴露给外部调用方
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -80,6 +85,7 @@ class ProblemStatusControllerTest {
                 .andExpect(jsonPath("$.data.statuses").isArray());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String validRequestJson() throws Exception {
         java.util.Map<String, Object> request = new java.util.LinkedHashMap<>();
         request.put("userId", 1);
@@ -87,6 +93,7 @@ class ProblemStatusControllerTest {
         request.put("accepted", true);
         request.put("score", 100);
         request.put("maxScore", 100);
+        // 返回本阶段计算结果，供上层流程继续使用
         return objectMapper.writeValueAsString(request);
     }
 }

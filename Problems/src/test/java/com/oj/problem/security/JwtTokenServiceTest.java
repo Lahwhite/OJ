@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,11 +15,15 @@ import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+// 类定义：封装这一部分的职责边界
 class JwtTokenServiceTest {
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private static final String SECRET = "unit-test-secret";
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private JwtTokenService jwtTokenService;
+    // 内部实现细节，避免直接暴露给外部调用方
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -77,20 +82,25 @@ class JwtTokenServiceTest {
         assertEquals(8L, currentUser.getUserId());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String generateToken(Long userId, String role) throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("user_id", userId);
         payload.put("role", role);
+        // 返回本阶段计算结果，供上层流程继续使用
         return signToken(payload);
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String generateTokenWithSub(Long userId, String role) throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("sub", userId);
         payload.put("role", role);
+        // 返回本阶段计算结果，供上层流程继续使用
         return signToken(payload);
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String signToken(Map<String, Object> payload) throws Exception {
         String headerJson = objectMapper.writeValueAsString(java.util.Collections.singletonMap("alg", "HS256"));
         String payloadJson = objectMapper.writeValueAsString(payload);
@@ -100,13 +110,16 @@ class JwtTokenServiceTest {
                 .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
         String signature = sign(encodedHeader + "." + encodedPayload);
         assertTrue(signature.length() > 0);
+        // 返回本阶段计算结果，供上层流程继续使用
         return encodedHeader + "." + encodedPayload + "." + signature;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private String sign(String content) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         SecretKeySpec keySpec = new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         mac.init(keySpec);
+        // 返回本阶段计算结果，供上层流程继续使用
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(mac.doFinal(content.getBytes(StandardCharsets.UTF_8)));
     }
