@@ -86,6 +86,7 @@ const els = {
 // 从 URL 读取题目 id、return_url 等参数
 function getParams() {
     const p = new URLSearchParams(window.location.search);
+    // 返回计算结果或提前结束当前流程
     return {
         id: p.get("id"),
         returnUrl: p.get("return_url"),
@@ -93,7 +94,9 @@ function getParams() {
     };
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function setNotice(message, type = "info") {
+    // 条件分支：根据当前页面状态做不同处理
     if (!message) {
         els.notice.className = "hidden border-b px-6 py-3 text-sm";
         els.notice.textContent = "";
@@ -118,6 +121,7 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function difficultyBadge(difficulty) {
     const map = {
         easy: ["简单", "bg-green-50 text-green-700"],
@@ -125,16 +129,21 @@ function difficultyBadge(difficulty) {
         hard: ["困难", "bg-red-50 text-red-700"]
     };
     const [label, cls] = map[difficulty] || [difficulty || "未知", "bg-gray-100 text-gray-600"];
+    // 返回计算结果或提前结束当前流程
     return `<span class="rounded-lg px-3 py-1 text-xs font-semibold ${cls}">${escapeHtml(label)}</span>`;
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function tagBadges(tags = []) {
+    // 返回计算结果或提前结束当前流程
     return tags.map(t => 
         `<span class="rounded-lg bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600">${escapeHtml(t)}</span>`
     ).join("");
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function formatRate(rate) {
+    // 返回计算结果或提前结束当前流程
     return `${((Number(rate) || 0) * 100).toFixed(1)}%`;
 }
 
@@ -144,14 +153,17 @@ async function loadProblem(id) {
         const res = await fetch(`${API_BASE}/${id}`);
         const text = await res.text();
         const body = text ? JSON.parse(text) : null;
+        // 条件分支：根据当前页面状态做不同处理
         if (!res.ok || (body && body.code >= 400)) {
             throw new Error(body?.message || `HTTP ${res.status}`);
         }
+        // 返回计算结果或提前结束当前流程
         return body?.data ?? null;
     } catch (err) {
         setNotice(`加载题目失败：${err.message}`, "error");
         els.problemContent.innerHTML = 
             `<div class="py-20 text-center text-gray-400">${escapeHtml(err.message)}</div>`;
+        // 返回计算结果或提前结束当前流程
         return null;
     }
 }
@@ -273,16 +285,19 @@ function switchLanguage(lang) {
 // 重置代码为默认模板，需要用户确认
 function resetCode() {
     if (!state.editor) return;
+    // 条件分支：根据当前页面状态做不同处理
     if (!window.confirm("确定重置代码？当前编辑内容将丢失。")) return;
     delete state.userCode[state.currentLanguage];
     state.editor.setValue(DEFAULT_CODE[state.currentLanguage] || "");
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function showResult(html) {
     els.resultContent.innerHTML = html;
     els.resultPanel.classList.remove("hidden");
 }
 
+// 页面辅助函数：拆分复杂交互，便于维护
 function hideResult() {
     els.resultPanel.classList.add("hidden");
 }
@@ -291,6 +306,7 @@ function hideResult() {
 function handleRun() {
     if (!state.editor) return;
     const code = state.editor.getValue().trim();
+    // 条件分支：根据当前页面状态做不同处理
     if (!code) {
         setNotice("请先编写代码。", "error");
         return;
@@ -324,6 +340,7 @@ function handleRun() {
 function handleSubmit() {
     if (!state.editor) return;
     const code = state.editor.getValue().trim();
+    // 条件分支：根据当前页面状态做不同处理
     if (!code) {
         setNotice("请先编写代码。", "error");
         return;
@@ -352,15 +369,18 @@ function bindEvents() {
 async function init() {
     const { id, returnUrl } = getParams();
     
+    // 条件分支：根据当前页面状态做不同处理
     if (returnUrl) {
         try {
             const u = new URL(returnUrl, window.location.href);
+            // 条件分支：根据当前页面状态做不同处理
             if (u.protocol === "http:" || u.protocol === "https:") {
                 els.homeLink.href = returnUrl;
             }
         } catch {}
     }
     
+    // 条件分支：根据当前页面状态做不同处理
     if (!id) {
         setNotice("未指定题目 ID，请从题库页面进入。", "error");
         els.problemContent.innerHTML = 
@@ -369,6 +389,7 @@ async function init() {
     }
     
     const problem = await loadProblem(id);
+    // 条件分支：根据当前页面状态做不同处理
     if (!problem) return;
     
     state.problem = problem;

@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,15 +24,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+// 类定义：封装这一部分的职责边界
 class ProblemStatusServiceImplTest {
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemRepository problemRepository;
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemUserStatusRepository statusRepository;
 
     @InjectMocks
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemStatusServiceImpl statusService;
 
     @Test
@@ -112,6 +117,7 @@ class ProblemStatusServiceImplTest {
         assertEquals(2L, response.getStatuses().get(1).getProblemId());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private SubmissionResultRequest request(
             Long userId,
             Long problemId,
@@ -126,15 +132,18 @@ class ProblemStatusServiceImplTest {
         request.setScore(score);
         request.setMaxScore(maxScore);
         request.setSubmittedAt(submittedAt);
+        // 返回本阶段计算结果，供上层流程继续使用
         return request;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemUserStatusEntity status(Long userId, ProblemEntity problem, boolean accepted, int bestScore) {
         ProblemUserStatusEntity status = new ProblemUserStatusEntity();
         status.setUserId(userId);
         status.setProblem(problem);
         status.setAccepted(accepted);
         status.setBestScore(bestScore);
+        // 返回本阶段计算结果，供上层流程继续使用
         return status;
     }
 }

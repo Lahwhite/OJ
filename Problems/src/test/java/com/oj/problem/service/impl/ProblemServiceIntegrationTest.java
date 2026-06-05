@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,12 +25,15 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+// 类定义：封装这一部分的职责边界
 class ProblemServiceIntegrationTest {
 
     @Autowired
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemService problemService;
 
     @Autowired
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemRepository problemRepository;
 
     @Test
@@ -66,6 +70,7 @@ class ProblemServiceIntegrationTest {
         assertFalse(problemRepository.findById(problemId).isPresent());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemUpsertRequest buildRequest(String title, java.util.List<String> tags) {
         ProblemUpsertRequest request = new ProblemUpsertRequest();
         request.setTitle(title);
@@ -83,15 +88,18 @@ class ProblemServiceIntegrationTest {
                 buildTestCase("3\n1 2 3", "6", true, 20),
                 buildTestCase("4\n1 1 1 1", "4", false, 80)
         ));
+        // 返回本阶段计算结果，供上层流程继续使用
         return request;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private TestCaseRequest buildTestCase(String input, String output, boolean sample, int score) {
         TestCaseRequest request = new TestCaseRequest();
         request.setInput(input);
         request.setOutput(output);
         request.setIsSample(sample);
         request.setScore(score);
+        // 返回本阶段计算结果，供上层流程继续使用
         return request;
     }
 }

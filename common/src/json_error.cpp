@@ -1,3 +1,4 @@
+// common 模块实现文件：负责公共能力的具体实现与底层细节
 #include "oj/json_error.h"
 
 #include <sstream>
@@ -17,6 +18,7 @@ std::string makeErrorJson(const std::string& error_code, const std::string& mess
                 case '\r': out << "\\r"; break;
                 case '\t': out << "\\t"; break;
                 default:
+                    // 条件判断：根据运行时状态决定后续流程
                     if (c < 0x20) {
                         static const char* hex = "0123456789abcdef";
                         out << "\\u00" << hex[(c >> 4) & 0x0F] << hex[c & 0x0F];
@@ -33,6 +35,7 @@ std::string makeErrorJson(const std::string& error_code, const std::string& mess
     oss << "\",\"message\":\"";
     appendJsonString(oss, message);
     oss << "\"}";
+    // 返回当前阶段的处理结果或默认兜底值
     return oss.str();
 }
 

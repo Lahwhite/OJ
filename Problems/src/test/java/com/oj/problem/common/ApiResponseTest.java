@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -5,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
+// 类定义：封装这一部分的职责边界
 class ApiResponseTest {
 
     @Test

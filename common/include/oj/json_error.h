@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include <stdexcept>
@@ -5,6 +6,7 @@
 
 namespace oj {
 
+// 结构定义：用于组织一组紧密相关的数据
 struct HttpException : public std::runtime_error {
     int http_status;
     std::string error_code;

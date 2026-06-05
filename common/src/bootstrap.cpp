@@ -1,3 +1,4 @@
+// common 模块实现文件：负责公共能力的具体实现与底层细节
 #include "oj/bootstrap.h"
 
 #include "oj/log.h"
@@ -11,15 +12,21 @@ static LogLevel parseLogLevel(const std::string& s) {
     if (s == "debug") {
         return LogLevel::Debug;
     }
+    // 条件判断：根据运行时状态决定后续流程
     if (s == "warning" || s == "warn") {
+        // 返回当前阶段的处理结果或默认兜底值
         return LogLevel::Warning;
     }
+    // 条件判断：根据运行时状态决定后续流程
     if (s == "error") {
+        // 返回当前阶段的处理结果或默认兜底值
         return LogLevel::Error;
     }
+    // 返回当前阶段的处理结果或默认兜底值
     return LogLevel::Info;
 }
 
+// 过程型函数：主要通过副作用完成状态更新
 void initInfrastructure(const AppConfig& config) {
     // 先起日志，后面的初始化过程也能打到日志里
     Logger::instance().init(parseLogLevel(config.log_level), config.log_file);
@@ -33,6 +40,7 @@ void initInfrastructure(const AppConfig& config) {
         config.mysql_database,
         config.mysql_pool_min,
         config.mysql_pool_max);
+    // 条件判断：根据运行时状态决定后续流程
     if (!mysql_ready) {
         OJ_LOG_WARN("MySQL pool is unavailable after initialization");
     }
@@ -42,11 +50,13 @@ void initInfrastructure(const AppConfig& config) {
         config.redis_port,
         config.redis_password,
         config.redis_db);
+    // 条件判断：根据运行时状态决定后续流程
     if (!redis_ready) {
         OJ_LOG_WARN("Redis cache is unavailable after initialization");
     }
 }
 
+// 过程型函数：主要通过副作用完成状态更新
 void shutdownInfrastructure() {
     RedisCache::instance().disconnect();
     MysqlConnectionPool::instance().shutdown();

@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.server.ResponseStatusException;
 
+// 类定义：封装这一部分的职责边界
 class GlobalExceptionHandlerTest {
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test

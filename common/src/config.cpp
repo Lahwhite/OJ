@@ -1,3 +1,4 @@
+// common 模块实现文件：负责公共能力的具体实现与底层细节
 #include "oj/config.h"
 
 #include <cstdlib>
@@ -29,14 +30,18 @@ static std::string getenvOr(const char* key, const std::string& def) {
 #if defined(_WIN32)
     char* buf = nullptr;
     size_t sz = 0;
+    // 条件判断：根据运行时状态决定后续流程
     if (_dupenv_s(&buf, &sz, key) == 0 && buf) {
         std::string v(buf);
         std::free(buf);
+        // 返回当前阶段的处理结果或默认兜底值
         return v;
     }
+    // 返回当前阶段的处理结果或默认兜底值
     return def;
 #else
     const char* v = std::getenv(key);
+    // 返回当前阶段的处理结果或默认兜底值
     return v ? std::string(v) : def;
 #endif
 }
@@ -45,8 +50,10 @@ static unsigned getenvUInt(const char* key, unsigned def) {
     // 这里统一把数字配置从字符串转成无符号整数
     std::string s = getenvOr(key, "");
     if (s.empty()) {
+        // 返回当前阶段的处理结果或默认兜底值
         return def;
     }
+    // 返回当前阶段的处理结果或默认兜底值
     return static_cast<unsigned>(std::stoul(s));
 }
 
@@ -68,6 +75,7 @@ AppConfig loadConfigFromEnv() {
 
     c.log_file = getenvOr(kEnvLogFile, c.log_file);
     c.log_level = getenvOr(kEnvLogLevel, c.log_level);
+    // 返回当前阶段的处理结果或默认兜底值
     return c;
 }
 

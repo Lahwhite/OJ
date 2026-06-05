@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include <string>
@@ -19,6 +20,7 @@ inline constexpr int kDefaultRedisDb = 0;
 
 inline constexpr const char* kDefaultLogLevel = "info";
 
+// 结构定义：用于组织一组紧密相关的数据
 struct AppConfig {
     std::string mysql_host = kDefaultMysqlHost;
     unsigned mysql_port = kDefaultMysqlPort;

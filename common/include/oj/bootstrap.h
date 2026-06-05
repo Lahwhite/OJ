@@ -1,3 +1,4 @@
+// common 模块头文件：声明公共组件对外暴露的接口与数据结构
 #pragma once
 
 #include "oj/config.h"
