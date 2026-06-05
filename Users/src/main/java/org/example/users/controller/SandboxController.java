@@ -44,6 +44,19 @@ public class SandboxController {
 
         model.addAttribute("languages", languages);
 
+        // 将用户输入的 code、language 还原
+        String sandboxCode = (String) session.getAttribute("sandboxCode");
+        if (sandboxCode != null) {
+            model.addAttribute("code", sandboxCode);
+            session.removeAttribute("sandboxCode");
+        }
+
+        String sandboxLanguage = (String) session.getAttribute("sandboxLanguage");
+        if (sandboxLanguage != null) {
+            model.addAttribute("selectedLanguage", sandboxLanguage);
+            session.removeAttribute("sandboxLanguage");
+        }
+
         // 检查 session 中的提示信息
         String sandboxMsg = (String) session.getAttribute("sandboxMsg");
         if (sandboxMsg != null) {
@@ -88,6 +101,10 @@ public class SandboxController {
             session.setAttribute("sandboxMsg", "User not logged in");
             return "redirect:/login";
         }
+
+        // 将当前 code、language 存储下来，后续使用
+        session.setAttribute("sandboxLanguage", language);
+        session.setAttribute("sandboxCode", code);
 
         // 参数是否为空
         if (language == null || language.isBlank()) {

@@ -75,6 +75,11 @@ public class AuthController {
         }
         else {
             session.setAttribute("loginUser", username);
+
+            // 查询 problem_users 是否存在该用户
+            Long bindUid = userService.getBindUserId(username);
+            // 可为 null，前端判断
+            session.setAttribute("problemUserId",bindUid);
             return "redirect:/home";
         }
     }

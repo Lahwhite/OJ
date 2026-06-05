@@ -1,7 +1,7 @@
-USE oj;
+USE myOJ;
 
-INSERT INTO users (username, email, password_hash, role)
-VALUES ('admin', 'admin@example.com', 'test_password_hash', 'admin');
+INSERT INTO problem_users (username, role)
+VALUES ('admin', 'admin');
 
 INSERT INTO problems (
     title,
@@ -43,3 +43,30 @@ VALUES ('入门', '#1890ff', 1);
 
 INSERT INTO problem_tags (problem_id, tag_id)
 VALUES (1, 1);
+
+INSERT INTO problem_user_status (
+    user_id,
+    problem_id,
+    accepted,
+    best_score,
+    last_score,
+    max_score,
+    last_submitted_at,
+    accepted_at
+) VALUES (
+    1,
+    1,
+    TRUE,
+    100,
+    100,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+select * from `myOJ`.`problem_users`;
+select * from `myOJ`.`problems`;
+select * from `myOJ`.`test_cases`;
+select * from `myOJ`.`tags`;
+select * from `myOJ`.`problem_tags`;
+select * from `myOJ`.`problem_user_status`;

@@ -1,3 +1,4 @@
+// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,17 +41,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
+// 类定义：封装这一部分的职责边界
 class ProblemServiceImplTest {
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemRepository problemRepository;
 
     @Mock
+    // 内部实现细节，避免直接暴露给外部调用方
     private TagRepository tagRepository;
 
     @InjectMocks
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemServiceImpl problemService;
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private CurrentUser adminUser;
 
     @BeforeEach
@@ -149,6 +155,7 @@ class ProblemServiceImplTest {
         when(problemRepository.save(any(ProblemEntity.class))).thenAnswer(invocation -> {
             ProblemEntity saved = invocation.getArgument(0);
             saved.setId(9L);
+            // 返回本阶段计算结果，供上层流程继续使用
             return saved;
         });
 
@@ -216,6 +223,7 @@ class ProblemServiceImplTest {
         assertEquals(404002, exception.getCode());
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemEntity buildProblemEntity(Long id, String title, boolean isPublic) {
         ProblemEntity entity = new ProblemEntity();
         entity.setId(id);
@@ -229,9 +237,11 @@ class ProblemServiceImplTest {
         entity.setSampleInput("1 2");
         entity.setSampleOutput("3");
         entity.setIsPublic(isPublic);
+        // 返回本阶段计算结果，供上层流程继续使用
         return entity;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private ProblemUpsertRequest buildUpsertRequest(String title, java.util.List<String> tags) {
         ProblemUpsertRequest request = new ProblemUpsertRequest();
         request.setTitle(title);
@@ -249,31 +259,38 @@ class ProblemServiceImplTest {
                 buildTestCaseRequest("2 3", "5", false, 80)
         ));
         request.setIsPublic(true);
+        // 返回本阶段计算结果，供上层流程继续使用
         return request;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private TestCaseRequest buildTestCaseRequest(String input, String output, boolean isSample, int score) {
         TestCaseRequest request = new TestCaseRequest();
         request.setInput(input);
         request.setOutput(output);
         request.setIsSample(isSample);
         request.setScore(score);
+        // 返回本阶段计算结果，供上层流程继续使用
         return request;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private TestCaseEntity buildTestCase(String input, String output, boolean isSample, int score) {
         TestCaseEntity entity = new TestCaseEntity();
         entity.setInput(input);
         entity.setOutput(output);
         entity.setIsSample(isSample);
         entity.setScore(score);
+        // 返回本阶段计算结果，供上层流程继续使用
         return entity;
     }
 
+    // 内部实现细节，避免直接暴露给外部调用方
     private TagEntity buildTag(String name, int count) {
         TagEntity tag = new TagEntity();
         tag.setName(name);
         tag.setProblemCount(count);
+        // 返回本阶段计算结果，供上层流程继续使用
         return tag;
     }
 }
