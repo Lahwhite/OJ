@@ -32,6 +32,7 @@ import org.springframework.util.StringUtils;
 public class JudgeServiceImpl implements JudgeService {
 
     private static final Logger log = LoggerFactory.getLogger(JudgeServiceImpl.class);
+    // judge 当前通过标准输出回传结果文件路径，这里兼容其固定文案。
     private static final Pattern RESULT_FILE_PATTERN =
             Pattern.compile("Result json saved to:\\s*(.+)", Pattern.CASE_INSENSITIVE);
 
@@ -64,6 +65,7 @@ public class JudgeServiceImpl implements JudgeService {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        // 结果文件名由 username 参与前缀生成，避免多用户并发提交时互相覆盖。
         String safeUsername = sanitizeUsername(request.getUsername());
         String prefix = safeUsername + "_" + System.currentTimeMillis();
         String srcFileName = sourceFileName(request.getLanguage());
@@ -93,6 +95,7 @@ public class JudgeServiceImpl implements JudgeService {
             Process process = processBuilder.start();
 
             StringBuilder outputBuilder = new StringBuilder();
+            // 合并 stdout/stderr 后异步读取，避免评测进程输出阻塞。
             Thread readerThread = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -147,6 +150,7 @@ public class JudgeServiceImpl implements JudgeService {
 
     private String buildExpectJson(ProblemDetailResponse problem) throws IOException {
         ObjectNode root = objectMapper.createObjectNode();
+        // judge 期望的是 test_cases + expected_output 这套字段命名。
         root.put("time_limit_ms", problem.getTimeLimit() == null ? 1000 : problem.getTimeLimit());
         root.put("memory_limit_mb", problem.getMemoryLimit() == null ? 128 : problem.getMemoryLimit());
         ArrayNode testCases = root.putArray("test_cases");
