@@ -16,6 +16,7 @@ const state = {
     keyword: "",
     token: window.localStorage.getItem(TOKEN_STORAGE_KEY) || "",
     currentUserId: null,
+    currentUsername: "",
     problemStatuses: new Map(),
 };
 
@@ -72,9 +73,12 @@ function initFromQuery() {
         els.homeLink.href = returnUrl;
     }
     const userId = Number(params.get("user_id") || params.get("userId"));
-    // 条件分支：根据当前页面状态做不同处理
     if (Number.isInteger(userId) && userId > 0) {
         state.currentUserId = userId;
+    }
+    const username = (params.get("username") || "").trim();
+    if (username) {
+        state.currentUsername = username;
     }
     els.adminToken.value = state.token;
     updateAdminStatus();
@@ -98,8 +102,8 @@ function detailUrl(problemId) {
     const returnUrl = new URLSearchParams(window.location.search).get("return_url");
     // 条件分支：根据当前页面状态做不同处理
     if (returnUrl && isAllowedReturnUrl(returnUrl)) params.set("return_url", returnUrl);
-    // 条件分支：根据当前页面状态做不同处理
     if (state.currentUserId) params.set("user_id", String(state.currentUserId));
+    if (state.currentUsername) params.set("username", state.currentUsername);
     // 返回计算结果或提前结束当前流程
     return `./problem-detail.html?${params.toString()}`;
 }
