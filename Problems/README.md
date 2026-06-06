@@ -142,6 +142,84 @@ Content-Type: application/json
 
 其他模块只需要在评测或计分完成后调用该接口即可，Problems 模块只负责存储和展示 AC 状态，不参与代码评测。
 
+## 与评测模块（judge_engine）对接
+
+题目模块的数据结构已按 `judge_engine.exe` CLI 所需格式对齐。Problems 模块**不直接调用**评测引擎，由提交/评测服务负责拼命令、执行 exe、解析结果；本模块提供题目与测试用例数据，并在评测完成后接收 AC 状态回写。
+
+更完整的对接说明见：[题目模块与评测模块对接说明](../模块使用文档/题目模块与评测模块对接说明.md)。
+
+### 命令格式
+
+```text
+judge_engine.exe --program_language=<语言> --src_file=<源码路径> --expect_result=<期望结果JSON路径>
+```
+
+| CLI 参数 | 来源 | 说明 |
+|---|---|---|
+| `--program_language` | 用户选择的语言 | 支持 `c` / `cpp` / `java` / `python`，须与 `judge/config/languages.json` 的 `id` 一致 |
+| `--src_file` | 用户提交的源码 | 写入临时文件后传入路径 |
+| `--expect_result` | 由题目数据组装 | 见下方 JSON 格式 |
+
+### 字段映射（Problems API → expect_result）
+
+| expect_result 字段 | Problems API 字段 | 接口 |
+|---|---|---|
+| `time_limit_ms` | `timeLimit` | `GET /problems/v1/problems/{id}` |
+| `memory_limit_mb` | `memoryLimit` | `GET /problems/v1/problems/{id}` |
+| `test_cases[].id` | `testCases[].id` | `GET /problems/v1/problems/{id}/test-cases` |
+| `test_cases[].input` | `testCases[].input` | 同上 |
+| `test_cases[].expected_output` | `testCases[].output` | 同上（引擎也接受 `output` 字段名） |
+| `test_cases[].score` | `testCases[].score` | 同上 |
+
+### expect_result 示例
+
+从接口数据组装后的 JSON 示例：
+
+```json
+{
+  "time_limit_ms": 1000,
+  "memory_limit_mb": 128,
+  "test_cases": [
+    {
+      "id": 1,
+      "input": "1 2\n",
+      "expected_output": "3\n",
+      "score": 50
+    },
+    {
+      "id": 2,
+      "input": "10 20\n",
+      "expected_output": "30\n",
+      "score": 50
+    }
+  ]
+}
+```
+
+### 推荐接入流程
+
+```text
+用户提交代码
+    ↓
+GET /problems/v1/problems/{id}           → 取 timeLimit、memoryLimit
+GET /problems/v1/problems/{id}/test-cases → 取完整测试用例
+    ↓
+组装 expect_result.json，写入用户源码为 src 文件
+    ↓
+执行 judge_engine.exe --program_language=... --src_file=... --expect_result=...
+    ↓
+读取 judge_engine 返回 JSON（verdict、total_score、max_score 等）
+    ↓
+PUT /problems/v1/problem-status           → 回写 AC 状态
+```
+
+### 注意事项
+
+- 详情页语言选择器含 `javascript`，但 judge_engine 目前不支持，接入时需校验或过滤。
+- 正式评测应使用 `/test-cases` 获取完整用例，不要依赖公开详情接口中的部分用例。
+- judge_engine CLI 用法与返回 JSON 结构详见 `judge/使用文档.md`。
+- 详情页「运行代码」「提交答案」按钮已预留 UI，评测逻辑由评测模块接入后调用上述流程即可。
+
 ## 数据库初始化
 
 建表脚本：
