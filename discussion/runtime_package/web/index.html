@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/discussion/static/styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
-<main class="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8">
+<main class="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 py-8 xl:px-6">
     <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <p class="text-sm font-medium text-blue-400">OJ Discussion</p>
@@ -20,9 +20,9 @@
         </div>
     </header>
 
-    <section id="notice" class="mb-5 hidden rounded-xl border px-4 py-3 text-sm"></section>
+    <section id="notice" class="mb-5 hidden max-w-xl break-words rounded-xl border px-4 py-3 text-sm leading-6"></section>
 
-    <section class="grid flex-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+    <section class="grid flex-1 gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside class="flex flex-col gap-5">
             <form id="filterForm" class="rounded-3xl bg-white p-6 shadow-xl">
                 <label for="problemFilter" class="block text-sm font-medium text-gray-700">题目编号</label>
@@ -49,9 +49,20 @@
 
                 <button type="submit" class="mt-5 w-full rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-400/40 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">发布</button>
             </form>
+
+            <section class="rounded-3xl border border-amber-100 bg-amber-50/80 p-6 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-gray-800">AI 总结</h3>
+                        <p id="summaryStatus" class="mt-1 text-sm text-amber-700">选择主题后可生成当前讨论摘要。</p>
+                    </div>
+                    <button id="summaryButton" type="button" class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-amber-300">生成总结</button>
+                </div>
+                <div id="summaryPanel" class="mt-4 hidden max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-white px-4 py-3 text-sm leading-7 text-gray-700"></div>
+            </section>
         </aside>
 
-        <section class="grid min-h-[620px] gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <section class="grid min-h-[620px] gap-5 lg:grid-cols-[minmax(360px,1fr)_minmax(480px,1.25fr)]">
             <div class="rounded-3xl bg-white p-6 shadow-xl">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <h2 class="text-xl font-bold text-gray-800">主题列表</h2>
@@ -71,24 +82,13 @@
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="flex flex-wrap items-center gap-2 text-sm text-gray-400">
                             <span id="detailProblem" class="rounded-lg bg-indigo-50 px-3 py-1 font-medium text-indigo-600"></span>
-                            <span id="detailAuthor"></span>
+                            <span id="detailAuthor" class="inline-flex min-w-0 items-center gap-2"></span>
                             <span id="detailTime"></span>
                         </div>
                         <button id="deleteTopicButton" type="button" class="hidden rounded-xl bg-red-50 px-4 py-2 text-sm font-medium text-red-500 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2">删除主题</button>
                     </div>
                     <h2 id="detailTitle" class="mt-4 text-2xl font-bold text-gray-800"></h2>
                     <p id="detailContent" class="mt-4 whitespace-pre-wrap break-words leading-7 text-gray-700"></p>
-
-                    <section class="mt-6 rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 class="font-bold text-gray-800">AI 总结</h3>
-                                <p id="summaryStatus" class="mt-1 text-sm text-amber-700">点击按钮后由 Gemini 生成当前主题和评论摘要。</p>
-                            </div>
-                            <button id="summaryButton" type="button" class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2">生成总结</button>
-                        </div>
-                        <div id="summaryPanel" class="mt-4 hidden whitespace-pre-wrap break-words rounded-xl bg-white px-4 py-3 text-sm leading-7 text-gray-700"></div>
-                    </section>
 
                     <div class="mt-7 border-t border-gray-200 pt-5">
                         <div class="flex items-center justify-between gap-3">

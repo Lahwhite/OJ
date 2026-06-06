@@ -76,6 +76,8 @@ public:
 private:
     static crow::response jsonResponse(int status, const nlohmann::json& body);
     static crow::response webFileResponse(const std::string& relative_path, const std::string& content_type);
+    static crow::response userAvatarResponse(const std::string& relative_path);
+    static crow::response userImageResponse(const std::string& relative_path);
     static size_t parsePositiveSize(const char* value, size_t fallback, size_t max_value);
 
     bool validateTopicPayload(const nlohmann::json& body) const;

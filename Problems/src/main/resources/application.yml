@@ -2,11 +2,11 @@ server:
   address: ${OJ_PROBLEMS_ADDRESS:${OJ_MANAGEMENT_ADDRESS:0.0.0.0}}
   port: ${OJ_PROBLEMS_PORT:${OJ_MANAGEMENT_PORT:8080}}
   servlet:
-    context-path: ${OJ_PROBLEMS_CONTEXT_PATH:${OJ_MANAGEMENT_CONTEXT_PATH:/api}}
+    context-path: ${OJ_PROBLEMS_CONTEXT_PATH:${OJ_MANAGEMENT_CONTEXT_PATH:/problems}}
 
 spring:
   datasource:
-    url: ${OJ_DB_URL:jdbc:mysql://localhost:3306/myOJ?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8}
+    url: ${OJ_DB_URL:jdbc:mysql://localhost:3306/myOJ?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8}
     username: ${OJ_DB_USERNAME:Problems}
     password: ${OJ_DB_PASSWORD:Management}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -24,3 +24,7 @@ spring:
 security:
   jwt:
     secret: ${OJ_JWT_SECRET:oj-management-dev-secret}
+
+problem:
+  status:
+    service-token: ${OJ_PROBLEM_STATUS_TOKEN:dev-problem-status-token}

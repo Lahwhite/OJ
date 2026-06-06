@@ -1,3 +1,4 @@
+// common 模块实现文件：负责公共能力的具体实现与底层细节
 #include "oj/bootstrap.h"
 #include "oj/config.h"
 #include "oj/http_response.h"
@@ -27,32 +28,42 @@
 
 namespace {
 
+// 布尔返回值通常用于表示是否执行成功
 bool expect(bool cond, const std::string& msg) {
+    // 条件判断：根据运行时状态决定后续流程
     if (!cond) {
         std::cerr << "[FAIL] " << msg << std::endl;
+        // 返回当前阶段的处理结果或默认兜底值
         return false;
     }
     std::cout << "[PASS] " << msg << std::endl;
+    // 返回当前阶段的处理结果或默认兜底值
     return true;
 }
 
 std::string readWholeFile(const std::filesystem::path& p) {
     std::ifstream in(p);
+    // 返回当前阶段的处理结果或默认兜底值
     return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 }
 
+// 布尔返回值通常用于表示是否执行成功
 bool tcpPortOpen(const std::string& host, uint16_t port) {
 #if defined(_WIN32)
     WSADATA wsaData;
+    // 条件判断：根据运行时状态决定后续流程
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        // 返回当前阶段的处理结果或默认兜底值
         return false;
     }
 #endif
     const int fd = static_cast<int>(::socket(AF_INET, SOCK_STREAM, 0));
+    // 条件判断：根据运行时状态决定后续流程
     if (fd < 0) {
 #if defined(_WIN32)
         WSACleanup();
 #endif
+        // 返回当前阶段的处理结果或默认兜底值
         return false;
     }
 
@@ -68,6 +79,7 @@ bool tcpPortOpen(const std::string& host, uint16_t port) {
 #else
     close(fd);
 #endif
+    // 返回当前阶段的处理结果或默认兜底值
     return open;
 }
 
@@ -77,7 +89,9 @@ std::string httpGet(const std::string& host, uint16_t port, const std::string& p
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
     const int fd = static_cast<int>(::socket(AF_INET, SOCK_STREAM, 0));
+    // 条件判断：根据运行时状态决定后续流程
     if (fd < 0) {
+        // 返回当前阶段的处理结果或默认兜底值
         return {};
     }
 
@@ -85,6 +99,7 @@ std::string httpGet(const std::string& host, uint16_t port, const std::string& p
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(host.c_str());
+    // 条件判断：根据运行时状态决定后续流程
     if (::connect(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
 #if defined(_WIN32)
         closesocket(static_cast<SOCKET>(fd));
@@ -92,6 +107,7 @@ std::string httpGet(const std::string& host, uint16_t port, const std::string& p
 #else
         close(fd);
 #endif
+        // 返回当前阶段的处理结果或默认兜底值
         return {};
     }
 
@@ -104,12 +120,14 @@ std::string httpGet(const std::string& host, uint16_t port, const std::string& p
 
     std::string response;
     char buf[4096];
+    // 循环处理：逐项遍历并构造结果或执行操作
     for (;;) {
 #if defined(_WIN32)
         const int n = recv(static_cast<SOCKET>(fd), buf, sizeof(buf), 0);
 #else
         const int n = recv(fd, buf, sizeof(buf), 0);
 #endif
+        // 条件判断：根据运行时状态决定后续流程
         if (n <= 0) {
             break;
         }
@@ -122,9 +140,11 @@ std::string httpGet(const std::string& host, uint16_t port, const std::string& p
 #else
     close(fd);
 #endif
+    // 返回当前阶段的处理结果或默认兜底值
     return response;
 }
 
+// 布尔返回值通常用于表示是否执行成功
 bool testBootstrapLogToFile(const std::filesystem::path& log_path) {
     std::filesystem::remove(log_path);
 
@@ -146,16 +166,20 @@ bool testBootstrapLogToFile(const std::filesystem::path& log_path) {
                     expect(content.find("OJ public infrastructure stopped") != std::string::npos,
                            "bootstrap shutdown message written to log file");
     std::filesystem::remove(log_path);
+    // 返回当前阶段的处理结果或默认兜底值
     return ok;
 }
 
+// 布尔返回值通常用于表示是否执行成功
 bool testHttpServerLive() {
     constexpr uint16_t kPort = 18080;
     oj::HttpServer server;
     server.router().get("/health", [](const oj::HttpRequest&) {
+        // 返回当前阶段的处理结果或默认兜底值
         return oj::HttpResponse::json(200, "{\"status\":\"ok\"}");
     });
     server.router().post("/echo", [](const oj::HttpRequest& req) {
+        // 返回当前阶段的处理结果或默认兜底值
         return oj::HttpResponse::json(200, req.body.empty() ? "{\"echo\":\"empty\"}" : req.body);
     });
 
@@ -173,12 +197,15 @@ bool testHttpServerLive() {
                                    "unknown route returns HTTP 404 JSON");
 
     server.stop();
+    // 条件判断：根据运行时状态决定后续流程
     if (server_thread.joinable()) {
         server_thread.join();
     }
+    // 返回当前阶段的处理结果或默认兜底值
     return health_ok && missing_ok;
 }
 
+// 布尔返回值通常用于表示是否执行成功
 bool testExternalServicesReachability() {
     const bool mysql_port = tcpPortOpen("127.0.0.1", 3306);
     const bool redis_port = tcpPortOpen("127.0.0.1", 6379);
@@ -207,6 +234,7 @@ bool testExternalServicesReachability() {
 
     oj::shutdownInfrastructure();
     oj::Logger::instance().init(oj::LogLevel::Info);
+    // 返回当前阶段的处理结果或默认兜底值
     return true;
 }
 
@@ -216,15 +244,19 @@ int main() {
     const auto log_path =
         std::filesystem::temp_directory_path() / "oj_common_real_env_integration.log";
 
+    // 布尔返回值通常用于表示是否执行成功
     bool ok = true;
     ok = testBootstrapLogToFile(log_path) && ok;
     ok = testHttpServerLive() && ok;
     ok = testExternalServicesReachability() && ok;
 
+    // 条件判断：根据运行时状态决定后续流程
     if (!ok) {
         std::cerr << "Real environment integration tests failed." << std::endl;
+        // 返回当前阶段的处理结果或默认兜底值
         return 1;
     }
     std::cout << "Real environment integration tests passed." << std::endl;
+    // 返回当前阶段的处理结果或默认兜底值
     return 0;
 }

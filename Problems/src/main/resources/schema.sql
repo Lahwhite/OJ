@@ -1,14 +1,10 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS problem_users (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
     username VARCHAR(50) NOT NULL COMMENT '用户名',
-    email VARCHAR(100) NOT NULL COMMENT '邮箱',
-    password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希',
     role ENUM('user', 'admin') DEFAULT 'user' COMMENT '角色',
-    avatar_url VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    UNIQUE KEY uk_username (username),
-    UNIQUE KEY uk_email (email)
+    UNIQUE KEY uk_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 CREATE TABLE IF NOT EXISTS problems (
@@ -34,8 +30,27 @@ CREATE TABLE IF NOT EXISTS problems (
     INDEX idx_created_at (created_at),
     FULLTEXT INDEX ft_title (title),
     FULLTEXT INDEX ft_description (description),
-    CONSTRAINT fk_problem_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_problem_creator FOREIGN KEY (created_by) REFERENCES problem_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='题目表';
+
+CREATE TABLE IF NOT EXISTS problem_user_status (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '用户题目状态ID',
+    user_id BIGINT NOT NULL COMMENT '外部用户ID',
+    problem_id BIGINT UNSIGNED NOT NULL COMMENT '题目ID',
+    accepted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否AC',
+    best_score INT NOT NULL DEFAULT 0 COMMENT '历史最高分',
+    last_score INT DEFAULT NULL COMMENT '最近一次得分',
+    max_score INT DEFAULT NULL COMMENT '最近评测理论最高分',
+    last_submitted_at TIMESTAMP NULL DEFAULT NULL COMMENT '最近提交时间',
+    accepted_at TIMESTAMP NULL DEFAULT NULL COMMENT '首次AC时间',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_problem_user_status (user_id, problem_id),
+    INDEX idx_status_user_id (user_id),
+    INDEX idx_status_problem_id (problem_id),
+    INDEX idx_status_accepted (accepted),
+    CONSTRAINT fk_problem_user_status_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户题目AC状态表';
 
 CREATE TABLE IF NOT EXISTS test_cases (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '测试用例ID',
