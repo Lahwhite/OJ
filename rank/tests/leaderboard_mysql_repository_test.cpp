@@ -1,8 +1,8 @@
 #include "leaderboard/leaderboard_service.hpp"
 #include "oj/bootstrap.h"
 #include "oj/config.h"
-#include "oj/mysql_pool.h"
 #include "storage/in_memory_cache.hpp"
+#include "storage/mysql_c_wrapper.hpp"
 #include "storage/repository_factory.hpp"
 
 #include <iostream>
@@ -14,8 +14,10 @@ int main() {
         oj::AppConfig cfg = oj::loadConfigFromEnv();
         oj::initInfrastructure(cfg);
 
-        if (!oj::MysqlConnectionPool::instance().available()) {
-            std::cout << "leaderboard mysql tests skipped: mysql pool unavailable\n";
+        auto mysql_cfg = oj::load_mysql_config();
+        oj::MysqlCConnection test_conn(mysql_cfg);
+        if (!test_conn.connected()) {
+            std::cout << "leaderboard mysql tests skipped: mysql connection failed\n";
             oj::shutdownInfrastructure();
             return 0;
         }

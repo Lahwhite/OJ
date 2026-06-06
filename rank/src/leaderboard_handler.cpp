@@ -2,8 +2,8 @@
 
 #include "oj/json_error.h"
 #include "oj/log.h"
-#include "oj/mysql_pool.h"
 #include "oj/redis_cache.h"
+#include "storage/mysql_c_wrapper.hpp"
 #include "storage/repository_factory.hpp"
 
 #include <algorithm>
@@ -172,15 +172,20 @@ HttpResponse LeaderboardHandler::handle_rank_static(const HttpRequest& request) 
 
 HttpResponse LeaderboardHandler::handle_health(const HttpRequest&) const {
     std::ostringstream body;
+    bool mysql_ready = false;
+    try {
+        MysqlCConfig cfg = load_mysql_config();
+        MysqlCConnection test(cfg);
+        mysql_ready = test.connected();
+    } catch (...) {
+        mysql_ready = false;
+    }
     body << "{"
          << "\"status\":\"ok\","
          << "\"service\":\"oj-rank\","
-         << "\"mysql_pool_ready\":" << (MysqlConnectionPool::instance().available() ? "true" : "false") << ","
+         << "\"mysql_ready\":" << (mysql_ready ? "true" : "false") << ","
          << "\"rank_database_ready\":" << (leaderboard_database_ready() ? "true" : "false") << ","
-         << "\"redis_ready\":" << (RedisCache::instance().connected() ? "true" : "false");
-    const auto st = MysqlConnectionPool::instance().stats();
-    body << ",\"mysql_idle_connections\":" << st.pool_size
-         << ",\"mysql_in_use_connections\":" << st.in_use
+         << "\"redis_ready\":" << (RedisCache::instance().connected() ? "true" : "false")
          << "}";
     return json_body(200, body.str());
 }
