@@ -79,6 +79,9 @@ void applyJsonConfig(const nlohmann::json& root, JudgeCliConfig& cfg) {
     if (root.contains("web_url")) {
         cfg.web_url = root.at("web_url").get<std::string>();
     }
+    if (root.contains("username")) {
+        cfg.username = root.at("username").get<std::string>();
+    }
 }
 
 bool loadConfigFile(const std::filesystem::path& path, JudgeCliConfig& cfg) {
@@ -158,6 +161,10 @@ JudgeCliConfig loadJudgeCliConfig(int argc, char* argv[], const std::filesystem:
     if (!env_keep.empty()) {
         cfg.web_keep_alive_sec = std::stoi(env_keep);
     }
+    const std::string env_username = envOrEmpty("OJ_USERNAME");
+    if (!env_username.empty()) {
+        cfg.username = env_username;
+    }
 
     // 命令行参数拥有最高优先级
     std::string arg_mode;
@@ -187,6 +194,10 @@ JudgeCliConfig loadJudgeCliConfig(int argc, char* argv[], const std::filesystem:
     std::string arg_url;
     if (parseArg(argc, argv, "web_url", arg_url)) {
         cfg.web_url = arg_url;
+    }
+    std::string arg_username;
+    if (parseArg(argc, argv, "username", arg_username)) {
+        cfg.username = arg_username;
     }
 
     // 规范化：端口范围升序、最小存活时间 30 秒

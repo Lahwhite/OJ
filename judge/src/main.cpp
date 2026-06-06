@@ -101,7 +101,7 @@ struct SavedResultPaths {
 };
 
 // 按时间戳命名保存结果文件，供 Web 页面拉取
-SavedResultPaths writeJsonResult(const char* argv0, const json& payload) {
+SavedResultPaths writeJsonResult(const char* argv0, const json& payload, const std::string& username) {
     const auto exe_dir = getExecutableDir(argv0);
     // 毫秒时间戳保证文件名唯一
     const auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -110,7 +110,7 @@ SavedResultPaths writeJsonResult(const char* argv0, const json& payload) {
 
     SavedResultPaths saved;
     saved.timestamp_ms = ts;
-    saved.timestamped = exe_dir / ("judge_result_" + std::to_string(ts) + ".json");
+    saved.timestamped = exe_dir / ("judge_result_" + username + "_" + std::to_string(ts) + ".json");
     writeJsonFile(saved.timestamped, payload);
     return saved;
 }
@@ -186,7 +186,7 @@ void finalizeResultOutput(const char* argv0,
                            char* argv[],
                            const json& payload) {
     const auto cfg = loadJudgeCliConfig(argc, argv, getExecutableDir(argv0));
-    const auto saved = writeJsonResult(argv0, payload);
+    const auto saved = writeJsonResult(argv0, payload, cfg.username);
     std::cout << "Result json saved to: " << saved.timestamped.string();
     std::cout << "\nOJ_RESULT_JSON=" << saved.timestamped.string();
     presentResultInWeb(argv0, argc, argv, cfg, saved.timestamped, saved.timestamp_ms);

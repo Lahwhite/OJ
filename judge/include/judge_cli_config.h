@@ -21,6 +21,7 @@ struct JudgeCliConfig {
     int web_port_end = 8180;
     int web_keep_alive_sec = 300;
     std::string web_url;
+    std::string username = "admin";
 };
 
 // 合并配置文件、环境变量与命令行参数，返回最终 CLI 配置
