@@ -13,13 +13,16 @@ cmake --build build-msys2 --target leaderboard_server -j
 ./build-msys2/leaderboard_server.exe
 ```
 
-**MySQL 持久化编译（与 discussion 相同依赖）：**
+**MySQL 持久化编译（使用 libmariadbclient C API，纯 g++，无需 Connector/C++）：**
 
 ```bash
+# 先安装依赖（只需一次）
+pacman -S --noconfirm mingw-w64-ucrt-x86_64-libmariadbclient
+
+# 编译
+cd OJ/rank
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ \
-  -DOJ_ENABLE_MYSQL=ON \
-  -DMYSQL_CONCPP_INCLUDE="C:/path/to/mysql-connector/include/jdbc" \
-  -DMYSQL_CONCPP_LIB="C:/path/to/mysqlcppconn.lib" \
+  -DOJ_RANK_ENABLE_MYSQL=ON \
   -S . -B build-msys2
 cmake --build build-msys2 --target leaderboard_server -j
 ```

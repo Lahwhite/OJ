@@ -1,8 +1,8 @@
 #include "storage/repository_factory.hpp"
 
 #include "oj/log.h"
-#include "oj/mysql_pool.h"
 #include "storage/in_memory_repository.hpp"
+#include "storage/mysql_c_wrapper.hpp"
 #include "storage/mysql_repository.hpp"
 
 #include <memory>
@@ -52,20 +52,24 @@ bool leaderboard_database_ready() {
 
 std::shared_ptr<ILeaderboardRepository> create_leaderboard_repository(bool seed_demo_when_memory) {
 #ifdef OJ_WITH_MYSQL
-    if (MysqlConnectionPool::instance().available() && MysqlLeaderboardRepository::database_ready()) {
-        OJ_LOG_INFO("rank repository: using MySQL persistence");
-        return std::make_shared<MysqlLeaderboardRepository>();
+    auto cfg = load_mysql_config();
+    if (!cfg.password.empty() || !cfg.host.empty()) {
+        try {
+            MysqlCConnection test_conn(cfg);
+            if (test_conn.connected() && MysqlLeaderboardRepository::database_ready()) {
+                OJ_LOG_INFO("rank repository: using MySQL persistence (C API)");
+                return std::make_shared<MysqlLeaderboardRepository>();
+            }
+            if (test_conn.connected()) {
+                OJ_LOG_WARN("rank mysql connected but leaderboard tables missing; fallback to in-memory");
+            }
+        } catch (const std::exception& e) {
+            OJ_LOG_WARN(std::string("rank mysql connect failed: ") + e.what() + "; fallback to in-memory");
+        }
     }
-
-    if (MysqlConnectionPool::instance().available()) {
-        OJ_LOG_WARN("rank mysql pool is ready but leaderboard tables are missing; fallback to in-memory repository");
-    } else {
-        OJ_LOG_WARN("rank mysql is unavailable; fallback to in-memory repository");
-    }
-#else
-    OJ_LOG_WARN("rank built without OJ_ENABLE_MYSQL; using in-memory repository");
 #endif
 
+    OJ_LOG_WARN("rank using in-memory repository");
     auto repo = std::make_shared<InMemoryLeaderboardRepository>();
     if (seed_demo_when_memory) {
         seed_demo_data(repo);
