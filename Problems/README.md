@@ -218,7 +218,31 @@ PUT /problems/v1/problem-status           → 回写 AC 状态
 - 详情页语言选择器含 `javascript`，但 judge_engine 目前不支持，接入时需校验或过滤。
 - 正式评测应使用 `/test-cases` 获取完整用例，不要依赖公开详情接口中的部分用例。
 - judge_engine CLI 用法与返回 JSON 结构详见 `judge/使用文档.md`。
-- 详情页「运行代码」「提交答案」按钮已预留 UI，评测逻辑由评测模块接入后调用上述流程即可。
+- 详情页「运行代码」「提交答案」按钮已预留 UI，评测逻辑由评测模块接入后调用上述流程。
+
+提交评测接口：
+
+- `POST /problems/v1/problems/{id}/submit`
+
+```json
+{
+  "username": "admin",
+  "language": "java",
+  "code": "public class Main { ... }"
+}
+```
+
+后端会在 `judge/` 目录组装 `cases.json` 和源码文件，并执行：
+
+```text
+judge_engine.exe --program_language=... --src_file=... --expect_result=... --username=...
+```
+
+配置项（`application.yml`）：
+
+- `judge.work-dir`：默认 `../judge`
+- `judge.executable`：默认 `judge_engine.exe`
+- `judge.timeout-seconds`：默认 `120`
 
 ## 数据库初始化
 
