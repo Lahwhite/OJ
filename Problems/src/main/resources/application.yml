@@ -28,3 +28,8 @@ security:
 problem:
   status:
     service-token: ${OJ_PROBLEM_STATUS_TOKEN:dev-problem-status-token}
+
+judge:
+  work-dir: ${OJ_JUDGE_WORK_DIR:../judge}
+  executable: ${OJ_JUDGE_EXECUTABLE:judge_engine.exe}
+  timeout-seconds: ${OJ_JUDGE_TIMEOUT_SECONDS:120}

@@ -15,8 +15,11 @@ if (-not (Test-Path $buildDir)) {
         Write-Error "MSYS2 UCRT64 not found at $ucrtBin"
     }
     $env:Path = "$ucrtBin;$env:Path"
+    
+    C:\msys64\usr\bin\bash.exe -lc "pacman -S --noconfirm --needed mingw-w64-ucrt-x86_64-libmariadbclient 2>&1 | tail -3"
+    
     Push-Location $rankDir
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ -S . -B build-msys2
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ -DOJ_RANK_ENABLE_MYSQL=ON -S . -B build-msys2
     Pop-Location
 }
 
@@ -49,7 +52,8 @@ if (Test-Path $seedSrc) {
 $dlls = @(
     "libgcc_s_seh-1.dll",
     "libstdc++-6.dll",
-    "libwinpthread-1.dll"
+    "libwinpthread-1.dll",
+    "libmariadb.dll"
 )
 foreach ($dll in $dlls) {
     $src = Join-Path $ucrtBin $dll

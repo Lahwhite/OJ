@@ -63,7 +63,8 @@ const state = {
     problem: null,
     editor: null,
     currentLanguage: "cpp",
-    userCode: {}  // 每种语言各保存一份用户代码，切换时不会丢失
+    username: "",
+    userCode: {}
 };
 
 // 缓存常用 DOM 元素，避免重复查询
@@ -83,14 +84,13 @@ const els = {
     memoryLimit: document.querySelector("#memoryLimit")
 };
 
-// 从 URL 读取题目 id、return_url 等参数
+// 从 URL 读取题目 id、return_url、username 等参数
 function getParams() {
     const p = new URLSearchParams(window.location.search);
-    // 返回计算结果或提前结束当前流程
     return {
         id: p.get("id"),
         returnUrl: p.get("return_url"),
-        userId: p.get("user_id") || p.get("userId")
+        username: p.get("username") || ""
     };
 }
 
@@ -336,24 +336,54 @@ function handleRun() {
     `);
 }
 
-// 提交按钮：当前只记录提交动作，实际评测待接入
-function handleSubmit() {
-    if (!state.editor) return;
+// 提交答案：调用后端接口，由 judge_engine 评测
+async function handleSubmit() {
+    if (!state.editor || !state.problem) return;
     const code = state.editor.getValue().trim();
-    // 条件分支：根据当前页面状态做不同处理
     if (!code) {
         setNotice("请先编写代码。", "error");
         return;
     }
-    
-    showResult(`
-        <div class="flex flex-wrap items-center gap-3 text-sm">
-            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">已提交</span>
-            <span class="text-gray-500">语言：${escapeHtml(state.currentLanguage.toUpperCase())}</span>
-            <span class="text-gray-500">代码长度：${code.length} 字节</span>
-            <span class="text-xs text-gray-400">评测功能待接入。</span>
-        </div>
-    `);
+    if (!state.username) {
+        setNotice("缺少 username 参数，请从带 username 的题库链接进入。", "error");
+        return;
+    }
+    if (state.currentLanguage === "javascript") {
+        setNotice("当前语言不支持评测，请选择 C / C++ / Java / Python。", "error");
+        return;
+    }
+
+    els.submitButton.disabled = true;
+    setNotice("正在提交评测...", "info");
+    try {
+        const res = await fetch(`${API_BASE}/${state.problem.id}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: state.username,
+                language: state.currentLanguage,
+                code
+            })
+        });
+        const text = await res.text();
+        const body = text ? JSON.parse(text) : null;
+        if (!res.ok || (body && body.code >= 400)) {
+            throw new Error(body?.message || `HTTP ${res.status}`);
+        }
+        setNotice("提交成功，评测结果将由 judge 模块生成。", "success");
+        showResult(`
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">已提交</span>
+                <span class="text-gray-500">用户：${escapeHtml(state.username)}</span>
+                <span class="text-gray-500">语言：${escapeHtml(state.currentLanguage.toUpperCase())}</span>
+                ${body?.data?.resultFile ? `<span class="text-xs text-gray-400">结果文件：${escapeHtml(body.data.resultFile)}</span>` : ""}
+            </div>
+        `);
+    } catch (err) {
+        setNotice(`提交失败：${err.message}`, "error");
+    } finally {
+        els.submitButton.disabled = false;
+    }
 }
 
 // 绑定所有交互事件
@@ -367,7 +397,8 @@ function bindEvents() {
 
 // 页面入口：读参数、加载题目、渲染页面、初始化编辑器
 async function init() {
-    const { id, returnUrl } = getParams();
+    const { id, returnUrl, username } = getParams();
+    state.username = username.trim();
     
     // 条件分支：根据当前页面状态做不同处理
     if (returnUrl) {
