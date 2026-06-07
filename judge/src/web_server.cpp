@@ -189,8 +189,10 @@ SOCKET createListeningSocket(const std::string& host, int port) {
         return INVALID_SOCKET;
     }
 
-    BOOL reuse = TRUE;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuse), sizeof(reuse));
+    // 使用 SO_EXCLUSIVEADDRUSE 强制独占端口，防止其他进程绑定到同一端口
+    int optval = 1;
+    setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+               reinterpret_cast<const char*>(&optval), sizeof(optval));
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -339,6 +341,7 @@ bool spawnDetachedWebServer(const std::string& executable_path,
     if (!ok) {
         return false;
     }
+    std::cout << "[INFO] Web server PID: " << pi.dwProcessId << std::endl;
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     return true;
