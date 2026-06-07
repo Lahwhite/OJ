@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,9 +33,12 @@ import org.springframework.util.StringUtils;
 public class JudgeServiceImpl implements JudgeService {
 
     private static final Logger log = LoggerFactory.getLogger(JudgeServiceImpl.class);
-    // judge 当前通过标准输出回传结果文件路径，这里兼容其固定文案。
     private static final Pattern RESULT_FILE_PATTERN =
-            Pattern.compile("Result json saved to:\\s*(.+)", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("(?:Result|Error) json saved to:\\s*(.+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern OJ_WEB_URL_PATTERN =
+            Pattern.compile("OJ_WEB_URL\\s*=\\s*(https?://[^\\s\"'<>]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("https?://[^\\s\"'<>]+", Pattern.CASE_INSENSITIVE);
 
     private final ProblemService problemService;
     private final JudgeProperties judgeProperties;
@@ -65,7 +69,6 @@ public class JudgeServiceImpl implements JudgeService {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // 结果文件名由 username 参与前缀生成，避免多用户并发提交时互相覆盖。
         String safeUsername = sanitizeUsername(request.getUsername());
         String prefix = safeUsername + "_" + System.currentTimeMillis();
         String srcFileName = sourceFileName(request.getLanguage());
@@ -78,8 +81,8 @@ public class JudgeServiceImpl implements JudgeService {
             Files.write(srcPath, request.getCode().getBytes(StandardCharsets.UTF_8));
             Files.write(casesPath, buildExpectJson(problem).getBytes(StandardCharsets.UTF_8));
 
-            String srcArg = ".\\" + srcPath.getFileName().toString();
-            String casesArg = ".\\" + casesPath.getFileName().toString();
+            String srcArg = ".\\" + srcPath.getFileName();
+            String casesArg = ".\\" + casesPath.getFileName();
             List<String> command = new ArrayList<>();
             command.add(executable.toString());
             command.add("--program_language=" + request.getLanguage());
@@ -95,7 +98,6 @@ public class JudgeServiceImpl implements JudgeService {
             Process process = processBuilder.start();
 
             StringBuilder outputBuilder = new StringBuilder();
-            // 合并 stdout/stderr 后异步读取，避免评测进程输出阻塞。
             Thread readerThread = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -120,7 +122,11 @@ public class JudgeServiceImpl implements JudgeService {
             String output = outputBuilder.toString();
             int exitCode = process.exitValue();
             String resultFile = extractResultFile(output);
-            if (exitCode != 0 && !StringUtils.hasText(resultFile)) {
+            String resultUrl = extractResultUrl(output);
+            if (!StringUtils.hasText(resultUrl) && StringUtils.hasText(resultFile)) {
+                resultUrl = buildResultUrl(resultFile);
+            }
+            if (exitCode != 0 && !StringUtils.hasText(resultFile) && !StringUtils.hasText(resultUrl)) {
                 throw new BusinessException(
                         500011,
                         "评测引擎执行失败：" + trimOutput(output),
@@ -131,8 +137,9 @@ public class JudgeServiceImpl implements JudgeService {
             response.setUsername(request.getUsername());
             response.setProblemId(problemId);
             response.setLanguage(request.getLanguage());
-            response.setMessage("提交成功，评测结果将由 judge 模块生成");
+            response.setMessage(StringUtils.hasText(resultUrl) ? "提交成功，请点击链接查看评测结果" : "提交成功");
             response.setResultFile(resultFile);
+            response.setResultUrl(resultUrl);
             return response;
         } catch (BusinessException ex) {
             throw ex;
@@ -150,7 +157,6 @@ public class JudgeServiceImpl implements JudgeService {
 
     private String buildExpectJson(ProblemDetailResponse problem) throws IOException {
         ObjectNode root = objectMapper.createObjectNode();
-        // judge 期望的是 test_cases + expected_output 这套字段命名。
         root.put("time_limit_ms", problem.getTimeLimit() == null ? 1000 : problem.getTimeLimit());
         root.put("memory_limit_mb", problem.getMemoryLimit() == null ? 128 : problem.getMemoryLimit());
         ArrayNode testCases = root.putArray("test_cases");
@@ -192,6 +198,42 @@ public class JudgeServiceImpl implements JudgeService {
         Matcher matcher = RESULT_FILE_PATTERN.matcher(output);
         if (matcher.find()) {
             return matcher.group(1).trim();
+        }
+        return null;
+    }
+
+    private String extractResultUrl(String output) {
+        if (!StringUtils.hasText(output)) {
+            return null;
+        }
+        Matcher webUrlMatcher = OJ_WEB_URL_PATTERN.matcher(output);
+        if (webUrlMatcher.find()) {
+            return webUrlMatcher.group(1).trim();
+        }
+        Matcher urlMatcher = URL_PATTERN.matcher(output);
+        if (urlMatcher.find()) {
+            return urlMatcher.group().trim();
+        }
+        return null;
+    }
+
+    private String buildResultUrl(String resultFile) {
+        String normalized = resultFile == null ? "" : resultFile.trim();
+        if (!StringUtils.hasText(normalized)) {
+            return null;
+        }
+        String unixStyle = normalized.replace('\\', '/');
+        int reportsIndex = unixStyle.toLowerCase().indexOf("/reports/");
+        if (reportsIndex >= 0) {
+            String relative = unixStyle.substring(reportsIndex + 1);
+            return "http://localhost:8080/" + relative;
+        }
+        Path filePath = Paths.get(normalized).normalize();
+        for (int i = 0; i < filePath.getNameCount(); i++) {
+            if ("reports".equalsIgnoreCase(filePath.getName(i).toString())) {
+                Path relative = filePath.subpath(i, filePath.getNameCount());
+                return "http://localhost:8080/" + relative.toString().replace('\\', '/');
+            }
         }
         return null;
     }
