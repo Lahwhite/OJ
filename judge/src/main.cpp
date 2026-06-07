@@ -110,7 +110,7 @@ SavedResultPaths writeJsonResult(const char* argv0, const json& payload, const s
 
     SavedResultPaths saved;
     saved.timestamp_ms = ts;
-    saved.timestamped = exe_dir / ("judge_result_" + username + "_" + std::to_string(ts) + ".json");
+    saved.timestamped = exe_dir / (username + "_" + "judge_result_" + std::to_string(ts) + ".json");
     writeJsonFile(saved.timestamped, payload);
     return saved;
 }
