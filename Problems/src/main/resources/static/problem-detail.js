@@ -302,6 +302,19 @@ function hideResult() {
     els.resultPanel.classList.add("hidden");
 }
 
+function renderResultLink(resultUrl) {
+    return `
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+            <div class="font-semibold">提交成功</div>
+            <div class="mt-2">点击
+                <a href="${escapeHtml(resultUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-600 underline hover:text-indigo-700">
+                    这里查看测评结果
+                </a>
+            </div>
+        </div>
+    `;
+}
+
 // 运行按钮：当前只做样例展示，评测引擎尚未接入
 function handleRun() {
     if (!state.editor) return;
@@ -370,15 +383,18 @@ async function handleSubmit() {
         if (!res.ok || (body && body.code >= 400)) {
             throw new Error(body?.message || `HTTP ${res.status}`);
         }
-        setNotice("提交成功，评测结果将由 judge 模块生成。", "success");
-        showResult(`
-            <div class="flex flex-wrap items-center gap-3 text-sm">
-                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">已提交</span>
-                <span class="text-gray-500">用户：${escapeHtml(state.username)}</span>
-                <span class="text-gray-500">语言：${escapeHtml(state.currentLanguage.toUpperCase())}</span>
-                ${body?.data?.resultFile ? `<span class="text-xs text-gray-400">结果文件：${escapeHtml(body.data.resultFile)}</span>` : ""}
-            </div>
-        `);
+        const result = body?.data || {};
+        if (result?.resultUrl) {
+            setNotice("提交成功，请点击链接查看评测结果。", "success");
+            showResult(renderResultLink(result.resultUrl));
+        } else {
+            setNotice("提交成功，但未返回评测结果链接。", "info");
+            showResult(`
+                <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                    已提交，但当前没有拿到评测结果链接。${result?.resultFile ? `<div class="mt-2 text-xs text-yellow-700">结果文件：${escapeHtml(result.resultFile)}</div>` : ""}
+                </div>
+            `);
+        }
     } catch (err) {
         setNotice(`提交失败：${err.message}`, "error");
     } finally {

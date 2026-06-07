@@ -7,6 +7,7 @@ public class SubmitCodeResponse {
     private String language;
     private String message;
     private String resultFile;
+    private String resultUrl;
 
     public String getUsername() {
         return username;
@@ -46,5 +47,13 @@ public class SubmitCodeResponse {
 
     public void setResultFile(String resultFile) {
         this.resultFile = resultFile;
+    }
+
+    public String getResultUrl() {
+        return resultUrl;
+    }
+
+    public void setResultUrl(String resultUrl) {
+        this.resultUrl = resultUrl;
     }
 }
