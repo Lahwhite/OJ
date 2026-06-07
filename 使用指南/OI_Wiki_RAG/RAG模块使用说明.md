@@ -25,3 +25,9 @@ http://localhost:8000/
 build_index.py 用于构建索引
 searcher.py 用于搜索相关页面
 agent.py 用于调用本地大模型回答问题
+
+需要在 conda 的 cluster 环境中启动 RAG 服务
+```
+conda activate cluster
+python .\rag_api.py
+```

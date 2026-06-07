@@ -35,8 +35,8 @@ INSERT INTO problems (
 
 INSERT INTO test_cases (problem_id, input, output, is_sample, score)
 VALUES
-    (1, 'Hello', 'Hello', TRUE, 20),
-    (1, 'World', 'World', FALSE, 80);
+    (1, 'Hello\n', 'Hello\n', TRUE, 20),
+    (1, 'World\n', 'World\n', FALSE, 80);
 
 INSERT INTO tags (name, color, problem_count)
 VALUES ('入门', '#1890ff', 1);
