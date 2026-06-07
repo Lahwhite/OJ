@@ -71,18 +71,6 @@ HttpResponse Router::dispatch(const HttpRequest& request) const {
                 return HttpResponse::json(500, makeErrorJson("INTERNAL_ERROR", "handler failed"));
             }
         }
-    // 条件判断：根据运行时状态决定后续流程
-    if (it == routes_.end()) {
-        // 返回当前阶段的处理结果或默认兜底值
-        return HttpResponse::json(404, makeErrorJson("NOT_FOUND", "route not found"));
-    }
-
-    try {
-        // 返回当前阶段的处理结果或默认兜底值
-        return it->second(request);
-    } catch (...) {
-        // 返回当前阶段的处理结果或默认兜底值
-        return HttpResponse::json(500, makeErrorJson("INTERNAL_ERROR", "handler failed"));
     }
 
     return HttpResponse::json(404, makeErrorJson("NOT_FOUND", "route not found"));
