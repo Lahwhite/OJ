@@ -39,13 +39,7 @@ $webDst = Join-Path $packageDir "web"
 New-Item -ItemType Directory -Force -Path $webDst | Out-Null
 Copy-Item (Join-Path $webSrc "*") $webDst -Force
 
-$sqlDst = Join-Path $packageDir "sql"
-New-Item -ItemType Directory -Force -Path $sqlDst | Out-Null
-Copy-Item (Join-Path $rankDir "sql\leaderboard_schema.sql") (Join-Path $sqlDst "leaderboard_schema.sql") -Force
-$seedSrc = Join-Path $rankDir "sql\seed_demo.sql"
-if (Test-Path $seedSrc) {
-    Copy-Item $seedSrc (Join-Path $sqlDst "seed_demo.sql") -Force
-}
+# SQL scripts live only in rank/sql/ (see rank/README.md §4)
 
 function Copy-DllIfExists($name) {
     $src = Join-Path $ucrtBin $name

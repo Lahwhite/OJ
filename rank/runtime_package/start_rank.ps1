@@ -17,7 +17,7 @@ if (-not $env:OJ_MYSQL_DATABASE) { $env:OJ_MYSQL_DATABASE = "myOJ" }
 
 Write-Host "Rank server: http://127.0.0.1:$env:OJ_RANK_PORT/rank"
 Write-Host "Health:      http://127.0.0.1:$env:OJ_RANK_PORT/health"
-Write-Host "MySQL:       $env:OJ_MYSQL_USER@$env:OJ_MYSQL_HOST`:$env:OJ_MYSQL_PORT/$env:OJ_MYSQL_DATABASE"
+Write-Host "MySQL:       $env:OJ_MYSQL_USER@$env:OJ_MYSQL_HOST`:$env:OJ_MYSQL_PORT/$env:OJ_MYSQL_DATABASE (scripts: ..\sql\)"
 Write-Host "Starting leaderboard_server.exe (keep this window open)..."
 Write-Host ""
 
