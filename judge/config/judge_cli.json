@@ -1,7 +1,7 @@
 {
   "open_web": true,
   "web_mode": "embedded",
-  "web_host": "10.22.14.228",
+  "web_host": "10.22.22.69",
   "web_port": "auto",
   "web_port_range": [9000, 9100],
   "web_keep_alive_sec": 300,

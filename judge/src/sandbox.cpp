@@ -37,7 +37,7 @@ bool Sandbox::createIsolatedEnvironment() {
 
 #ifdef _WIN32
 
-// Windows 沙箱：通过管道重定向 stdin/stdout/stderr 并监控超时
+// Windows 沙箱：通过管道重定向 stdin/stdout/stderr，使用作业对象确保超时后彻底终止进程树
 SandboxResult Sandbox::execute(const std::string& command, const std::string& input) {
     SandboxResult result;
     result.exit_code = -1;
@@ -46,77 +46,112 @@ SandboxResult Sandbox::execute(const std::string& command, const std::string& in
     result.timeout = false;
     result.memory_exceeded = false;
 
-    STARTUPINFOA si;
-    PROCESS_INFORMATION pi;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    // 1. 创建作业对象，用于超时后终止 cmd + 所有子进程
+    HANDLE hJob = CreateJobObject(nullptr, nullptr);
+    if (!hJob) {
+        result.error = "Failed to create job object";
+        return result;
+    }
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = {};
+    jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli))) {
+        result.error = "Failed to configure job object";
+        CloseHandle(hJob);
+        return result;
+    }
 
+    // 2. 创建三组管道：标准输出、标准错误、标准输入
     HANDLE hOutputRead, hOutputWrite;
     HANDLE hErrorRead, hErrorWrite;
     HANDLE hInputRead, hInputWrite;
     SECURITY_ATTRIBUTES saAttr;
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
-    saAttr.lpSecurityDescriptor = NULL;
+    saAttr.lpSecurityDescriptor = nullptr;
 
-    // 创建三组管道：标准输出、标准错误、标准输入
     if (!CreatePipe(&hOutputRead, &hOutputWrite, &saAttr, 0)) {
         result.error = "Failed to create output pipe";
+        CloseHandle(hJob);
         return result;
     }
     if (!CreatePipe(&hErrorRead, &hErrorWrite, &saAttr, 0)) {
         result.error = "Failed to create error pipe";
         CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
+        CloseHandle(hJob);
         return result;
     }
     if (!CreatePipe(&hInputRead, &hInputWrite, &saAttr, 0)) {
         result.error = "Failed to create input pipe";
         CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
         CloseHandle(hErrorRead);  CloseHandle(hErrorWrite);
+        CloseHandle(hJob);
         return result;
     }
 
-    // 将子进程的标准流绑定到管道句柄
+    // 3. 绑定子进程标准流到管道
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
     si.hStdOutput = hOutputWrite;
     si.hStdError  = hErrorWrite;
     si.hStdInput  = hInputRead;
     si.dwFlags   |= STARTF_USESTDHANDLES;
+    ZeroMemory(&pi, sizeof(pi));
 
     // 经 cmd.exe 执行，兼容复杂命令行
     std::string full_command = "cmd.exe /c " + command;
     std::vector<char> cmd_buf(full_command.begin(), full_command.end());
     cmd_buf.push_back('\0');
 
+    // 4. 以挂起模式创建进程，确保在它产生任何子进程前放入作业
     BOOL bSuccess = CreateProcessA(
-        NULL, cmd_buf.data(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+        nullptr, cmd_buf.data(), nullptr, nullptr, TRUE,
+        CREATE_SUSPENDED,
+        nullptr, nullptr, &si, &pi);
 
     if (!bSuccess) {
         DWORD error_code = GetLastError();
         char error_msg[256];
         FormatMessageA(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            error_msg, sizeof(error_msg), NULL);
+            nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            error_msg, sizeof(error_msg), nullptr);
         result.error = "Failed to create process: " + std::string(error_msg);
         CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
         CloseHandle(hErrorRead);  CloseHandle(hErrorWrite);
         CloseHandle(hInputRead);  CloseHandle(hInputWrite);
+        CloseHandle(hJob);
         return result;
     }
 
-    // 关闭父进程侧写端，防止管道死锁
+    // 5. 将 cmd.exe 进程加入作业对象
+    if (!AssignProcessToJobObject(hJob, pi.hProcess)) {
+        result.error = "Failed to assign process to job object";
+        TerminateProcess(pi.hProcess, 1);
+        CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
+        CloseHandle(hOutputRead); CloseHandle(hOutputWrite);
+        CloseHandle(hErrorRead);  CloseHandle(hErrorWrite);
+        CloseHandle(hInputRead);  CloseHandle(hInputWrite);
+        CloseHandle(hJob);
+        return result;
+    }
+
+    // 恢复进程运行
+    ResumeThread(pi.hThread);
+
+    // 6. 关闭父进程侧不需要的管道端，防止死锁
     CloseHandle(hOutputWrite);
     CloseHandle(hErrorWrite);
     CloseHandle(hInputRead);
 
-    // 向子进程 stdin 写入测试输入
+    // 7. 向子进程 stdin 写入测试输入
     if (!input.empty()) {
         size_t total = 0;
         while (total < input.size()) {
             DWORD dwWritten = 0;
             const DWORD to_write = static_cast<DWORD>(input.size() - total);
-            if (!WriteFile(hInputWrite, input.data() + total, to_write, &dwWritten, NULL) || dwWritten == 0) {
+            if (!WriteFile(hInputWrite, input.data() + total, to_write, &dwWritten, nullptr) || dwWritten == 0) {
                 break;
             }
             total += dwWritten;
@@ -124,32 +159,35 @@ SandboxResult Sandbox::execute(const std::string& command, const std::string& in
     }
     CloseHandle(hInputWrite);
 
-    // 等待进程结束，超时则强制终止
+    // 8. 等待进程结束或超时
     DWORD dwWaitResult = WaitForSingleObject(pi.hProcess, static_cast<DWORD>(config_.time_limit_ms));
     if (dwWaitResult == WAIT_TIMEOUT) {
-        TerminateProcess(pi.hProcess, 1);
+        // 超时：终止整个作业（cmd.exe + java.exe 等子进程）
+        TerminateJobObject(hJob, 1);
         result.timeout = true;
     }
 
+    // 获取退出码
     DWORD dwExitCode;
-    GetExitCodeProcess(pi.hProcess, &dwExitCode);
-    result.exit_code = static_cast<int>(dwExitCode);
+    if (GetExitCodeProcess(pi.hProcess, &dwExitCode))
+        result.exit_code = static_cast<int>(dwExitCode);
 
-    // 读取子进程 stdout/stderr 作为运行输出
+    // 9. 读取 stdout / stderr —— 作业终止后管道写端已关闭，ReadFile 会正常读到 EOF
     char buffer[4096];
     DWORD dwRead;
-    while (ReadFile(hOutputRead, buffer, sizeof(buffer), &dwRead, NULL) && dwRead > 0) {
+    while (ReadFile(hOutputRead, buffer, sizeof(buffer), &dwRead, nullptr) && dwRead > 0) {
         result.output.append(buffer, dwRead);
     }
-    while (ReadFile(hErrorRead, buffer, sizeof(buffer), &dwRead, NULL) && dwRead > 0) {
+    while (ReadFile(hErrorRead, buffer, sizeof(buffer), &dwRead, nullptr) && dwRead > 0) {
         result.error.append(buffer, dwRead);
     }
 
-    // 释放所有句柄，防止资源泄漏
+    // 10. 清理所有句柄
     CloseHandle(hOutputRead);
     CloseHandle(hErrorRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    CloseHandle(hJob);   // 关闭作业句柄（KILL_ON_CLOSE 提供双保险）
 
     return result;
 }

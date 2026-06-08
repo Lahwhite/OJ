@@ -5,6 +5,7 @@ import org.example.users.entity.User;
 import org.example.users.repository.ProblemUserRepository;
 import org.example.users.repository.UserRepository;
 import org.example.users.service.UserService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,7 +22,9 @@ public class UserServiceImpl implements UserService {
     public User authenticate(String username,  String password) {
         if (checkUsername(username)) {
             User user = userRepository.findByUsername(username);
-            if (user.getPassword().equals(password)) {
+            // 登录时：校验用户输入的密码和数据库里的散列值
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            if (encoder.matches(password, user.getPassword())) {
                 return user;
             }
         }
@@ -38,7 +41,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void insertUser(String username, String password) {
-        userRepository.save(new User(username, password));
+        // 注册时：对密码加密，存到数据库
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String hashed = encoder.encode(password);
+        userRepository.save(new User(username, hashed));
     }
 
     //
