@@ -1,6 +1,0 @@
-build/
-build_mingw/
-src/web_assets.cpp
-judge_result_*.json
-temp_java_out/
-temp_*/

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ProblemUserRepository problemUserRepository;
+    private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
     public UserServiceImpl(UserRepository userRepository, ProblemUserRepository problemUserRepository) {
         this.userRepository = userRepository;
@@ -23,8 +24,7 @@ public class UserServiceImpl implements UserService {
         if (checkUsername(username)) {
             User user = userRepository.findByUsername(username);
             // 登录时：校验用户输入的密码和数据库里的散列值
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            if (encoder.matches(password, user.getPassword())) {
+            if (ENCODER.matches(password, user.getPassword())) {
                 return user;
             }
         }
@@ -42,8 +42,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void insertUser(String username, String password) {
         // 注册时：对密码加密，存到数据库
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String hashed = encoder.encode(password);
+        String hashed = ENCODER.encode(password);
         userRepository.save(new User(username, hashed));
     }
 

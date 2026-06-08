@@ -1,9 +1,0 @@
-CREATE DATABASE IF NOT EXISTS `myOJ`
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-CREATE USER IF NOT EXISTS 'User'@'localhost' IDENTIFIED BY 'Management';
-CREATE USER IF NOT EXISTS 'User'@'%' IDENTIFIED BY 'Management';
-GRANT ALL ON myOJ.* TO 'User'@'localhost';
-GRANT ALL ON myOJ.* TO 'User'@'%';
-FLUSH PRIVILEGES;
