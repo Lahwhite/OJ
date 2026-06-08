@@ -1,23 +1,21 @@
 # 检索增强生成模块使用手册
 
-## 1. 本模块旨在实现
+## 1. 本模块旨在实现检索增强生成功能
 
-检索增强生成功能
+## 2. 使用前环境准备
 
-## 2. 使用前环境需求
-
-### 需要先本地部署离线版 OI wiki
+### 需要先本地部署离线版 OI Wiki
 
 ```
 git clone https://gitee.com/OI-wiki/OI-wiki.git -b gh-pages
 ```
 
-进入 OI-wiki 目录下，启动HTTP服务器
+进入 OI-wiki 目录，启动 HTTP 服务器
 ```
 python3 -m http.server 8000
 ```
 
-可通过如下方式访问 OI Wiki 页面
+可通过以下地址访问 OI Wiki 页面
 ```
 http://localhost:8000/
 ```
@@ -26,8 +24,10 @@ build_index.py 用于构建索引
 searcher.py 用于搜索相关页面
 agent.py 用于调用本地大模型回答问题
 
-需要在 conda 的 cluster 环境中启动 RAG 服务
+先使用 requirements.txt 配置运行环境
 ```
-conda activate cluster
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 python .\rag_api.py
 ```
