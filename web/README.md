@@ -24,5 +24,5 @@ cmake --build build --target judge_engine
 
 ## 文档
 
-- 交付使用：`../judge/交付使用手册.md`
-- 改动说明：`../judge/改动文档.md`
+- 交付使用：`../Manual/Judge/交付使用手册.md`
+- 改动说明：`../Manual/Judge/改动文档.md`
