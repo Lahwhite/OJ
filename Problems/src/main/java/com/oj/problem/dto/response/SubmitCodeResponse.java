@@ -8,6 +8,11 @@ public class SubmitCodeResponse {
     private String message;
     private String resultFile;
     private String resultUrl;
+    private Long userId;
+    private Boolean accepted;
+    private Integer score;
+    private Integer maxScore;
+    private String verdict;
 
     public String getUsername() {
         return username;
@@ -55,5 +60,45 @@ public class SubmitCodeResponse {
 
     public void setResultUrl(String resultUrl) {
         this.resultUrl = resultUrl;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Boolean getAccepted() {
+        return accepted;
+    }
+
+    public void setAccepted(Boolean accepted) {
+        this.accepted = accepted;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public Integer getMaxScore() {
+        return maxScore;
+    }
+
+    public void setMaxScore(Integer maxScore) {
+        this.maxScore = maxScore;
+    }
+
+    public String getVerdict() {
+        return verdict;
+    }
+
+    public void setVerdict(String verdict) {
+        this.verdict = verdict;
     }
 }

@@ -1,16 +1,21 @@
 package com.oj.problem.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.oj.problem.config.JudgeProperties;
+import com.oj.problem.dto.request.SubmissionResultRequest;
 import com.oj.problem.dto.request.SubmitCodeRequest;
 import com.oj.problem.dto.response.ProblemDetailResponse;
 import com.oj.problem.dto.response.SubmitCodeResponse;
 import com.oj.problem.dto.response.TestCaseResponse;
+import com.oj.problem.entity.ProblemUserEntity;
 import com.oj.problem.exception.BusinessException;
+import com.oj.problem.repository.ProblemUserRepository;
 import com.oj.problem.service.JudgeService;
 import com.oj.problem.service.ProblemService;
+import com.oj.problem.service.ProblemStatusService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,14 +46,20 @@ public class JudgeServiceImpl implements JudgeService {
             Pattern.compile("https?://[^\\s\"'<>]+", Pattern.CASE_INSENSITIVE);
 
     private final ProblemService problemService;
+    private final ProblemStatusService problemStatusService;
+    private final ProblemUserRepository problemUserRepository;
     private final JudgeProperties judgeProperties;
     private final ObjectMapper objectMapper;
 
     public JudgeServiceImpl(
             ProblemService problemService,
+            ProblemStatusService problemStatusService,
+            ProblemUserRepository problemUserRepository,
             JudgeProperties judgeProperties,
             ObjectMapper objectMapper) {
         this.problemService = problemService;
+        this.problemStatusService = problemStatusService;
+        this.problemUserRepository = problemUserRepository;
         this.judgeProperties = judgeProperties;
         this.objectMapper = objectMapper;
     }
@@ -133,6 +144,8 @@ public class JudgeServiceImpl implements JudgeService {
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
+            JudgeResultSummary summary = updateProblemStatusFromResult(problemId, request.getUsername(), resultFile);
+
             SubmitCodeResponse response = new SubmitCodeResponse();
             response.setUsername(request.getUsername());
             response.setProblemId(problemId);
@@ -140,6 +153,13 @@ public class JudgeServiceImpl implements JudgeService {
             response.setMessage(StringUtils.hasText(resultUrl) ? "提交成功，请点击链接查看评测结果" : "提交成功");
             response.setResultFile(resultFile);
             response.setResultUrl(resultUrl);
+            if (summary != null) {
+                response.setUserId(summary.userId);
+                response.setAccepted(summary.accepted);
+                response.setScore(summary.score);
+                response.setMaxScore(summary.maxScore);
+                response.setVerdict(summary.verdict);
+            }
             return response;
         } catch (BusinessException ex) {
             throw ex;
@@ -170,6 +190,64 @@ public class JudgeServiceImpl implements JudgeService {
             index++;
         }
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
+    }
+
+    private JudgeResultSummary updateProblemStatusFromResult(Long problemId, String username, String resultFile) {
+        if (!StringUtils.hasText(resultFile)) {
+            return null;
+        }
+        Path resultPath = resolveResultPath(resultFile);
+        if (!Files.isRegularFile(resultPath)) {
+            log.warn("Judge result file not found, skip status update: {}", resultPath);
+            return null;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(resultPath.toFile());
+            String verdict = root.path("verdict").asText("");
+            int score = root.path("total_score").asInt(0);
+            int maxScore = root.path("max_score").asInt(0);
+            boolean accepted = "AC".equalsIgnoreCase(verdict) || "ACCEPTED".equalsIgnoreCase(verdict);
+
+            ProblemUserEntity user = findOrCreateProblemUser(username);
+            SubmissionResultRequest statusRequest = new SubmissionResultRequest();
+            statusRequest.setUserId(user.getId());
+            statusRequest.setProblemId(problemId);
+            statusRequest.setAccepted(accepted);
+            statusRequest.setScore(score);
+            statusRequest.setMaxScore(maxScore);
+            statusRequest.setSubmittedAt(java.time.LocalDateTime.now());
+            problemStatusService.upsertStatus(statusRequest);
+
+            JudgeResultSummary summary = new JudgeResultSummary();
+            summary.userId = user.getId();
+            summary.accepted = accepted;
+            summary.score = score;
+            summary.maxScore = maxScore;
+            summary.verdict = StringUtils.hasText(verdict) ? verdict : "UNKNOWN";
+            return summary;
+        } catch (IOException ex) {
+            log.warn("Failed to parse judge result file, skip status update: {}", resultPath, ex);
+            return null;
+        }
+    }
+
+    private Path resolveResultPath(String resultFile) {
+        Path resultPath = Paths.get(resultFile.trim());
+        if (resultPath.isAbsolute()) {
+            return resultPath.normalize();
+        }
+        return judgeProperties.resolveWorkDir().resolve(resultPath).normalize();
+    }
+
+    private ProblemUserEntity findOrCreateProblemUser(String username) {
+        String normalized = sanitizeUsername(username);
+        return problemUserRepository.findByUsername(normalized)
+                .orElseGet(() -> {
+                    ProblemUserEntity user = new ProblemUserEntity();
+                    user.setUsername(normalized);
+                    user.setRole("user");
+                    return problemUserRepository.save(user);
+                });
     }
 
     private String sourceFileName(String language) {
@@ -255,5 +333,13 @@ public class JudgeServiceImpl implements JudgeService {
         } catch (IOException ex) {
             log.warn("Failed to delete temp file: {}", path, ex);
         }
+    }
+
+    private static class JudgeResultSummary {
+        private Long userId;
+        private Boolean accepted;
+        private Integer score;
+        private Integer maxScore;
+        private String verdict;
     }
 }
