@@ -1,5 +1,6 @@
 package com.oj.problem.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -134,6 +135,9 @@ public class JudgeServiceImpl implements JudgeService {
             int exitCode = process.exitValue();
             String resultFile = extractResultFile(output);
             String resultUrl = extractResultUrl(output);
+            if (!StringUtils.hasText(resultUrl) && StringUtils.hasText(resultFile)) {
+                resultUrl = extractResultUrlFromFile(resultFile);
+            }
             if (!StringUtils.hasText(resultUrl) && StringUtils.hasText(resultFile)) {
                 resultUrl = buildResultUrl(resultFile);
             }
@@ -291,6 +295,54 @@ public class JudgeServiceImpl implements JudgeService {
         Matcher urlMatcher = URL_PATTERN.matcher(output);
         if (urlMatcher.find()) {
             return urlMatcher.group().trim();
+        }
+        return null;
+    }
+
+    private String extractResultUrlFromFile(String resultFile) {
+        if (!StringUtils.hasText(resultFile)) {
+            return null;
+        }
+        Path resultPath = Paths.get(resultFile.trim());
+        if (!Files.isRegularFile(resultPath)) {
+            return null;
+        }
+        try {
+            String content = Files.readString(resultPath, StandardCharsets.UTF_8);
+            String urlFromText = extractResultUrl(content);
+            if (StringUtils.hasText(urlFromText)) {
+                return urlFromText;
+            }
+            JsonNode root = objectMapper.readTree(content);
+            return findUrlInJson(root);
+        } catch (IOException ex) {
+            log.warn("Failed to read judge result file: {}", resultPath, ex);
+            return null;
+        }
+    }
+
+    private String findUrlInJson(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isTextual()) {
+            return extractResultUrl(node.asText());
+        }
+        if (node.isObject()) {
+            for (JsonNode child : node) {
+                String found = findUrlInJson(child);
+                if (StringUtils.hasText(found)) {
+                    return found;
+                }
+            }
+        }
+        if (node.isArray()) {
+            for (JsonNode child : node) {
+                String found = findUrlInJson(child);
+                if (StringUtils.hasText(found)) {
+                    return found;
+                }
+            }
         }
         return null;
     }

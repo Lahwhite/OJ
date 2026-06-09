@@ -70,6 +70,7 @@ const state = {
 // 缓存常用 DOM 元素，避免重复查询
 const els = {
     notice: document.querySelector("#notice"),
+    backToProblemListLink: document.querySelector("#backToProblemListLink"),
     homeLink: document.querySelector("#homeLink"),
     problemTitle: document.querySelector("#problemTitle"),
     problemContent: document.querySelector("#problemContent"),
@@ -92,6 +93,23 @@ function getParams() {
         returnUrl: p.get("return_url"),
         username: p.get("username") || ""
     };
+}
+
+function isAllowedReturnUrl(value) {
+    try {
+        const url = new URL(value, window.location.href);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
+
+function problemListUrl(returnUrl, username) {
+    const params = new URLSearchParams();
+    if (returnUrl && isAllowedReturnUrl(returnUrl)) params.set("return_url", returnUrl);
+    if (username) params.set("username", username);
+    const query = params.toString();
+    return query ? `./index.html?${query}` : "./index.html";
 }
 
 // 页面辅助函数：拆分复杂交互，便于维护
@@ -415,16 +433,12 @@ function bindEvents() {
 async function init() {
     const { id, returnUrl, username } = getParams();
     state.username = username.trim();
+    els.backToProblemListLink.href = problemListUrl(returnUrl, state.username);
     
     // 条件分支：根据当前页面状态做不同处理
-    if (returnUrl) {
-        try {
-            const u = new URL(returnUrl, window.location.href);
-            // 条件分支：根据当前页面状态做不同处理
-            if (u.protocol === "http:" || u.protocol === "https:") {
-                els.homeLink.href = returnUrl;
-            }
-        } catch {}
+    if (returnUrl && isAllowedReturnUrl(returnUrl)) {
+        els.homeLink.href = returnUrl;
+        els.homeLink.classList.remove("hidden");
     }
     
     // 条件分支：根据当前页面状态做不同处理
