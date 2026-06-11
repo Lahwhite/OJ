@@ -1,4 +1,3 @@
-// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.entity;
 
 import java.time.LocalDateTime;
@@ -25,77 +24,76 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "problems")
-// 对外暴露的方法或字段，通常承接模块间协作
 public class ProblemEntity {
 
+    // 数据库主键，所有对外响应都沿用这个标识定位资源。
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Long id;
 
     // 题面基础信息
     @Column(nullable = false, length = 255)
     private String title;
 
+    // 题面正文，允许多行文本并在前端按原换行展示。
     @Column(nullable = false, columnDefinition = "TEXT")
-    // 内部实现细节，避免直接暴露给外部调用方
     private String description;
 
+    // 题目难度枚举，前后端统一使用 easy、medium、hard 三档。
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Difficulty difficulty;
 
+    // 单个测试点的时间限制，单位为毫秒。
     @Column(name = "time_limit", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Integer timeLimit = 1000;
 
+    // 单个测试点的内存限制，单位为 MB。
     @Column(name = "memory_limit", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Integer memoryLimit = 128;
 
+    // 输入格式说明，和样例输入分开保存便于页面分区渲染。
     @Column(name = "input_description", nullable = false, columnDefinition = "TEXT")
-    // 内部实现细节，避免直接暴露给外部调用方
     private String inputDescription;
 
+    // 输出格式说明，和样例输出分开保存便于页面分区渲染。
     @Column(name = "output_description", nullable = false, columnDefinition = "TEXT")
-    // 内部实现细节，避免直接暴露给外部调用方
     private String outputDescription;
 
+    // 公开样例输入，用于详情页展示和用户本地调试参考。
     @Column(name = "sample_input", nullable = false, columnDefinition = "TEXT")
-    // 内部实现细节，避免直接暴露给外部调用方
     private String sampleInput;
 
+    // 公开样例输出，用于详情页展示和用户本地调试参考。
     @Column(name = "sample_output", nullable = false, columnDefinition = "TEXT")
-    // 内部实现细节，避免直接暴露给外部调用方
     private String sampleOutput;
 
+    // 创建者用户 ID，首次保存题目时从当前登录用户写入。
     @Column(name = "created_by")
-    // 内部实现细节，避免直接暴露给外部调用方
     private Long createdBy;
 
+    // 是否公开给普通用户，管理端可以保存未公开题目草稿。
     @Column(name = "is_public", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Boolean isPublic = Boolean.TRUE;
 
+    // 提交次数统计，由评测回写流程维护。
     @Column(name = "submission_count", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Integer submissionCount = 0;
 
+    // 通过次数统计，仅在 AC 结果回写时递增。
     @Column(name = "accepted_count", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private Integer acceptedCount = 0;
 
+    // 创建时间由数据库自动维护，用于列表排序和审计展示。
     @Column(name = "created_at", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private LocalDateTime createdAt;
 
+    // 更新时间由数据库自动维护，用于管理端确认最近修改。
     @Column(name = "updated_at", nullable = false)
-    // 内部实现细节，避免直接暴露给外部调用方
     private LocalDateTime updatedAt;
 
+    // 完整测试用例集合，创建和更新题目时至少保留一条。
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
-    // 内部实现细节，避免直接暴露给外部调用方
     private List<TestCaseEntity> testCases = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -103,11 +101,10 @@ public class ProblemEntity {
             name = "problem_tags",
             joinColumns = @JoinColumn(name = "problem_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 题目标签名称集合，服务层会去重并同步标签统计。
     private Set<TagEntity> tags = new LinkedHashSet<>();
 
     @PrePersist
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
@@ -115,220 +112,162 @@ public class ProblemEntity {
     }
 
     @PreUpdate
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void addTestCase(TestCaseEntity testCase) {
         testCases.add(testCase);
         testCase.setProblem(this);
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void clearTestCases() {
-        // 循环处理：逐项遍历集合并完成同步或映射
         for (TestCaseEntity testCase : testCases) {
             testCase.setProblem(null);
         }
         testCases.clear();
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Long getId() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return id;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setId(Long id) {
         this.id = id;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getTitle() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return title;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setTitle(String title) {
         this.title = title;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getDescription() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return description;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setDescription(String description) {
         this.description = description;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Difficulty getDifficulty() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return difficulty;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setDifficulty(Difficulty difficulty) {
         this.difficulty = difficulty;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getTimeLimit() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return timeLimit;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setTimeLimit(Integer timeLimit) {
         this.timeLimit = timeLimit;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getMemoryLimit() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return memoryLimit;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setMemoryLimit(Integer memoryLimit) {
         this.memoryLimit = memoryLimit;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getInputDescription() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return inputDescription;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setInputDescription(String inputDescription) {
         this.inputDescription = inputDescription;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getOutputDescription() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return outputDescription;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setOutputDescription(String outputDescription) {
         this.outputDescription = outputDescription;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getSampleInput() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return sampleInput;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setSampleInput(String sampleInput) {
         this.sampleInput = sampleInput;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public String getSampleOutput() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return sampleOutput;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setSampleOutput(String sampleOutput) {
         this.sampleOutput = sampleOutput;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Long getCreatedBy() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return createdBy;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Boolean getIsPublic() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return isPublic;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getSubmissionCount() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return submissionCount;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setSubmissionCount(Integer submissionCount) {
         this.submissionCount = submissionCount;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getAcceptedCount() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return acceptedCount;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setAcceptedCount(Integer acceptedCount) {
         this.acceptedCount = acceptedCount;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public LocalDateTime getCreatedAt() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return createdAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public LocalDateTime getUpdatedAt() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return updatedAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public List<TestCaseEntity> getTestCases() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return testCases;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setTestCases(List<TestCaseEntity> testCases) {
         this.testCases = testCases;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Set<TagEntity> getTags() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return tags;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setTags(Set<TagEntity> tags) {
         this.tags = tags;
     }

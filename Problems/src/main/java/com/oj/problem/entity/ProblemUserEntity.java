@@ -14,19 +14,24 @@ import javax.persistence.Table;
 @Table(name = "problem_users")
 public class ProblemUserEntity {
 
+    // 数据库主键，所有对外响应都沿用这个标识定位资源。
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 提交人用户名，会用于评测临时文件名前缀和用户状态记录。
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
+    // 用户角色，当前模块主要用来区分管理员和普通用户。
     @Column(nullable = false, length = 20)
     private String role = "user";
 
+    // 创建时间由数据库自动维护，用于列表排序和审计展示。
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    // 更新时间由数据库自动维护，用于管理端确认最近修改。
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 

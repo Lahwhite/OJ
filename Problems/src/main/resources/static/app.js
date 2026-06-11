@@ -64,11 +64,10 @@ const els = {
     testCaseEditorList: document.querySelector("#testCaseEditorList"),
 };
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 入口页会从 URL 继承登录用户和返回地址，便于从用户模块跳回。
 function initFromQuery() {
     const params = new URLSearchParams(window.location.search);
     const returnUrl = params.get("return_url");
-    // 条件分支：根据当前页面状态做不同处理
     if (returnUrl && isAllowedReturnUrl(returnUrl)) {
         els.homeLink.href = returnUrl;
     }
@@ -84,33 +83,28 @@ function initFromQuery() {
     updateAdminStatus();
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 只允许 http/https 返回地址，避免把导航写成 javascript 等危险协议。
 function isAllowedReturnUrl(value) {
     try {
         const url = new URL(value, window.location.href);
-        // 返回计算结果或提前结束当前流程
         return url.protocol === "http:" || url.protocol === "https:";
     } catch {
-        // 返回计算结果或提前结束当前流程
         return false;
     }
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 跳转详情页时保留用户上下文，让详情页提交后能回写同一用户状态。
 function detailUrl(problemId) {
     const params = new URLSearchParams({ id: String(problemId) });
     const returnUrl = new URLSearchParams(window.location.search).get("return_url");
-    // 条件分支：根据当前页面状态做不同处理
     if (returnUrl && isAllowedReturnUrl(returnUrl)) params.set("return_url", returnUrl);
     if (state.currentUserId) params.set("user_id", String(state.currentUserId));
     if (state.currentUsername) params.set("username", state.currentUsername);
-    // 返回计算结果或提前结束当前流程
     return `./problem-detail.html?${params.toString()}`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 统一维护顶部提示的文本和配色，避免各流程手写样式。
 function setNotice(message, type = "info") {
-    // 条件分支：根据当前页面状态做不同处理
     if (!message) {
         els.notice.className = "mb-5 hidden rounded-xl border px-4 py-3 text-sm";
         els.notice.textContent = "";
@@ -125,7 +119,7 @@ function setNotice(message, type = "info") {
     els.notice.textContent = message;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 管理 JWT 仅保存在当前浏览器，状态标记提醒用户是否能执行维护操作。
 function updateAdminStatus() {
     const enabled = Boolean(state.token);
     els.adminStatus.textContent = enabled ? "已配置" : "未配置";
@@ -134,7 +128,7 @@ function updateAdminStatus() {
         : "rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500";
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 后端统一响应体包在 data 中，这里同时处理 HTTP 错误和业务错误码。
 async function requestJson(url, options = {}) {
     const response = await fetch(url, {
         ...options,
@@ -145,41 +139,33 @@ async function requestJson(url, options = {}) {
     });
     const text = await response.text();
     const body = text ? JSON.parse(text) : null;
-    // 条件分支：根据当前页面状态做不同处理
     if (!response.ok || (body && body.code >= 400)) {
         throw new Error(body?.message || `请求失败：${response.status}`);
     }
-    // 返回计算结果或提前结束当前流程
     return body?.data ?? null;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 管理端写操作统一走 Bearer token，缺失时尽早在前端提示。
 function authHeaders() {
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.token) {
         throw new Error("请先保存管理员 JWT。");
     }
-    // 返回计算结果或提前结束当前流程
     return { Authorization: `Bearer ${state.token}` };
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 分页和筛选参数集中组装，便于刷新列表时复用当前状态。
 function listUrl() {
     const params = new URLSearchParams({
         page: String(state.page),
         size: String(state.size),
     });
-    // 条件分支：根据当前页面状态做不同处理
     if (state.difficulty) params.set("difficulty", state.difficulty);
-    // 条件分支：根据当前页面状态做不同处理
     if (state.tag) params.set("tag", state.tag);
-    // 条件分支：根据当前页面状态做不同处理
     if (state.keyword) params.set("keyword", state.keyword);
-    // 返回计算结果或提前结束当前流程
     return `${API_BASE}?${params.toString()}`;
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 加载题目列表后同步用户状态，确保左侧 AC 标记和详情面板一致。
 async function loadProblems({ keepSelection = false } = {}) {
     setNotice("");
     els.problemList.innerHTML = loadingHtml("正在加载题目...");
@@ -190,7 +176,6 @@ async function loadProblems({ keepSelection = false } = {}) {
     state.size = pageData.size || state.size;
     await loadProblemStatuses();
 
-    // 条件分支：根据当前页面状态做不同处理
     if (!keepSelection || !state.problems.some((problem) => problem.id === state.selectedProblemId)) {
         state.selectedProblemId = null;
         state.selectedProblem = null;
@@ -198,7 +183,6 @@ async function loadProblems({ keepSelection = false } = {}) {
     renderProblems();
     renderPagination();
 
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.selectedProblemId && state.problems.length > 0) {
         await selectProblem(state.problems[0].id);
     } else if (state.selectedProblemId) {
@@ -208,28 +192,24 @@ async function loadProblems({ keepSelection = false } = {}) {
     }
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 列表和详情共用加载占位，保持异步切换时的视觉反馈一致。
 function loadingHtml(text) {
-    // 返回计算结果或提前结束当前流程
     return `<div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">${text}</div>`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 空状态样式统一封装，避免不同区域提示风格不一致。
 function emptyHtml(text) {
-    // 返回计算结果或提前结束当前流程
     return `<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400">${text}</div>`;
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 用户上下文存在时批量获取状态，失败不影响题库浏览主流程。
 async function loadProblemStatuses() {
     state.problemStatuses = new Map();
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.currentUserId) {
         return;
     }
     try {
         const data = await requestJson(`${STATUS_API_BASE}/users/${state.currentUserId}`);
-        // 遍历集合，为每个元素绑定逻辑或生成视图
         (data?.statuses || []).forEach((status) => {
             state.problemStatuses.set(Number(status.problemId), status);
         });
@@ -238,10 +218,9 @@ async function loadProblemStatuses() {
     }
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 左侧列表只渲染摘要信息，点击后再按需加载详情。
 function renderProblems() {
     els.problemCount.textContent = `共 ${state.total} 道题目`;
-    // 条件分支：根据当前页面状态做不同处理
     if (state.problems.length === 0) {
         els.problemList.innerHTML = emptyHtml("没有找到符合条件的题目。");
         return;
@@ -265,13 +244,12 @@ function renderProblems() {
             </div>
         </button>
     `).join("");
-    // 遍历集合，为每个元素绑定逻辑或生成视图
     els.problemList.querySelectorAll("[data-problem-id]").forEach((button) => {
         button.addEventListener("click", () => selectProblem(Number(button.dataset.problemId)));
     });
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 分页按钮状态由总数和当前页计算，防止越界翻页。
 function renderPagination() {
     const totalPages = Math.max(1, Math.ceil(state.total / state.size));
     els.pageLabel.textContent = `第 ${state.page} / ${totalPages} 页`;
@@ -279,7 +257,7 @@ function renderPagination() {
     els.nextPageButton.disabled = state.page >= totalPages;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 难度展示统一在这里维护，后端枚举变化时只需改一处。
 function difficultyBadge(difficulty) {
     const themes = {
         easy: ["简单", "bg-green-50 text-green-700"],
@@ -287,51 +265,39 @@ function difficultyBadge(difficulty) {
         hard: ["困难", "bg-red-50 text-red-700"],
     };
     const [label, classes] = themes[difficulty] || [difficulty || "未知", "bg-gray-100 text-gray-600"];
-    // 返回计算结果或提前结束当前流程
     return `<span class="rounded-lg px-3 py-1 text-xs font-medium ${classes}">${escapeHtml(label)}</span>`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 标签输出前做 HTML 转义，防止题目标签污染页面结构。
 function tagBadges(tags = []) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!tags.length) return '<span class="text-xs text-gray-400">暂无标签</span>';
-    // 返回计算结果或提前结束当前流程
     return tags.map((tag) => `<span class="rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">${escapeHtml(tag)}</span>`).join("");
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 状态 Map 的 key 统一转成数字，避免字符串和数字 id 不匹配。
 function getProblemStatus(problemId) {
-    // 返回计算结果或提前结束当前流程
     return state.problemStatuses.get(Number(problemId)) || null;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// AC 标记依赖当前用户，未选择用户时展示未知状态。
 function statusIconHtml(problemId) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.currentUserId) {
-        // 返回计算结果或提前结束当前流程
         return '<span class="status-mark status-unknown" aria-label="未选择用户">-</span>';
     }
     const status = getProblemStatus(problemId);
-    // 条件分支：根据当前页面状态做不同处理
     if (status?.accepted) {
-        // 返回计算结果或提前结束当前流程
         return '<span class="status-mark status-accepted" title="已通过" aria-label="已通过">✓</span>';
     }
-    // 返回计算结果或提前结束当前流程
     return '<span class="status-mark status-unaccepted" title="未通过" aria-label="未通过">-</span>';
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 详情页状态摘要展示最好分、最近分和最近提交时间。
 function statusSummaryHtml(problemId) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.currentUserId) {
-        // 返回计算结果或提前结束当前流程
         return "";
     }
     const status = getProblemStatus(problemId);
     const accepted = Boolean(status?.accepted);
-    // 返回计算结果或提前结束当前流程
     return `
         <section class="mt-5 rounded-xl border ${accepted ? "border-green-100 bg-green-50" : "border-gray-200 bg-gray-50"} p-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -352,15 +318,14 @@ function statusSummaryHtml(problemId) {
     `;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 列表选中态只改 class，不重新渲染整页以减少闪烁。
 function markActiveProblem() {
-    // 遍历集合，为每个元素绑定逻辑或生成视图
     els.problemList.querySelectorAll("[data-problem-id]").forEach((button) => {
         button.classList.toggle("is-active", Number(button.dataset.problemId) === state.selectedProblemId);
     });
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 选择题目后再请求详情，避免列表接口承担过多数据。
 async function selectProblem(problemId) {
     state.selectedProblemId = problemId;
     markActiveProblem();
@@ -372,14 +337,14 @@ async function selectProblem(problemId) {
     renderDetail(problem);
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 没有题目或筛选为空时清空详情区，避免残留上一次内容。
 function showEmptyDetail() {
     els.problemDetail.classList.add("hidden");
     els.problemDetail.innerHTML = "";
     els.emptyDetail.classList.remove("hidden");
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 管理端详情同时承担预览和编辑入口，所以保留完整题面与用例。
 function renderDetail(problem) {
     els.emptyDetail.classList.add("hidden");
     els.problemDetail.classList.remove("hidden");
@@ -422,28 +387,24 @@ function renderDetail(problem) {
     document.querySelector("#deleteProblemButton").addEventListener("click", () => deleteProblem(problem));
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 题面分区统一生成，便于保持标题和正文样式一致。
 function detailSection(title, content) {
-    // 返回计算结果或提前结束当前流程
     return `<section class="mt-6"><h3 class="text-lg font-bold text-gray-800">${title}</h3>${content}</section>`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 题面文本按原换行展示，并在插入 HTML 前转义。
 function textBlock(text) {
-    // 返回计算结果或提前结束当前流程
     return `<p class="mt-3 whitespace-pre-wrap break-words leading-7 text-gray-700">${escapeHtml(text || "")}</p>`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 样例和测试用例用同一段代码块模板，减少样式分歧。
 function codeCard(title, text) {
-    // 返回计算结果或提前结束当前流程
     return `<div><h3 class="text-lg font-bold text-gray-800">${title}</h3><pre class="code-block mt-3 overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-gray-800 p-4 text-sm leading-6 text-gray-100">${escapeHtml(text || "")}</pre></div>`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 只把标记为样例的用例公开展示，隐藏用例仍可用于评测。
 function renderTestCases(testCases) {
     const samples = testCases.filter((testCase) => testCase.isSample);
-    // 返回计算结果或提前结束当前流程
     return `
         <section class="mt-6 border-t border-gray-200 pt-5">
             <div class="flex items-center justify-between gap-3">
@@ -465,9 +426,8 @@ function renderTestCases(testCases) {
     `;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 编辑器复用创建和修改流程，打开时把题目详情回填到表单。
 function openEditor(problem = null) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!state.token) {
         setNotice("请先保存管理员 JWT，再维护题目。", "error");
         els.adminToken.focus();
@@ -489,20 +449,19 @@ function openEditor(problem = null) {
     els.publicInput.checked = problem?.isPublic !== false;
     els.testCaseEditorList.innerHTML = "";
     const testCases = problem?.testCases?.length ? problem.testCases : [{ input: "", output: "", isSample: true, score: 100 }];
-    // 遍历集合，为每个元素绑定逻辑或生成视图
     testCases.forEach(addTestCaseEditor);
     els.editorModal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
     els.titleInput.focus();
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 关闭弹窗时恢复页面滚动，避免遮罩关闭后页面仍锁定。
 function closeEditor() {
     els.editorModal.classList.add("hidden");
     document.body.classList.remove("overflow-hidden");
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 每个测试用例编辑块自带删除逻辑，但至少保留一条用例。
 function addTestCaseEditor(testCase = {}) {
     const wrapper = document.createElement("div");
     wrapper.className = "test-case-editor rounded-2xl border border-gray-200 bg-gray-50 p-4";
@@ -531,7 +490,6 @@ function addTestCaseEditor(testCase = {}) {
         </div>
     `;
     wrapper.querySelector(".remove-test-case").addEventListener("click", () => {
-        // 条件分支：根据当前页面状态做不同处理
         if (els.testCaseEditorList.children.length === 1) {
             setNotice("至少需要保留一个测试用例。", "error");
             return;
@@ -543,15 +501,14 @@ function addTestCaseEditor(testCase = {}) {
     updateTestCaseLabels();
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 删除或新增用例后重新编号，避免表单标签跳号。
 function updateTestCaseLabels() {
-    // 遍历集合，为每个元素绑定逻辑或生成视图
     els.testCaseEditorList.querySelectorAll(".test-case-label").forEach((label, index) => {
         label.textContent = `测试用例 ${index + 1}`;
     });
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 提交前从表单组装 DTO，并对标签去重以减少后端清洗压力。
 function collectPayload() {
     const tags = els.tagsInput.value.split(",").map((tag) => tag.trim()).filter(Boolean);
     const testCases = [...els.testCaseEditorList.querySelectorAll(".test-case-editor")].map((wrapper) => ({
@@ -560,7 +517,6 @@ function collectPayload() {
         score: Number(wrapper.querySelector(".test-case-score").value),
         isSample: wrapper.querySelector(".test-case-sample").checked,
     }));
-    // 返回计算结果或提前结束当前流程
     return {
         title: els.titleInput.value.trim(),
         difficulty: els.difficultyInput.value,
@@ -577,7 +533,7 @@ function collectPayload() {
     };
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 根据是否存在题目 ID 决定创建或更新，成功后刷新并选中新题目。
 async function submitProblem(event) {
     event.preventDefault();
     const problemId = Number(els.editorProblemId.value) || null;
@@ -596,9 +552,8 @@ async function submitProblem(event) {
     }
 }
 
-// 异步流程：通常负责接口请求与界面回填
+// 删除题目是不可逆操作，先二次确认再调用管理接口。
 async function deleteProblem(problem) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!window.confirm(`确定删除题目 #${problem.id}「${problem.title}」吗？此操作无法撤销。`)) return;
     try {
         await requestJson(`${API_BASE}/${problem.id}`, {
@@ -614,32 +569,25 @@ async function deleteProblem(problem) {
     }
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 后端返回小数通过率，前端统一格式化为百分比。
 function formatRate(rate) {
-    // 返回计算结果或提前结束当前流程
     return `${((Number(rate) || 0) * 100).toFixed(1)}%`;
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 状态时间可能为空或格式异常，展示前统一兜底。
 function formatDateTime(value) {
-    // 条件分支：根据当前页面状态做不同处理
     if (!value) {
-        // 返回计算结果或提前结束当前流程
         return "-";
     }
     const date = new Date(value);
-    // 条件分支：根据当前页面状态做不同处理
     if (Number.isNaN(date.getTime())) {
-        // 返回计算结果或提前结束当前流程
         return "-";
     }
-    // 返回计算结果或提前结束当前流程
     return date.toLocaleString();
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 所有用户可控文本进入 innerHTML 前都经过转义。
 function escapeHtml(value) {
-    // 返回计算结果或提前结束当前流程
     return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -648,7 +596,7 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 所有 DOM 事件集中绑定，页面初始化顺序更容易检查。
 function bindEvents() {
     els.refreshButton.addEventListener("click", () => loadProblems({ keepSelection: true }).catch(handleError));
     els.filterForm.addEventListener("submit", (event) => {
@@ -673,14 +621,12 @@ function bindEvents() {
         loadProblems().catch(handleError);
     });
     els.previousPageButton.addEventListener("click", () => {
-        // 条件分支：根据当前页面状态做不同处理
         if (state.page > 1) {
             state.page -= 1;
             loadProblems().catch(handleError);
         }
     });
     els.nextPageButton.addEventListener("click", () => {
-        // 条件分支：根据当前页面状态做不同处理
         if (state.page * state.size < state.total) {
             state.page += 1;
             loadProblems().catch(handleError);
@@ -688,7 +634,6 @@ function bindEvents() {
     });
     els.saveTokenButton.addEventListener("click", () => {
         state.token = els.adminToken.value.trim().replace(/^Bearer\s+/i, "");
-        // 条件分支：根据当前页面状态做不同处理
         if (state.token) {
             window.localStorage.setItem(TOKEN_STORAGE_KEY, state.token);
             setNotice("管理员 JWT 已保存在当前浏览器。", "success");
@@ -709,18 +654,16 @@ function bindEvents() {
     els.closeEditorButton.addEventListener("click", closeEditor);
     els.cancelEditorButton.addEventListener("click", closeEditor);
     els.editorModal.addEventListener("click", (event) => {
-        // 条件分支：根据当前页面状态做不同处理
         if (event.target === els.editorModal) closeEditor();
     });
     document.addEventListener("keydown", (event) => {
-        // 条件分支：根据当前页面状态做不同处理
         if (event.key === "Escape" && !els.editorModal.classList.contains("hidden")) closeEditor();
     });
     els.addTestCaseButton.addEventListener("click", () => addTestCaseEditor({ input: "", output: "", isSample: false, score: 0 }));
     els.problemForm.addEventListener("submit", submitProblem);
 }
 
-// 页面辅助函数：拆分复杂交互，便于维护
+// 异步入口统一兜底，避免未捕获错误静默失败。
 function handleError(error) {
     setNotice(error.message, "error");
 }

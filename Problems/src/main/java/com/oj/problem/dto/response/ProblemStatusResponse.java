@@ -1,111 +1,86 @@
-// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.dto.response;
 
 import java.time.LocalDateTime;
 
-// 对外暴露的方法或字段，通常承接模块间协作
 public class ProblemStatusResponse {
 
     // 用户在单个题目上的做题状态记录
     private Long userId;
+    // 题目 ID，用于定位本次提交或状态更新关联的题目。
     private Long problemId;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 是否已经通过该题，历史上任意一次 AC 后保持为 true。
     private Boolean accepted;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 历史最高分，用于部分通过的题目展示用户最好成绩。
     private Integer bestScore;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 最近一次提交得分，便于用户判断当前进展。
     private Integer lastScore;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 本题当前评测总分，和 score 一起展示分数占比。
     private Integer maxScore;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 最近一次提交时间，用于题目列表和状态详情展示。
     private LocalDateTime lastSubmittedAt;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 首次通过时间，只有从未通过变为通过时写入。
     private LocalDateTime acceptedAt;
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Long getUserId() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return userId;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Long getProblemId() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return problemId;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setProblemId(Long problemId) {
         this.problemId = problemId;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Boolean getAccepted() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return accepted;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setAccepted(Boolean accepted) {
         this.accepted = accepted;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getBestScore() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return bestScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setBestScore(Integer bestScore) {
         this.bestScore = bestScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getLastScore() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return lastScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setLastScore(Integer lastScore) {
         this.lastScore = lastScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public Integer getMaxScore() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return maxScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setMaxScore(Integer maxScore) {
         this.maxScore = maxScore;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public LocalDateTime getLastSubmittedAt() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return lastSubmittedAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setLastSubmittedAt(LocalDateTime lastSubmittedAt) {
         this.lastSubmittedAt = lastSubmittedAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public LocalDateTime getAcceptedAt() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return acceptedAt;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public void setAcceptedAt(LocalDateTime acceptedAt) {
         this.acceptedAt = acceptedAt;
     }

@@ -69,6 +69,7 @@ public class ProblemStatusServiceImpl implements ProblemStatusService {
 
         return toResponse(statusRepository.save(status));
     }
+    // 按用户聚合题目状态，供题库列表批量标记 AC 情况。
 
     @Override
     @Transactional(readOnly = true)
