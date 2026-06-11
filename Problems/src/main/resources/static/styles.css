@@ -15,7 +15,6 @@ textarea {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .problem-card {
     border: 1px solid rgb(229 231 235);
     border-radius: 1rem;
@@ -23,20 +22,17 @@ textarea {
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .problem-card:hover {
     border-color: rgb(129 140 248);
     box-shadow: 0 10px 24px rgb(99 102 241 / 0.12);
     transform: translateY(-1px);
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .problem-card.is-active {
     border-color: rgb(79 70 229);
     box-shadow: 0 12px 28px rgb(99 102 241 / 0.18);
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .status-mark {
     display: inline-flex;
     width: 1.75rem;
@@ -48,24 +44,20 @@ textarea {
     line-height: 1;
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .status-accepted {
     color: rgb(34 197 94);
 }
 
 .status-unaccepted,
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .status-unknown {
     color: rgb(75 85 99);
 }
 
 .code-block,
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .code-input {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
-/* 样式规则：控制对应元素的布局或视觉表现 */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -73,7 +65,6 @@ textarea {
     overflow: hidden;
 }
 
-/* 响应式规则：适配不同尺寸下的页面展示 */
 @media (max-width: 1023px) {
     main {
         padding-bottom: 2rem;

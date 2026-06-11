@@ -1,14 +1,12 @@
-// 题目模块：该文件负责具体的数据结构、接口或业务逻辑
 package com.oj.problem.exception;
 
 import org.springframework.http.HttpStatus;
 
-// 对外暴露的方法或字段，通常承接模块间协作
 public class BusinessException extends RuntimeException {
 
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 业务响应码，成功固定为 0，异常使用模块内错误码。
     private final int code;
-    // 内部实现细节，避免直接暴露给外部调用方
+    // 异常最终映射成的 HTTP 状态码。
     private final HttpStatus httpStatus;
 
     // code 给前端判断用，httpStatus 给 Spring 转成 HTTP 状态码
@@ -18,15 +16,11 @@ public class BusinessException extends RuntimeException {
         this.httpStatus = httpStatus;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public int getCode() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return code;
     }
 
-    // 对外暴露的方法或字段，通常承接模块间协作
     public HttpStatus getHttpStatus() {
-        // 返回本阶段计算结果，供上层流程继续使用
         return httpStatus;
     }
 }

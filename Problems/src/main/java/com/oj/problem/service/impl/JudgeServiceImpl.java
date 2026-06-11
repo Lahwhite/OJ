@@ -1,6 +1,5 @@
 package com.oj.problem.service.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -64,6 +63,7 @@ public class JudgeServiceImpl implements JudgeService {
         this.judgeProperties = judgeProperties;
         this.objectMapper = objectMapper;
     }
+    // 提交服务负责准备临时文件、调用评测引擎，并回写用户做题状态。
 
     @Override
     public SubmitCodeResponse submit(Long problemId, SubmitCodeRequest request) {
@@ -136,9 +136,6 @@ public class JudgeServiceImpl implements JudgeService {
             String resultFile = extractResultFile(output);
             String resultUrl = extractResultUrl(output);
             if (!StringUtils.hasText(resultUrl) && StringUtils.hasText(resultFile)) {
-                resultUrl = extractResultUrlFromFile(resultFile);
-            }
-            if (!StringUtils.hasText(resultUrl) && StringUtils.hasText(resultFile)) {
                 resultUrl = buildResultUrl(resultFile);
             }
             if (exitCode != 0 && !StringUtils.hasText(resultFile) && !StringUtils.hasText(resultUrl)) {
@@ -178,6 +175,7 @@ public class JudgeServiceImpl implements JudgeService {
             deleteQuietly(casesPath);
         }
     }
+    // 把数据库测试用例转换成 judge_engine 需要的 expect json 格式。
 
     private String buildExpectJson(ProblemDetailResponse problem) throws IOException {
         ObjectNode root = objectMapper.createObjectNode();
@@ -195,6 +193,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
     }
+    // 从评测结果文件提取 verdict 和分数，并同步用户题目状态。
 
     private JudgeResultSummary updateProblemStatusFromResult(Long problemId, String username, String resultFile) {
         if (!StringUtils.hasText(resultFile)) {
@@ -234,6 +233,7 @@ public class JudgeServiceImpl implements JudgeService {
             return null;
         }
     }
+    // 评测引擎可能返回相对路径或绝对路径，这里统一转成可读文件路径。
 
     private Path resolveResultPath(String resultFile) {
         Path resultPath = Paths.get(resultFile.trim());
@@ -242,6 +242,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return judgeProperties.resolveWorkDir().resolve(resultPath).normalize();
     }
+    // 题目模块只需要轻量用户记录，缺失时按用户名懒创建。
 
     private ProblemUserEntity findOrCreateProblemUser(String username) {
         String normalized = sanitizeUsername(username);
@@ -253,6 +254,7 @@ public class JudgeServiceImpl implements JudgeService {
                     return problemUserRepository.save(user);
                 });
     }
+    // 评测引擎按固定源文件名识别语言，这里集中维护映射。
 
     private String sourceFileName(String language) {
         switch (language) {
@@ -268,10 +270,12 @@ public class JudgeServiceImpl implements JudgeService {
                 throw new BusinessException(400011, "不支持的编程语言", HttpStatus.BAD_REQUEST);
         }
     }
+    // 用户名进入文件名之前做白名单替换，避免生成非法路径。
 
     private String sanitizeUsername(String username) {
         return username.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
     }
+    // 从评测引擎标准输出中解析结果 json 文件路径。
 
     private String extractResultFile(String output) {
         if (!StringUtils.hasText(output)) {
@@ -283,6 +287,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return null;
     }
+    // 优先读取引擎显式输出的报告地址，否则退回普通 URL 匹配。
 
     private String extractResultUrl(String output) {
         if (!StringUtils.hasText(output)) {
@@ -298,54 +303,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return null;
     }
-
-    private String extractResultUrlFromFile(String resultFile) {
-        if (!StringUtils.hasText(resultFile)) {
-            return null;
-        }
-        Path resultPath = Paths.get(resultFile.trim());
-        if (!Files.isRegularFile(resultPath)) {
-            return null;
-        }
-        try {
-            String content = Files.readString(resultPath, StandardCharsets.UTF_8);
-            String urlFromText = extractResultUrl(content);
-            if (StringUtils.hasText(urlFromText)) {
-                return urlFromText;
-            }
-            JsonNode root = objectMapper.readTree(content);
-            return findUrlInJson(root);
-        } catch (IOException ex) {
-            log.warn("Failed to read judge result file: {}", resultPath, ex);
-            return null;
-        }
-    }
-
-    private String findUrlInJson(JsonNode node) {
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        if (node.isTextual()) {
-            return extractResultUrl(node.asText());
-        }
-        if (node.isObject()) {
-            for (JsonNode child : node) {
-                String found = findUrlInJson(child);
-                if (StringUtils.hasText(found)) {
-                    return found;
-                }
-            }
-        }
-        if (node.isArray()) {
-            for (JsonNode child : node) {
-                String found = findUrlInJson(child);
-                if (StringUtils.hasText(found)) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
+    // 把 reports 目录下的结果文件转换成本地 Web 服务可访问链接。
 
     private String buildResultUrl(String resultFile) {
         String normalized = resultFile == null ? "" : resultFile.trim();
@@ -367,6 +325,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return null;
     }
+    // 错误信息只保留前段输出，避免把过长编译日志塞进接口响应。
 
     private String trimOutput(String output) {
         if (!StringUtils.hasText(output)) {
@@ -375,6 +334,7 @@ public class JudgeServiceImpl implements JudgeService {
         String trimmed = output.trim();
         return trimmed.length() > 300 ? trimmed.substring(0, 300) + "..." : trimmed;
     }
+    // 临时源码和用例文件只做尽力清理，失败时记录日志但不覆盖评测结果。
 
     private void deleteQuietly(Path path) {
         if (path == null) {
